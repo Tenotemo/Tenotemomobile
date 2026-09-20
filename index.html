@@ -1946,6 +1946,10 @@ header .header-info{min-width:0}
 .t-eft-card .t-close{background:#475569}.t-eft-card .t-reject{background:#be123c}
 .t-eft-request{padding:12px 0;border-bottom:1px solid #cbd5e1;overflow-wrap:anywhere}
 #tEftMessage,#tAdminMessage{min-height:20px;font-weight:700;overflow-wrap:anywhere}
+.tenotemo-top50-caption{font-size:13px;font-weight:800;color:#075985;padding:10px 4px;text-align:center}
+.tenotemo-your-rank{margin:12px 0;padding:12px;background:#dcfce7;border:1px solid #86efac;border-radius:12px;color:#14532d;font-weight:800;text-align:center}
+#leaderboardTableContainer .leaderboard-table{width:100%;border-collapse:collapse}
+#leaderboardTableContainer .leaderboard-table td:nth-child(2){overflow-wrap:anywhere}
 /* Daily leaderboard mobile readability */
 .tenotemo-daily-note{background:#eff9ff;border:1px solid #b8e1f8;border-radius:12px;padding:12px;margin:12px 0;font-size:13px;line-height:1.55;color:#17364b}
 #leaderboardTableContainer{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -1973,7 +1977,7 @@ header .header-info{min-width:0}
  </div>
 </div>
 <div id="tenotemoProfilePanel" role="dialog" aria-modal="true" aria-labelledby="tenotemoProfileTitle"><div class="t-auth-card">
-<h2 id="tenotemoProfileTitle">My Profile</h2><p id="tenotemoProfileEmail"></p><p id="tenotemoProfileMembership"></p><p id="tenotemoProfileTotal"></p><p id="tenotemoProfileRank"></p>
+<h2 id="tenotemoProfileTitle">My Profile</h2><p id="tenotemoProfileEmail"></p><p id="tenotemoProfileMembership"></p><p id="tenotemoProfileTotal"></p><p id="tenotemoProfileRank"></p><p id="tenotemoProfileDailyRank">Daily position: —</p><p id="tenotemoProfileWeekly">Earned this week: R0.00</p>
 <label for="tenotemoProfileName">Player name</label><input id="tenotemoProfileName" maxlength="20"><button class="t-auth-primary" id="tenotemoProfileSave">Save name</button>
 <div id="tenotemoProfileMessage" class="t-auth-message" role="status"></div>
 <div class="t-auth-actions"><button class="t-auth-secondary" id="tenotemoProfilePassword">Change password</button><button class="t-auth-secondary" id="tenotemoSignOut">Sign out</button><button class="t-auth-secondary" id="tenotemoProfileClose">Close</button></div></div></div>
@@ -8183,10 +8187,20 @@ document.getElementById('tenotemoResendConfirmation').onclick=async()=>{
 document.getElementById('tenotemoShowPassword').onchange=e=>{document.getElementById('tenotemoAuthPassword').type=e.target.checked?'text':'password';document.getElementById('tenotemoAuthConfirm').type=e.target.checked?'text':'password'};
 function tConfigured(){return /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(window.TENOTEMO_SUPABASE_URL||'') && !String(window.TENOTEMO_SUPABASE_PUBLISHABLE_KEY||'').startsWith('PASTE_')}
 async function tMembership(){if(!tClient||!tUser)return false;const {data,error}=await tClient.from('tenotemo_memberships').select('active_until').eq('user_id',tUser.id).maybeSingle();if(error)throw error;return Boolean(data?.active_until && new Date(data.active_until)>new Date())}
-async function tGetRank(){tRank=null;if(!hasSubscription)return;const {data,error}=await tClient.rpc('tenotemo_leaderboard',{p_limit:1000});if(error)throw error;const entry=(data||[]).find(x=>x.user_id===tUser.id);tRank=entry?.position||null}
+let tDailyRank=null,tWeeklyEarnedCents=0;
+async function tGetRank(){
+ tRank=null;tDailyRank=null;tWeeklyEarnedCents=0;
+ if(!hasSubscription||!tUser)return;
+ const {data,error}=await tClient.rpc('tenotemo_my_ranks');
+ if(error)throw error;
+ const row=(data||[])[0];
+ tRank=row?.all_time_position??null;
+ tDailyRank=row?.daily_position??null;
+ tWeeklyEarnedCents=Number(row?.weekly_earned_cents||0);
+}
 function tRefresh(){const total=getTotalPlayerScore();document.getElementById('totalPointsDisplay').textContent=String(total);document.getElementById('totalPointsDisplay').setAttribute('aria-label','Total points: '+total);document.getElementById('menuTotalPoints').textContent='Total points: '+total;
  const position=hasSubscription?(tRank?'#'+tRank:'# —'):'# 🔒';document.getElementById('positionDisplay').textContent=position;document.getElementById('positionDisplay').setAttribute('aria-label',hasSubscription?(tRank?'Leaderboard position '+tRank:'Leaderboard position unranked'):'Leaderboard position locked; subscribe to unlock');document.getElementById('menuPosition').textContent=hasSubscription?'Global leaderboard position: '+position:'🔒 Leaderboard position · Subscribe to unlock';
- document.getElementById('tenotemoProfileTotal').textContent='Total points: '+total;document.getElementById('tenotemoProfileRank').textContent='Leaderboard position: '+position;
+ document.getElementById('tenotemoProfileTotal').textContent='Total points: '+total;document.getElementById('tenotemoProfileRank').textContent='All-time position: '+position;document.getElementById('tenotemoProfileDailyRank').textContent='Daily position: '+(hasSubscription?(tDailyRank?'#'+tDailyRank:'# —'):'# 🔒');document.getElementById('tenotemoProfileWeekly').textContent='Earned this week: '+(hasSubscription?'R'+(tWeeklyEarnedCents/100).toFixed(2):'🔒');
  document.getElementById('tenotemoProfileMembership').textContent=hasSubscription?'Subscription: active':'Subscription: inactive · leaderboard locked';
 }
 async function tLoadPlayer(user){tRemoteLoading=true;tUser=user;try{
@@ -8253,23 +8267,23 @@ async function tRenderLeaderboard(){
  if(!hasSubscription){box.innerHTML='<div class="locked-leaderboard"><h3>🔒 Leaderboard Locked</h3><p>An active subscription is required to see global rankings.</p></div>';return}
  const daily=leaderboardType==='daily';
  box.textContent=daily?'Loading today’s leaderboard…':'Loading all-time leaderboard…';
- const {data,error}=await tClient.rpc(daily?'tenotemo_daily_leaderboard':'tenotemo_leaderboard',{p_limit:100});
+ const {data,error}=await tClient.rpc(daily?'tenotemo_daily_leaderboard':'tenotemo_leaderboard',{p_limit:50});
  if(error){box.textContent='Unable to load leaderboard: '+error.message+(daily?' — Run the Tenotemo daily leaderboard SQL in Supabase.':'');return}
  if(daily){
   const week=data?.[0]?.week_start||'this Monday';
   const date=data?.[0]?.today||new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   box.innerHTML='<div class="tenotemo-daily-note"><strong>Daily leaderboard · '+escapeHTML(date)+'</strong><br>Daily points reset at midnight (South Africa). Each completed day’s #1 subscribed player earns R100. Weekly earnings reset each Monday. Week starting '+escapeHTML(String(week))+'.</div>'+
-  '<table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Today’s points</th><th>Earned this week</th></tr></thead><tbody>'+
-  (data||[]).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.daily_points+'</td><td><strong>R'+(Number(e.weekly_earned_cents)/100).toFixed(2)+'</strong></td></tr>').join('')+'</tbody></table>';
+  '<div class="tenotemo-top50-caption">Top 50 players · Your position is also available in My Profile.</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Today’s points</th><th>Earned this week</th></tr></thead><tbody>'+ 
+  (data||[]).slice(0,50).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.daily_points+'</td><td><strong>R'+(Number(e.weekly_earned_cents)/100).toFixed(2)+'</strong></td></tr>').join('')+'</tbody></table>'+(tDailyRank>50?'<div class="tenotemo-your-rank">Your daily position: #'+tDailyRank+' · See My Profile for your ranking and weekly earnings.</div>':'');
  }else{
-  box.innerHTML='<table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Total points</th></tr></thead><tbody>'+
-  (data||[]).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.total_points+'</td></tr>').join('')+'</tbody></table>';
+  box.innerHTML='<div class="tenotemo-top50-caption">Top 50 players · Your position is also available in My Profile.</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Total points</th></tr></thead><tbody>'+ 
+  (data||[]).slice(0,50).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.total_points+'</td></tr>').join('')+'</tbody></table>'+(tRank>50?'<div class="tenotemo-your-rank">Your all-time position: #'+tRank+' · See My Profile for your ranking.</div>':'');
  }
 }
 document.getElementById('dailyTab').style.display='';
-document.getElementById('dailyTab').textContent='Daily · R100';
+document.getElementById('dailyTab').textContent='Win R100 Daily';
 document.getElementById('cumulativeTab').textContent='All-time';
-function tOpenProfile(){if(!tUser){tGate.classList.remove('hidden');return}document.getElementById('tenotemoProfilePanel').classList.add('open');tRefresh()}
+function tOpenProfile(){if(!tUser){tGate.classList.remove('hidden');return}document.getElementById('tenotemoProfilePanel').classList.add('open');tRefresh();if(hasSubscription)tGetRank().then(tRefresh).catch(e=>console.warn('Profile ranks:',e.message))}
 document.getElementById('tenotemoProfileButton').onclick=tOpenProfile;
 document.getElementById('tenotemoMenuProfile').onclick=tOpenProfile;
 document.getElementById('tenotemoProfileClose').onclick=()=>document.getElementById('tenotemoProfilePanel').classList.remove('open');
