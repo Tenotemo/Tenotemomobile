@@ -2060,6 +2060,89 @@ header .header-info{min-width:0}
     #shapeField:not(.memory-mode) .shape-pool .combo-animal { font-size: 16px !important; }
 }
 
+
+/* FIX: each complete animal+shape pair gets its OWN full-width, full-height tile.
+   Previous 39px grid rows clipped 42px+ cards and made their contents overlap. */
+#shapeField:not(.memory-mode) .shape-pool,
+#colourField:not(.memory-mode) .colour-palette {
+  box-sizing:border-box!important;
+  position:absolute!important;
+  top:10px!important; bottom:auto!important;
+  left:10px!important;right:10px!important;
+  width:auto!important;
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  grid-auto-rows:60px!important;
+  gap:5px!important;
+  padding:7px!important;
+  min-height:0!important;
+  max-height:unset!important;
+  height:auto!important;
+  overflow:visible!important;
+  align-content:start!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+  z-index:12;
+}
+#shapeField:not(.memory-mode) .shape-pool > .shape-piece,
+#colourField:not(.memory-mode) .colour-palette > .colour-piece {
+  box-sizing:border-box!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  height:60px!important;min-height:0!important;max-height:60px!important;
+  margin:0!important; padding:3px!important;
+  align-self:stretch!important;justify-self:stretch!important;
+}
+#shapeField:not(.memory-mode) .shape-pool > .combo-card {
+  box-sizing:border-box!important;
+  display:flex!important;flex-direction:row!important;
+  align-items:center!important;justify-content:center!important;
+  flex-wrap:nowrap!important;
+  gap:3px!important;padding:3px!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;
+  height:60px!important;min-height:0!important;max-height:60px!important;
+  overflow:hidden!important;
+}
+#shapeField:not(.memory-mode) .shape-pool .combo-icon {width:23px!important;height:23px!important;flex:0 0 23px!important}
+#shapeField:not(.memory-mode) .shape-pool .combo-icon svg {width:22px!important;height:22px!important}
+#shapeField:not(.memory-mode) .shape-pool .combo-animal {font-size:21px!important;line-height:1!important;flex:0 0 auto}
+#shapeField:not(.memory-mode) .shape-target-area,
+#colourField:not(.memory-mode) .colour-grid-wrapper {
+  top:157px!important;height:calc(100% - 163px)!important;
+  box-sizing:border-box!important;
+}
+@media(max-width:760px){
+  #shapeField:not(.memory-mode) .shape-pool,
+  #colourField:not(.memory-mode) .colour-palette {
+    top:8px!important;left:6px!important;right:6px!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    grid-auto-rows:64px!important;gap:5px!important;padding:5px!important;
+  }
+  #shapeField:not(.memory-mode) .shape-pool > .shape-piece,
+  #colourField:not(.memory-mode) .colour-palette > .colour-piece,
+  #shapeField:not(.memory-mode) .shape-pool > .combo-card {
+    height:64px!important;max-height:64px!important;
+  }
+  #shapeField:not(.memory-mode) .shape-pool .combo-icon {width:22px!important;height:22px!important;flex-basis:22px!important}
+  #shapeField:not(.memory-mode) .shape-pool .combo-icon svg {width:21px!important;height:21px!important}
+  #shapeField:not(.memory-mode) .shape-pool .combo-animal {font-size:20px!important}
+  #shapeField:not(.memory-mode) .shape-target-area,
+  #colourField:not(.memory-mode) .colour-grid-wrapper {
+    top:222px!important;height:calc(100% - 228px)!important;
+  }
+  /* If a later round presents more than twelve choices, make space for a fourth row. */
+  #shapeField:not(.memory-mode):has(.shape-pool > :nth-child(13)) .shape-target-area,
+  #colourField:not(.memory-mode):has(.colour-palette > :nth-child(13)) .colour-grid-wrapper {
+    top:291px!important;height:calc(100% - 297px)!important;
+  }
+}
+@media(max-width:370px){
+  #shapeField:not(.memory-mode) .shape-pool,
+  #colourField:not(.memory-mode) .colour-palette {gap:3px!important;padding:4px!important;left:4px!important;right:4px!important}
+  #shapeField:not(.memory-mode) .shape-pool .combo-animal {font-size:17px!important}
+  #shapeField:not(.memory-mode) .shape-pool .combo-icon {width:19px!important;height:19px!important;flex-basis:19px!important}
+  #shapeField:not(.memory-mode) .shape-pool .combo-icon svg {width:18px!important;height:18px!important}
+}
+
 </style>
 </head>
 
