@@ -1955,7 +1955,7 @@ header .header-info{min-width:0}
  <div class="t-auth-card">
   <h2 id="tenotemoAuthTitle">Create Tenotemo account</h2><p id="tenotemoAuthHint">New player? Register to save your progress across devices.</p>
   <form id="tenotemoAuthForm">
-   <div id="tenotemoNameWrap" hidden><label for="tenotemoAuthName">Player name</label><input id="tenotemoAuthName" maxlength="20" autocomplete="nickname"></div>
+   <div id="tenotemoNameWrap" hidden><label for="tenotemoAuthName">Player name</label><input id="tenotemoAuthName" maxlength="20" autocomplete="nickname" required><small id="tenotemoNameAvailability" role="status" aria-live="polite" style="display:block;margin-top:5px"></small></div>
    <label for="tenotemoAuthEmail">Email address</label><input id="tenotemoAuthEmail" type="email" autocomplete="email" required>
    <div id="tenotemoPasswordWrap"><label for="tenotemoAuthPassword">Password</label><input id="tenotemoAuthPassword" type="password" autocomplete="current-password" required minlength="12">
    <label style="font-weight:normal"><input id="tenotemoShowPassword" type="checkbox" style="width:auto"> Show password</label></div>
@@ -1976,7 +1976,7 @@ header .header-info{min-width:0}
 <div id="tEftPanel" role="dialog" aria-modal="true" aria-labelledby="tEftTitle"><section class="t-eft-card">
 <h2 id="tEftTitle">Tenotemo · R40 monthly EFT</h2>
 <p>Pay by bank transfer. Your leaderboard unlocks only after the administrator confirms that the R40 has reached the bank account. Your points are retained while waiting.</p>
-<div class="t-eft-bank"><strong>Standard Bank</strong><br>Account holder: <strong>DMA ARENA (PTY) LTD</strong><br>Account type: MyMoBiz Current Account<br>Account number: <strong>10284645220</strong><br>Branch code: <strong>004952</strong><br>Amount: <strong>R40.00</strong><br>Payment reference: <strong id="tEftReference">Select Generate reference</strong></div>
+<div class="t-eft-bank"><strong>Standard Bank</strong><br>Account holder: <strong>DMA ARENA (PTY) LTD</strong><br>Account type: MyMoBiz Current Account<br>Account number: <strong>10284645220</strong><br>Branch code: <strong>004952</strong><br>Amount: <strong>R40.00</strong><br>Payment reference: <strong id="tEftReference">Select Generate reference</strong><br><small>Your reference will look like PlayerName-0001. Use the exact reference shown after generating.</small></div>
 <p><button id="tEftGenerate" type="button">Generate / retrieve my reference</button></p>
 <p>Use the exact reference shown above in your EFT. After making payment, select <strong>I've paid — submit for verification</strong>. Do not submit before paying.</p>
 <button id="tEftSubmit" type="button" disabled>I've paid — submit for verification</button>
@@ -8141,6 +8141,24 @@ const tForm=document.getElementById('tenotemoAuthForm');
 const tMsg=document.getElementById('tenotemoAuthMessage');
 let tClient=null,tUser=null,tAuthMode='signup',tRank=null,tSyncTimer=null,tSessionReady=false,tRemoteLoading=false;
 function tMessage(message,good=false){tMsg.textContent=message;tMsg.classList.toggle('good',good)}
+async function tCheckNameAvailable(name){
+ const {data,error}=await tClient.rpc('tenotemo_username_available',{p_name:name});
+ if(error)throw Error('Username availability check unavailable. Run the username SQL update first. '+error.message);
+ return data===true;
+}
+let tNameCheckCounter=0;
+document.getElementById('tenotemoAuthName').addEventListener('input',async()=>{
+ const name=document.getElementById('tenotemoAuthName').value.trim();
+ const output=document.getElementById('tenotemoNameAvailability');
+ const check=++tNameCheckCounter;
+ if(!name){output.textContent='';return}
+ if(!/^[A-Za-z0-9_]{3,20}$/.test(name)){output.textContent='Use 3–20 letters, numbers or underscores.';return}
+ output.textContent='Checking username…';
+ await new Promise(resolve=>setTimeout(resolve,350));
+ if(check!==tNameCheckCounter||!tClient)return;
+ try{const available=await tCheckNameAvailable(name);if(check===tNameCheckCounter)output.textContent=available?'✓ Username available':'Username already taken — choose another.'}
+ catch(e){if(check===tNameCheckCounter)output.textContent=e.message}
+});
 function tPasswordValid(p){return p.length>=12 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p) && /[^A-Za-z0-9]/.test(p)}
 function tSetMode(mode){tAuthMode=mode;const signup=mode==='signup',reset=mode==='reset',change=mode==='change';
  document.getElementById('tenotemoAuthTitle').textContent=signup?'Create Tenotemo account':reset?'Reset your password':change?'Choose a new password':'Welcome to Tenotemo';
@@ -8202,7 +8220,41 @@ async function tSaveNow(){if(!tClient||!tUser||tRemoteLoading)return;
 const tOldSaveProgress=saveProgress;saveProgress=function(){tOldSaveProgress();tSaveSoon();tRefresh()};
 recordLeaderboardScore=function(){tSaveSoon();tRefresh()};
 refreshPlayerSummary=function(){tRefresh()};
-const tOldSaveName=savePlayerName;savePlayerName=function(){const name=document.getElementById('playerNameInput').value.trim().slice(0,20)||'Player';playerName=name;localStorage.setItem(PLAYER_NAME_KEY,name);updatePlayerStatus();tRefresh();if(tUser&&tClient)tClient.from('tenotemo_profiles').update({player_name:name}).eq('user_id',tUser.id).then(({error})=>{if(error)console.error(error)});};
+// The server enforces unique player names. Do not overwrite the local name until it accepts the change.
+let tNameUpdateInFlight=false;
+async function tChangePlayerName(input, messageElement){
+ if(!tUser||!tClient)return;
+ const desired=input.value.trim().slice(0,20);
+ const oldName=playerName;
+ if(desired===oldName){input.value=oldName;return}
+ if(!/^[A-Za-z0-9_]{3,20}$/.test(desired)){
+   input.value=oldName;
+   if(messageElement)messageElement.textContent='Use 3–20 letters, numbers or underscores.';
+   else alert('Username must have 3–20 letters, numbers or underscores.');
+   return;
+ }
+ if(tNameUpdateInFlight)return;
+ tNameUpdateInFlight=true;
+ try{
+  const {error}=await tClient.from('tenotemo_profiles').update({player_name:desired}).eq('user_id',tUser.id);
+  if(error)throw error;
+  playerName=desired;
+  document.getElementById('playerNameInput').value=desired;
+  document.getElementById('tenotemoProfileName').value=desired;
+  localStorage.setItem(PLAYER_NAME_KEY,desired);
+  if(messageElement)messageElement.textContent='Username saved.';
+  updatePlayerStatus();tRefresh();
+ }catch(e){
+  input.value=oldName;
+  const message=e.code==='23505'||/unique|duplicate|already taken/i.test(e.message||'')?'That username is already taken. Please choose another.':('Could not save username: '+e.message);
+  if(messageElement)messageElement.textContent=message;else alert(message);
+ }finally{tNameUpdateInFlight=false}
+}
+savePlayerName=function(){
+ if(!tUser||tRemoteLoading)return;
+ const input=document.getElementById('playerNameInput');
+ if(input.value.trim()!==playerName)tChangePlayerName(input,null);
+};
 const tOldRestart=restartAllProgress;restartAllProgress=function(){const prev=getTotalPlayerScore();tOldRestart();if(getTotalPlayerScore()===0&&prev!==0)tSaveNow().catch(e=>alert('Remote reset failed: '+e.message));};
 const tOldOpenLeaderboard=openLeaderboard;openLeaderboard=function(){tOldOpenLeaderboard();tRenderLeaderboard()};
 updateSubscriptionUI=function(){document.getElementById('subscriptionStatus').textContent=hasSubscription?'Leaderboard access: Active':'Leaderboard access: Locked';document.getElementById('subscriptionMessage').textContent=hasSubscription?'Your subscription is verified by Supabase.':'An active subscription is required. Access is verified by Supabase, not browser settings.';document.getElementById('subscriptionButton').textContent=hasSubscription?'Renew · R40 EFT':'Subscribe · R40 EFT';};
@@ -8217,7 +8269,9 @@ function tOpenProfile(){if(!tUser){tGate.classList.remove('hidden');return}docum
 document.getElementById('tenotemoProfileButton').onclick=tOpenProfile;
 document.getElementById('tenotemoMenuProfile').onclick=tOpenProfile;
 document.getElementById('tenotemoProfileClose').onclick=()=>document.getElementById('tenotemoProfilePanel').classList.remove('open');
-document.getElementById('tenotemoProfileSave').onclick=async()=>{const name=document.getElementById('tenotemoProfileName').value.trim().slice(0,20);const msg=document.getElementById('tenotemoProfileMessage');if(!name){msg.textContent='Enter a player name.';return}const {error}=await tClient.from('tenotemo_profiles').update({player_name:name}).eq('user_id',tUser.id);if(error){msg.textContent=error.message;return}playerName=name;document.getElementById('playerNameInput').value=name;localStorage.setItem(PLAYER_NAME_KEY,name);msg.textContent='Profile saved.';tRefresh()};
+document.getElementById('tenotemoProfileSave').onclick=async()=>{
+ await tChangePlayerName(document.getElementById('tenotemoProfileName'),document.getElementById('tenotemoProfileMessage'));
+};
 document.getElementById('tenotemoProfilePassword').onclick=()=>{document.getElementById('tenotemoProfilePanel').classList.remove('open');tGate.classList.remove('hidden');tSetMode('change')};
 document.getElementById('tenotemoSignOut').onclick=async()=>{clearTimeout(tSyncTimer);await tSaveNow().catch(console.warn);await tClient.auth.signOut();tUser=null;tSessionReady=false;hasSubscription=false;tRank=null;modeScores={shape:0,colour:0,movement:0};extraModeScores={climb:0,spin:0};modeRounds={shape:0,colour:0,movement:0};localStorage.removeItem(PROGRESS_STORAGE_KEY);localStorage.removeItem(PLAYER_NAME_KEY);document.getElementById('tenotemoProfilePanel').classList.remove('open');document.getElementById('tAdminOpen').hidden=true;document.getElementById('tAdminPanel').classList.remove('open');document.getElementById('tEftPanel').classList.remove('open');showMainMenu();tGate.classList.remove('hidden');tSetMode('login')};
 tForm.onsubmit=async e=>{e.preventDefault();if(!tClient){tMessage('Supabase configuration is missing. Ask the administrator to connect this game.');return}
@@ -8225,10 +8279,10 @@ tForm.onsubmit=async e=>{e.preventDefault();if(!tClient){tMessage('Supabase conf
  const button=document.getElementById('tenotemoAuthSubmit');button.disabled=true;tMessage('Please wait…');try{
  if(tAuthMode==='reset'){const {error}=await tClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;tMessage('If the email is registered, a reset link will be sent.',true);return}
  if(tAuthMode==='signup'||tAuthMode==='change'){if(!tPasswordValid(pass))throw Error('Use at least 12 characters, uppercase, lowercase, number and symbol.');if(pass!==confirmPass)throw Error('Passwords do not match.')}
- if(tAuthMode==='signup'){const name=document.getElementById('tenotemoAuthName').value.trim().slice(0,20);if(!name)throw Error('Enter a player name.');const {data,error}=await tClient.auth.signUp({email,password:pass,options:{data:{player_name:name},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage(data.session?'Account created. Loading…':'Account request received. Check your Inbox and Spam for the confirmation email. If it does not arrive, use Resend confirmation email. After confirming, select Back to sign in.',true);if(data.session)await tLoadPlayer(data.user);return}
+ if(tAuthMode==='signup'){const name=document.getElementById('tenotemoAuthName').value.trim().slice(0,20);if(!/^[A-Za-z0-9_]{3,20}$/.test(name))throw Error('Username must contain 3–20 letters, numbers or underscores.');if(!(await tCheckNameAvailable(name)))throw Error('That username is already taken. Please choose another.');const {data,error}=await tClient.auth.signUp({email,password:pass,options:{data:{player_name:name},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage(data.session?'Account created. Loading…':'Account request received. Check your Inbox and Spam for the confirmation email. If it does not arrive, use Resend confirmation email. After confirming, select Back to sign in.',true);if(data.session)await tLoadPlayer(data.user);return}
  if(tAuthMode==='change'){const {error}=await tClient.auth.updateUser({password:pass});if(error)throw error;tGate.classList.add('hidden');tSetMode('login');alert('Password updated.');return}
  const {data,error}=await tClient.auth.signInWithPassword({email,password:pass});if(error)throw error;await tLoadPlayer(data.user);
- }catch(err){const message=err.message||'Unknown error';tMessage(/invalid login credentials/i.test(message)?'Email or password not recognised. New player? Select Create account. Already registered? Confirm your email, or use Forgot password.':/email not confirmed/i.test(message)?'Your email is not confirmed yet. Enter your email and select Resend confirmation email.':message)}finally{button.disabled=false}};
+ }catch(err){const message=err.message||'Unknown error';tMessage(/invalid login credentials/i.test(message)?'Email or password not recognised. New player? Select Create account. Already registered? Confirm your email, or use Forgot password.':/email not confirmed/i.test(message)?'Your email is not confirmed yet. Enter your email and select Resend confirmation email.':/database error saving new user/i.test(message)?'Registration could not be completed. Your username may have just been taken; try another name.':message)}finally{button.disabled=false}};
 
 /* Server-controlled EFT requests. Never put administrator credentials in this HTML. */
 let tEftCurrent=null;
@@ -8251,7 +8305,7 @@ async function tEftLoad(){
 document.getElementById('tEftClose').onclick=()=>document.getElementById('tEftPanel').classList.remove('open');
 document.getElementById('tEftGenerate').onclick=async e=>{
  if(!tClient||!tUser)return;e.currentTarget.disabled=true;tEftMessage('Generating payment reference…');
- try{const {data,error}=await tClient.rpc('tenotemo_create_eft_request');if(error)throw error;await tEftLoad();tEftMessage('Use this exact reference when paying R40.00.')}catch(err){tEftMessage(err.message)}finally{e.currentTarget.disabled=false}
+ try{const {data,error}=await tClient.rpc('tenotemo_create_eft_request');if(error)throw error;await tEftLoad();tEftMessage('Use this exact reference when paying R40.00.')}catch(err){tEftMessage(/non-DEFAULT value into column \"id\"/i.test(err.message)?'The database reference function needs updating. Ask the administrator to run tenotemo_eft_reference_fix.sql in Supabase.':err.message)}finally{e.currentTarget.disabled=false}
 };
 document.getElementById('tEftSubmit').onclick=async e=>{
  if(!tEftCurrent||tEftCurrent.status!=='created')return;
