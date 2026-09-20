@@ -1946,6 +1946,11 @@ header .header-info{min-width:0}
 .t-eft-card .t-close{background:#475569}.t-eft-card .t-reject{background:#be123c}
 .t-eft-request{padding:12px 0;border-bottom:1px solid #cbd5e1;overflow-wrap:anywhere}
 #tEftMessage,#tAdminMessage{min-height:20px;font-weight:700;overflow-wrap:anywhere}
+/* Daily leaderboard mobile readability */
+.tenotemo-daily-note{background:#eff9ff;border:1px solid #b8e1f8;border-radius:12px;padding:12px;margin:12px 0;font-size:13px;line-height:1.55;color:#17364b}
+#leaderboardTableContainer{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#leaderboardTableContainer .leaderboard-table{min-width:360px;font-size:clamp(11px,2.7vw,14px)}
+#leaderboardTableContainer .leaderboard-table th,#leaderboardTableContainer .leaderboard-table td{padding:10px 6px}
 </style>
 </head>
 
@@ -2658,22 +2663,11 @@ const PATTERN_CHALLENGE_TIME = 60;
 ============================================================ */
 
 function getPassingValue(passCount) {
-
-    const values = [
-        10,
-        8,
-        6,
-        4,
-        2,
-        0
-    ];
-
-    return values[
-        Math.min(
-            passCount,
-            values.length - 1
-        )
-    ];
+    // Games 1 and 2: from round 3, each target starts at 50 points.
+    // Each crossing of the red zone costs 5 points, to a minimum of zero.
+    if (roundIndex >= 2) return Math.max(0, 50 - passCount * 5);
+    const values = [10, 8, 6, 4, 2, 0];
+    return values[Math.min(passCount, values.length - 1)];
 }
 
 
@@ -4337,7 +4331,7 @@ function createShapeTargets() {
             expectedCombo: roundIndex >= 2 ? comboKey(item) : null,
             matched: false,
             passCount: 0,
-            points: 10,
+            points: getPassingValue(0),
             insideRedZone: false
         });
         track.appendChild(target);
@@ -5294,7 +5288,7 @@ function createColourGrid(round, showColours) {
             expectedCombo: round.combo ? { ...patternItem } : null,
             matched: false,
             passCount: 0,
-            points: 10,
+            points: getPassingValue(0),
             insideRedZone: false
         });
 
@@ -6999,23 +6993,12 @@ function evaluateMovementAttempt() {
     }
 
 
-    /*
-       GAME 3 SCORING:
-
-       10 points for EVERY
-       correct position.
-
-       Example:
-
-       12 correct positions
-       × 10
-       =
-       120 points
-    */
+    /* Game 3: 10 points per correct position in rounds 1–2;
+       50 points per correct position from round 3. */
 
     const earned =
         correctPositions *
-        10;
+        (roundIndex >= 2 ? 50 : 10);
 
 
     const percentage =
@@ -7540,7 +7523,8 @@ const segmentRuleContent = {
         rules: [
             "Study every item during the memorise phase.",
             "Drag the matching item into each moving empty block.",
-            "Items lose value whenever their block passes through the red zone; the red minus sign shows the deduction.",
+            "Rounds 1–2: each correct item starts at 10 points. From round 3: each correct item starts at 50 points.",
+            "From round 3, each red-zone crossing deducts 5 points from that block (minimum zero). Earlier rounds keep their original red-zone deductions.",
             "Complete every position before time runs out for the best score."
         ]
     },
@@ -7551,7 +7535,7 @@ const segmentRuleContent = {
             "Study the full grid before it becomes blank.",
             "Drag the correct colour into each moving empty square.",
             "For two-colour squares, the left and right positions must also match.",
-            "Blocks lose value in the red zone; every deduction appears as a red minus sign."
+            "Rounds 1–2: each correct box starts at 10 points. From round 3: each correct box starts at 50 points, losing 5 points per red-zone crossing (minimum zero)."
         ]
     },
     movement: {
@@ -7561,7 +7545,7 @@ const segmentRuleContent = {
             "Memorise the highlighted pattern and its order.",
             "Select the matching positions when the pattern disappears.",
             "Follow the on-screen instruction for each round.",
-            "Accuracy and completing the pattern before time expires earn the score."
+            "Rounds 1–2 award 10 points per correctly remembered position; round 3 awards 50 points per correct position. You need at least 50% accuracy to pass."
         ]
     },
     climb: {
@@ -7569,9 +7553,9 @@ const segmentRuleContent = {
         intro: "The train stops at random memory and logic challenges as it climbs.",
         rules: [
             "Solve the challenge shown at every train stop.",
-            "Easy challenges award about 5 points, medium challenges up to 12, and hard challenges up to 20.",
+            "Easy challenges award 1 point, medium up to 3, and hard up to 5.",
             "Faster correct answers keep more of the available points.",
-            "If time expires, use Recheck Pattern and continue for a smaller reward."
+            "If time expires, use Recheck Pattern and continue for 1 point. The train only moves after a correct solution."
         ]
     },
     spin: {
@@ -7580,7 +7564,8 @@ const segmentRuleContent = {
         rules: [
             "Faster spinning stops are worth more points.",
             "Place only the items you remember, then lock them and continue spinning for the rest.",
-            "Correct placements stay locked; each incorrect placement deducts 5 points.",
+            "From round 3, the fastest stop awards 50 points per correct item; later stops award 35, 20 and 5 points.",
+            "Correct placements stay locked. Wrong placements cost 5 points in rounds 1–2 and 10 points from round 3.",
             "Later spins are slower and easier, but each item is worth fewer points."
         ]
     }
@@ -7730,12 +7715,12 @@ let climbRunning=false, climbScore=0, climbSolved=0, climbStop=1, climbPuzzle=nu
 let climbChallengeTimer=null, climbSecondsLeft=0, climbAttemptLocked=false, climbRecheckMode=false, climbRecheckAvailable=false;
 const climbSymbols=["🐙","🦀","⭐","🐠","🐬","🐚","🐢","🪸","⚓","🌊","🔷","🔶","🟣","🟩","🔺","❤️"];
 const climbWords=["BLUE","TRAIN","WAVE","STAR","CRAB","SHELL","OCEAN","TRACK","CORAL","TURTLE","DOLPHIN","ANCHOR","REEF","FISH"];
-const climbPts={easy:5,medium:12,hard:20};
+const climbPts={easy:1,medium:3,hard:5};
 function climbPuzzlePoints(p){
     /* Spot-the-change is intentionally a quick low-value challenge. */
-    if(p.type==="odd") return 5;
-    if(p.type==="numberPattern") return {easy:5,medium:12,hard:20}[p.diff];
-    if(p.type==="wordSequence") return {easy:5,medium:12,hard:20}[p.diff];
+    if(p.type==="odd") return 1;
+    if(p.type==="numberPattern") return {easy:1,medium:3,hard:5}[p.diff];
+    if(p.type==="wordSequence") return {easy:1,medium:3,hard:5}[p.diff];
     return climbPts[p.diff];
 }
 function climbStartingTime(p){
@@ -7743,11 +7728,12 @@ function climbStartingTime(p){
     return {easy:30,medium:45,hard:60}[p.diff];
 }
 function climbTimePoints(){
-    if(climbRecheckMode || climbRecheckAvailable || climbSecondsLeft<=0) return 2;
+    if(climbRecheckMode || climbRecheckAvailable || climbSecondsLeft<=0) return 1;
     const maximum = climbPts[climbPuzzle?.diff || "easy"];
+    if(maximum===1) return 1;
     const total = climbPuzzle ? climbStartingTime(climbPuzzle) : 30;
     const timeRatio = Math.max(0, Math.min(1, climbSecondsLeft / total));
-    return Math.max(2, Math.round(maximum * (.35 + .65 * timeRatio)));
+    return Math.max(1, Math.round(maximum * (.35 + .65 * timeRatio)));
 }
 function climbUpdateClock(){
     document.getElementById("timerDisplay").textContent="Time: "+Math.max(0,climbSecondsLeft)+"s • "+climbTimePoints()+" pts";
@@ -8101,13 +8087,16 @@ function climbFinish(correct){
 const oSpinIcons=["🐠","🐙","🐬","🦀","🐚","⚓","🪸","🦈","🐡","🐳","🦞","🪼","🏝️","🐢"];
 const oSpinPositions=[{x:50,y:14.4},{x:75.2,y:24.8},{x:85.6,y:50},{x:75.2,y:75.2},{x:50,y:85.6},{x:24.8,y:75.2},{x:14.4,y:50},{x:24.8,y:24.8}];
 const oSpinCounts=[1,2,3,4,5,6],oSpinSpeeds=[900,650,450,280],oSpinPoints=[10,7,4,1];
+function oSpinValue(){return oSpinRoundIndex>=2?[50,35,20,5][oSpinStopIndex]:oSpinPoints[oSpinStopIndex]}
+function oSpinNextValue(){return oSpinRoundIndex>=2?[50,35,20,5][oSpinStopIndex+1]:oSpinPoints[oSpinStopIndex+1]}
+function oSpinWrongPenalty(){return oSpinRoundIndex>=2?10:5}
 let oSpinRoundIndex=0,oSpinStopIndex=0,oSpinScore=0,oSpinSolution=[],oSpinAnswers={},oSpinSelected=null,oSpinRaf=0,oSpinActive=false;
 function oSpinShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function startOceanSpin(){savePlayerName();clearTimer();stopAllAnimations();hideAllFields();document.getElementById("climbField").style.display="none";menuOverlay.classList.add("hidden");resultOverlay.classList.add("hidden");leaderboardOverlay.classList.add("hidden");document.getElementById("spinField").style.display="block";instruction.textContent="Watch the ocean items through the spinning opening.";oSpinRoundIndex=0;oSpinStopIndex=0;oSpinScore=0;modeDisplay.textContent="Ocean Spin";oSpinNewRound()}
 function oSpinNewRound(){oSpinStopIndex=0;oSpinAnswers={};const n=oSpinCounts[oSpinRoundIndex],spots=oSpinShuffle([...oSpinPositions]).slice(0,n),pool=oSpinShuffle([...oSpinIcons]);oSpinSolution=spots.map((p,i)=>({p,icon:pool[i],id:i,resolved:false}));document.getElementById("oSpinTargets").innerHTML=oSpinSolution.map(o=>`<button class="spin-target" data-id="${o.id}" style="left:${o.p.x}%;top:${o.p.y}%">+</button>`).join("");document.getElementById("oSpinComplete").classList.add("hidden");oSpinStart()}
-function oSpinHud(){const left=oSpinSolution.filter(o=>!o.resolved).length;document.getElementById("oSpinRound").textContent=`Round ${oSpinRoundIndex+1}/6`;document.getElementById("oSpinStop").textContent=`Stop ${oSpinStopIndex+1}/4`;document.getElementById("oSpinValue").textContent=`${oSpinPoints[oSpinStopIndex]} pts each`;roundDisplay.textContent=`Round ${oSpinRoundIndex+1} · Stop ${oSpinStopIndex+1}`;scoreDisplay.textContent=`Score: ${oSpinScore}`;timerDisplay.textContent=`Items left: ${left}`;document.getElementById("spinStatus").textContent=["Maximum Speed","Fast Speed","Medium Speed","Slow Speed"][oSpinStopIndex]}
+function oSpinHud(){const left=oSpinSolution.filter(o=>!o.resolved).length;document.getElementById("oSpinRound").textContent=`Round ${oSpinRoundIndex+1}/6`;document.getElementById("oSpinStop").textContent=`Stop ${oSpinStopIndex+1}/4`;document.getElementById("oSpinValue").textContent=`${oSpinValue()} pts each`;roundDisplay.textContent=`Round ${oSpinRoundIndex+1} · Stop ${oSpinStopIndex+1}`;scoreDisplay.textContent=`Score: ${oSpinScore}`;timerDisplay.textContent=`Items left: ${left}`;document.getElementById("spinStatus").textContent=["Maximum Speed","Fast Speed","Medium Speed","Slow Speed"][oSpinStopIndex]}
 function oSpinStart(){oSpinAnswers={};oSpinSelected=null;oSpinHud();const board=document.getElementById("oSpinBoard"),wheel=document.getElementById("oSpinWheel");board.classList.remove("choosing");document.getElementById("oSpinContinue").style.display="none";document.getElementById("oSpinObjects").innerHTML=oSpinSolution.filter(o=>!o.resolved).map(o=>`<div class="spin-object" style="left:${o.p.x}%;top:${o.p.y}%">${o.icon}</div>`).join("");document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];t.className="spin-target"+(o.resolved?" good":"");t.textContent=o.resolved?o.icon:"+"});document.getElementById("oSpinHole").setAttribute("r","50");document.getElementById("oSpinHoleRim").style.display="block";document.getElementById("oSpinTray").innerHTML="";document.getElementById("oSpinCheck").disabled=true;document.getElementById("oSpinMessage").textContent="Watch through the opening.";oSpinActive=true;let angle=0,last=performance.now(),began=last;function tick(now){if(!oSpinActive)return;const dt=Math.min((now-last)/1000,.04),elapsed=(now-began)/1000;last=now;angle=(angle+oSpinSpeeds[oSpinStopIndex]*dt)%360;wheel.style.transform=`rotate(${angle}deg)`;document.getElementById("oSpinPhase").textContent=`WATCH · ${Math.max(0,5-elapsed).toFixed(1)}s`;if(elapsed>=5){oSpinStop();return}oSpinRaf=requestAnimationFrame(tick)}oSpinRaf=requestAnimationFrame(tick)}
-function oSpinStop(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);document.getElementById("oSpinWheel").style.transform="rotate(0deg)";document.getElementById("oSpinHole").setAttribute("r","0");document.getElementById("oSpinHoleRim").style.display="none";document.getElementById("oSpinBoard").classList.add("choosing");document.getElementById("oSpinPhase").textContent="PLACE THE OCEAN ITEMS";const left=oSpinSolution.filter(o=>!o.resolved),extra=oSpinShuffle(oSpinIcons.filter(x=>!oSpinSolution.some(o=>o.icon===x))).slice(0,3),choices=oSpinShuffle([...left.map(o=>o.icon),...extra]);document.getElementById("oSpinTray").innerHTML=choices.map(x=>`<button class="spin-choice" draggable="true" data-icon="${x}">${x}</button>`).join("");document.querySelectorAll(".spin-choice").forEach(b=>{b.onclick=()=>oSpinPick(b.dataset.icon);b.onpointerdown=e=>oSpinPointerStart(e,b);b.ondragstart=e=>{oSpinSelected=b.dataset.icon;e.dataTransfer.setData("text/plain",oSpinSelected)}});document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];if(o.resolved){t.disabled=true;return}t.disabled=false;t.onclick=()=>oSpinPlace(+t.dataset.id);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();oSpinSelected=e.dataTransfer.getData("text/plain");oSpinPlace(+t.dataset.id)}});const cont=document.getElementById("oSpinContinue");cont.style.display=oSpinStopIndex<3?"block":"none";if(oSpinStopIndex<3)cont.textContent=`Lock selected & continue · next ${oSpinPoints[oSpinStopIndex+1]} pts each`;document.getElementById("oSpinMessage").textContent=`Place only items you are sure about for ${oSpinPoints[oSpinStopIndex]} points each. Then lock them and continue spinning for the empty positions. Wrong placements lose 5 points.`}
+function oSpinStop(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);document.getElementById("oSpinWheel").style.transform="rotate(0deg)";document.getElementById("oSpinHole").setAttribute("r","0");document.getElementById("oSpinHoleRim").style.display="none";document.getElementById("oSpinBoard").classList.add("choosing");document.getElementById("oSpinPhase").textContent="PLACE THE OCEAN ITEMS";const left=oSpinSolution.filter(o=>!o.resolved),extra=oSpinShuffle(oSpinIcons.filter(x=>!oSpinSolution.some(o=>o.icon===x))).slice(0,3),choices=oSpinShuffle([...left.map(o=>o.icon),...extra]);document.getElementById("oSpinTray").innerHTML=choices.map(x=>`<button class="spin-choice" draggable="true" data-icon="${x}">${x}</button>`).join("");document.querySelectorAll(".spin-choice").forEach(b=>{b.onclick=()=>oSpinPick(b.dataset.icon);b.onpointerdown=e=>oSpinPointerStart(e,b);b.ondragstart=e=>{oSpinSelected=b.dataset.icon;e.dataTransfer.setData("text/plain",oSpinSelected)}});document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];if(o.resolved){t.disabled=true;return}t.disabled=false;t.onclick=()=>oSpinPlace(+t.dataset.id);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();oSpinSelected=e.dataTransfer.getData("text/plain");oSpinPlace(+t.dataset.id)}});const cont=document.getElementById("oSpinContinue");cont.style.display=oSpinStopIndex<3?"block":"none";if(oSpinStopIndex<3)cont.textContent=`Lock selected & continue · next ${oSpinNextValue()} pts each`;document.getElementById("oSpinMessage").textContent=`Place only items you are sure about for ${oSpinPoints[oSpinStopIndex]} points each. Then lock them and continue spinning for the empty positions. Wrong placements lose ${oSpinWrongPenalty()} points.`}
 let oSpinPointerIcon=null,oSpinPointerGhost=null;
 function oSpinPointerStart(e,b){if(e.pointerType==="mouse"||b.classList.contains("used"))return;e.preventDefault();oSpinPointerIcon=b.dataset.icon;oSpinPointerGhost=b.cloneNode(true);Object.assign(oSpinPointerGhost.style,{position:"fixed",zIndex:"700",pointerEvents:"none",opacity:".9",width:"48px",height:"48px"});document.body.appendChild(oSpinPointerGhost);oSpinPointerMove(e);document.addEventListener("pointermove",oSpinPointerMove,{passive:false});document.addEventListener("pointerup",oSpinPointerEnd,{once:true});document.addEventListener("pointercancel",oSpinPointerEnd,{once:true})}
 function oSpinNearestTarget(x,y,limit=110){let nearest=null,best=Infinity;document.querySelectorAll("#oSpinTargets .spin-target:not(:disabled)").forEach(t=>{const r=t.getBoundingClientRect(),d=Math.hypot(x-(r.left+r.width/2),y-(r.top+r.height/2));if(d<best){best=d;nearest=t}});return best<=limit?nearest:null}
@@ -8115,10 +8104,10 @@ function oSpinPointerMove(e){if(!oSpinPointerGhost)return;e.preventDefault();oSp
 function oSpinPointerEnd(e){document.removeEventListener("pointermove",oSpinPointerMove);const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("#oSpinTargets .spin-target")||oSpinNearestTarget(e.clientX,e.clientY);document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>t.classList.remove("drag-near"));if(target&&oSpinPointerIcon){oSpinSelected=oSpinPointerIcon;oSpinPlace(+target.dataset.id)}if(oSpinPointerGhost)oSpinPointerGhost.remove();oSpinPointerGhost=null;oSpinPointerIcon=null}
 function oSpinPick(icon){if(Object.values(oSpinAnswers).includes(icon))return;oSpinSelected=icon;document.querySelectorAll(".spin-choice").forEach(b=>b.classList.toggle("selected",b.dataset.icon===icon))}
 function oSpinPlace(id){const o=oSpinSolution[id];if(!oSpinSelected||o.resolved)return;for(const k in oSpinAnswers)if(oSpinAnswers[k]===oSpinSelected){delete oSpinAnswers[k];const old=document.querySelector(`#oSpinTargets [data-id="${k}"]`);old.textContent="+"}oSpinAnswers[id]=oSpinSelected;const t=document.querySelector(`#oSpinTargets [data-id="${id}"]`);t.textContent=oSpinSelected;oSpinSelected=null;document.querySelectorAll(".spin-choice").forEach(b=>{b.classList.remove("selected");b.classList.toggle("used",Object.values(oSpinAnswers).includes(b.dataset.icon))});document.getElementById("oSpinCheck").disabled=Object.keys(oSpinAnswers).length===0}
-function oSpinGrade(autoContinue){let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinPoints[oSpinStopIndex]-wrong*5;oSpinScore+=net;extraModeScores.spin+=net;saveProgress();recordLeaderboardScore(getTotalPlayerScore());oSpinHud();document.getElementById("oSpinCheck").disabled=true;setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
+function oSpinGrade(autoContinue){let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinValue()-wrong*oSpinWrongPenalty();oSpinScore+=net;extraModeScores.spin+=net;saveProgress();recordLeaderboardScore(getTotalPlayerScore());oSpinHud();document.getElementById("oSpinCheck").disabled=true;setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
 function oSpinCheck(){oSpinGrade(false)}
-function oSpinAfterCheck(correct,wrong,net){const left=oSpinSolution.filter(o=>!o.resolved).length,box=document.getElementById("oSpinComplete"),result=[];box.classList.remove("hidden");if(correct)result.push(`${correct} correct`);if(wrong)result.push(`${wrong} incorrect`);document.getElementById("oSpinCompleteTitle").textContent=`${result.join(" · ") || "No items checked"} · ${net>=0?"+":""}${net} points`;const next=document.getElementById("oSpinNext");if(!left){document.getElementById("oSpinCompleteText").textContent="Every ocean item is correct.";next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}else if(oSpinStopIndex<3){document.getElementById("oSpinCompleteText").textContent=`Correct items are locked. ${left} item${left===1?"":"s"} remain for the next, slower spin at ${oSpinPoints[oSpinStopIndex+1]} points each. Each wrong placement costs 5 points.`;next.textContent="Continue spinning";next.onclick=()=>{oSpinStopIndex++;box.classList.add("hidden");oSpinStart()}}else{document.getElementById("oSpinCompleteText").textContent=`Final stop complete. ${left} item${left===1?"":"s"} remained unresolved.`;next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}}
-function oSpinFinish(){document.getElementById("oSpinCompleteTitle").textContent=`Ocean Spin complete · ${oSpinScore}/210`;document.getElementById("oSpinCompleteText").textContent="Maximum score is earned by solving every item at maximum speed.";const next=document.getElementById("oSpinNext");next.textContent="Main menu";next.onclick=exitOceanSpin}
+function oSpinAfterCheck(correct,wrong,net){const left=oSpinSolution.filter(o=>!o.resolved).length,box=document.getElementById("oSpinComplete"),result=[];box.classList.remove("hidden");if(correct)result.push(`${correct} correct`);if(wrong)result.push(`${wrong} incorrect`);document.getElementById("oSpinCompleteTitle").textContent=`${result.join(" · ") || "No items checked"} · ${net>=0?"+":""}${net} points`;const next=document.getElementById("oSpinNext");if(!left){document.getElementById("oSpinCompleteText").textContent="Every ocean item is correct.";next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}else if(oSpinStopIndex<3){document.getElementById("oSpinCompleteText").textContent=`Correct items are locked. ${left} item${left===1?"":"s"} remain for the next, slower spin at ${oSpinPoints[oSpinStopIndex+1]} points each. Each wrong placement costs ${oSpinWrongPenalty()} points.`;next.textContent="Continue spinning";next.onclick=()=>{oSpinStopIndex++;box.classList.add("hidden");oSpinStart()}}else{document.getElementById("oSpinCompleteText").textContent=`Final stop complete. ${left} item${left===1?"":"s"} remained unresolved.`;next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}}
+function oSpinFinish(){document.getElementById("oSpinCompleteTitle").textContent=`Ocean Spin complete · ${oSpinScore} points`;document.getElementById("oSpinCompleteText").textContent="Maximum score is earned by solving every item at maximum speed.";const next=document.getElementById("oSpinNext");next.textContent="Main menu";next.onclick=exitOceanSpin}
 function oSpinContinue(){if(oSpinStopIndex>=3)return;if(Object.keys(oSpinAnswers).length){oSpinGrade(true)}else{oSpinStopIndex++;oSpinStart()}}
 function exitOceanSpin(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);document.getElementById("spinField").style.display="none";showMainMenu()}
 document.getElementById("startSpinButton").addEventListener("click",()=>showSegmentRules("spin",startOceanSpin));
@@ -8259,12 +8248,27 @@ const tOldRestart=restartAllProgress;restartAllProgress=function(){const prev=ge
 const tOldOpenLeaderboard=openLeaderboard;openLeaderboard=function(){tOldOpenLeaderboard();tRenderLeaderboard()};
 updateSubscriptionUI=function(){document.getElementById('subscriptionStatus').textContent=hasSubscription?'Leaderboard access: Active':'Leaderboard access: Locked';document.getElementById('subscriptionMessage').textContent=hasSubscription?'Your subscription is verified by Supabase.':'An active subscription is required. Access is verified by Supabase, not browser settings.';document.getElementById('subscriptionButton').textContent=hasSubscription?'Renew · R40 EFT':'Subscribe · R40 EFT';};
 renderLeaderboard=function(){tRenderLeaderboard()};
-async function tRenderLeaderboard(){const box=document.getElementById('leaderboardTableContainer');if(!hasSubscription){box.innerHTML='<div class="locked-leaderboard"><h3>🔒 Leaderboard Locked</h3><p>An active subscription is required to see global rankings.</p></div>';return}
- box.textContent='Loading global leaderboard…';const {data,error}=await tClient.rpc('tenotemo_leaderboard',{p_limit:100});if(error){box.textContent='Unable to load leaderboard: '+error.message;return}
- box.innerHTML='<table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Total points</th></tr></thead><tbody>'+(data||[]).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.total_points+'</td></tr>').join('')+'</tbody></table>';
+async function tRenderLeaderboard(){
+ const box=document.getElementById('leaderboardTableContainer');
+ if(!hasSubscription){box.innerHTML='<div class="locked-leaderboard"><h3>🔒 Leaderboard Locked</h3><p>An active subscription is required to see global rankings.</p></div>';return}
+ const daily=leaderboardType==='daily';
+ box.textContent=daily?'Loading today’s leaderboard…':'Loading all-time leaderboard…';
+ const {data,error}=await tClient.rpc(daily?'tenotemo_daily_leaderboard':'tenotemo_leaderboard',{p_limit:100});
+ if(error){box.textContent='Unable to load leaderboard: '+error.message+(daily?' — Run the Tenotemo daily leaderboard SQL in Supabase.':'');return}
+ if(daily){
+  const week=data?.[0]?.week_start||'this Monday';
+  const date=data?.[0]?.today||new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  box.innerHTML='<div class="tenotemo-daily-note"><strong>Daily leaderboard · '+escapeHTML(date)+'</strong><br>Daily points reset at midnight (South Africa). Each completed day’s #1 subscribed player earns R100. Weekly earnings reset each Monday. Week starting '+escapeHTML(String(week))+'.</div>'+
+  '<table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Today’s points</th><th>Earned this week</th></tr></thead><tbody>'+
+  (data||[]).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.daily_points+'</td><td><strong>R'+(Number(e.weekly_earned_cents)/100).toFixed(2)+'</strong></td></tr>').join('')+'</tbody></table>';
+ }else{
+  box.innerHTML='<table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Total points</th></tr></thead><tbody>'+
+  (data||[]).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.total_points+'</td></tr>').join('')+'</tbody></table>';
+ }
 }
-// Daily tab cannot safely infer daily points from cumulative totals; use cumulative until daily event ledger exists.
-document.getElementById('dailyTab').style.display='none';document.getElementById('cumulativeTab').textContent='Global all-time';
+document.getElementById('dailyTab').style.display='';
+document.getElementById('dailyTab').textContent='Daily · R100';
+document.getElementById('cumulativeTab').textContent='All-time';
 function tOpenProfile(){if(!tUser){tGate.classList.remove('hidden');return}document.getElementById('tenotemoProfilePanel').classList.add('open');tRefresh()}
 document.getElementById('tenotemoProfileButton').onclick=tOpenProfile;
 document.getElementById('tenotemoMenuProfile').onclick=tOpenProfile;
