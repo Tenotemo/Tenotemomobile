@@ -1872,6 +1872,11 @@ body:has(#menuOverlay:not(.hidden)) #headerReturnMenu{display:none!important}
 }
 @media(max-width:370px){#spinField .spin-side{max-height:37dvh!important}#spinField .spin-board{width:min(280px,74vw,38dvh)!important}#shapeField:not(.memory-mode) .shape-target{flex-basis:16.5vw}}
 
+
+.tenotemo-player-summary{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0 8px}
+.tenotemo-player-summary span{background:#eaf6ff;color:#15344a;border:1px solid #b8e0f5;border-radius:12px;padding:10px 13px;font-weight:800;font-size:14px}
+#positionDisplay,#totalPointsDisplay{white-space:nowrap}
+@media(max-width:700px){#positionDisplay,#totalPointsDisplay{font-size:11px;padding:6px 8px}.tenotemo-player-summary span{font-size:12px}}
 </style>
 </head>
 
@@ -1894,6 +1899,9 @@ body:has(#menuOverlay:not(.hidden)) #headerReturnMenu{display:none!important}
         <div class="info-box" id="roundDisplay">
             Round -
         </div>
+
+        <div class="info-box" id="totalPointsDisplay" aria-live="polite">Total: 0</div>
+        <div class="info-box" id="positionDisplay" aria-live="polite">🔒 Position</div>
 
         <div class="info-box" id="scoreDisplay">
             Score: 0
@@ -2124,6 +2132,11 @@ body:has(#menuOverlay:not(.hidden)) #headerReturnMenu{display:none!important}
 
         </div>
 
+        <div class="tenotemo-player-summary" id="menuPlayerSummary" aria-live="polite">
+            <span id="menuTotalPoints">Total points: 0</span>
+            <span id="menuPosition">🔒 Leaderboard position · Subscribe to unlock</span>
+        </div>
+
         <div class="menu-buttons">
 
             <button
@@ -2341,6 +2354,8 @@ let modeRounds = {
     movement: 0
 };
 
+let extraModeScores = {climb:0,spin:0};
+
 let score = 0;
 let roundIndex = 0;
 let roundStartScore = 0;
@@ -2436,6 +2451,11 @@ function loadProgress() {
                 ) || 0
         };
 
+        extraModeScores = {
+            climb: Math.max(0, Number(saved.extraModeScores?.climb) || 0),
+            spin: Number(saved.extraModeScores?.spin) || 0
+        };
+
         modeRounds = {
             shape:
                 Number(
@@ -2465,9 +2485,12 @@ function saveProgress() {
                 modeScores,
 
             modeRounds:
-                modeRounds
+                modeRounds,
+            extraModeScores:
+                extraModeScores
         })
     );
+    refreshPlayerSummary();
 }
 
 
@@ -2480,7 +2503,9 @@ function getTotalPlayerScore() {
     return (
         Number(modeScores.shape) +
         Number(modeScores.colour) +
-        Number(modeScores.movement)
+        Number(modeScores.movement) +
+        Number(extraModeScores.climb) +
+        Number(extraModeScores.spin)
     );
 }
 
@@ -2764,6 +2789,8 @@ function savePlayerName() {
     );
 
     updatePlayerStatus();
+    recordLeaderboardScore(getTotalPlayerScore());
+    refreshPlayerSummary();
 }
 
 
@@ -2920,6 +2947,29 @@ function recordLeaderboardScore(
 }
 
 
+/* The current position is calculated from this browser's saved leaderboard.
+   Global positions require Supabase and are not represented as global ranks. */
+function refreshPlayerSummary(){
+    const total=getTotalPlayerScore();
+    const totalText="Total: "+total;
+    const totalHeader=document.getElementById("totalPointsDisplay");
+    const totalMenu=document.getElementById("menuTotalPoints");
+    if(totalHeader)totalHeader.textContent=totalText;
+    if(totalMenu)totalMenu.textContent="Total points: "+total;
+    let position="🔒 Position";
+    let menuPosition="🔒 Leaderboard position · Subscribe to unlock";
+    if(hasSubscription){
+        const ranked=cumulativeLeaderboard.slice().sort((a,b)=>Number(b.score)-Number(a.score));
+        const index=ranked.findIndex(entry=>entry.name===playerName);
+        position=index>=0?"Local #"+(index+1):"Local: Unranked";
+        menuPosition=index>=0?"Local leaderboard position: #"+(index+1):"Local leaderboard position: Unranked";
+    }
+    const posHeader=document.getElementById("positionDisplay");
+    const posMenu=document.getElementById("menuPosition");
+    if(posHeader)posHeader.textContent=position;
+    if(posMenu)posMenu.textContent=menuPosition;
+}
+
 /* ============================================================
    RESET PLAYER LEADERBOARD SCORE
 ============================================================ */
@@ -2984,6 +3034,7 @@ function resetPlayerLeaderboardScore() {
     }
 
     saveLeaderboards();
+    refreshPlayerSummary();
 }
 
 
@@ -3071,7 +3122,7 @@ function renderLeaderboard() {
 
         leaderboardTableContainer.innerHTML = `
             <div class="empty-leaderboard">
-                No scores have been recorded yet.
+                No scores have been recorded on this device yet.
             </div>
         `;
 
@@ -3192,6 +3243,7 @@ function openLeaderboard() {
     savePlayerName();
 
     updateSubscriptionUI();
+    refreshPlayerSummary();
 
     leaderboardType =
         "daily";
@@ -3208,6 +3260,7 @@ function openLeaderboard() {
         "active"
     );
 
+    recordLeaderboardScore(getTotalPlayerScore());
     renderLeaderboard();
 
     leaderboardOverlay.classList.remove(
@@ -3420,6 +3473,10 @@ function restartAllProgress() {
         movement: 0
     };
 
+    extraModeScores = {climb:0,spin:0};
+    if(typeof climbScore!=="undefined")climbScore=0;
+    if(typeof oSpinScore!=="undefined")oSpinScore=0;
+
     score =
         0;
 
@@ -3569,6 +3626,7 @@ function showMainMenu() {
     updatePlayerStatus();
 
     updateHeader();
+    refreshPlayerSummary();
 }
 
 
@@ -7133,7 +7191,7 @@ playAgainButton.addEventListener(
                for the new run.
             */
 
-            resetPlayerLeaderboardScore();
+            recordLeaderboardScore(getTotalPlayerScore());
 
 
             startMode(
@@ -7592,6 +7650,7 @@ playerNameInput.value =
     playerName;
 
 updatePlayerStatus();
+refreshPlayerSummary();
 
 showMainMenu();
 
@@ -7627,7 +7686,7 @@ function climbUpdateClock(){
 }
 function climbStartMemoryCountdown(p,next){
     clearInterval(climbChallengeTimer);
-    let memorySeconds=p.diff==="easy"?10:20;
+    let memorySeconds={easy:10,medium:15,hard:20}[p.diff];
     document.getElementById("timerDisplay").textContent="Memorise: "+memorySeconds+"s";
     climbChallengeTimer=setInterval(()=>{
         if(!climbRunning||climbPuzzle!==p){clearInterval(climbChallengeTimer);return;}
@@ -7953,6 +8012,9 @@ function climbFinish(correct){
     clearInterval(climbChallengeTimer);
     const pts=climbTimePoints();
     climbScore+=pts;
+    extraModeScores.climb+=pts;
+    saveProgress();
+    recordLeaderboardScore(getTotalPlayerScore());
     climbSolved++;
     const toast=document.getElementById("climbToast");
     toast.textContent=`Solved! +${pts} points 🚂`;
@@ -7985,7 +8047,7 @@ function oSpinPointerMove(e){if(!oSpinPointerGhost)return;e.preventDefault();oSp
 function oSpinPointerEnd(e){document.removeEventListener("pointermove",oSpinPointerMove);const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("#oSpinTargets .spin-target")||oSpinNearestTarget(e.clientX,e.clientY);document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>t.classList.remove("drag-near"));if(target&&oSpinPointerIcon){oSpinSelected=oSpinPointerIcon;oSpinPlace(+target.dataset.id)}if(oSpinPointerGhost)oSpinPointerGhost.remove();oSpinPointerGhost=null;oSpinPointerIcon=null}
 function oSpinPick(icon){if(Object.values(oSpinAnswers).includes(icon))return;oSpinSelected=icon;document.querySelectorAll(".spin-choice").forEach(b=>b.classList.toggle("selected",b.dataset.icon===icon))}
 function oSpinPlace(id){const o=oSpinSolution[id];if(!oSpinSelected||o.resolved)return;for(const k in oSpinAnswers)if(oSpinAnswers[k]===oSpinSelected){delete oSpinAnswers[k];const old=document.querySelector(`#oSpinTargets [data-id="${k}"]`);old.textContent="+"}oSpinAnswers[id]=oSpinSelected;const t=document.querySelector(`#oSpinTargets [data-id="${id}"]`);t.textContent=oSpinSelected;oSpinSelected=null;document.querySelectorAll(".spin-choice").forEach(b=>{b.classList.remove("selected");b.classList.toggle("used",Object.values(oSpinAnswers).includes(b.dataset.icon))});document.getElementById("oSpinCheck").disabled=Object.keys(oSpinAnswers).length===0}
-function oSpinGrade(autoContinue){let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinPoints[oSpinStopIndex]-wrong*5;oSpinScore+=net;oSpinHud();document.getElementById("oSpinCheck").disabled=true;setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
+function oSpinGrade(autoContinue){let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinPoints[oSpinStopIndex]-wrong*5;oSpinScore+=net;extraModeScores.spin+=net;saveProgress();recordLeaderboardScore(getTotalPlayerScore());oSpinHud();document.getElementById("oSpinCheck").disabled=true;setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
 function oSpinCheck(){oSpinGrade(false)}
 function oSpinAfterCheck(correct,wrong,net){const left=oSpinSolution.filter(o=>!o.resolved).length,box=document.getElementById("oSpinComplete"),result=[];box.classList.remove("hidden");if(correct)result.push(`${correct} correct`);if(wrong)result.push(`${wrong} incorrect`);document.getElementById("oSpinCompleteTitle").textContent=`${result.join(" · ") || "No items checked"} · ${net>=0?"+":""}${net} points`;const next=document.getElementById("oSpinNext");if(!left){document.getElementById("oSpinCompleteText").textContent="Every ocean item is correct.";next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}else if(oSpinStopIndex<3){document.getElementById("oSpinCompleteText").textContent=`Correct items are locked. ${left} item${left===1?"":"s"} remain for the next, slower spin at ${oSpinPoints[oSpinStopIndex+1]} points each. Each wrong placement costs 5 points.`;next.textContent="Continue spinning";next.onclick=()=>{oSpinStopIndex++;box.classList.add("hidden");oSpinStart()}}else{document.getElementById("oSpinCompleteText").textContent=`Final stop complete. ${left} item${left===1?"":"s"} remained unresolved.`;next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}}
 function oSpinFinish(){document.getElementById("oSpinCompleteTitle").textContent=`Ocean Spin complete · ${oSpinScore}/210`;document.getElementById("oSpinCompleteText").textContent="Maximum score is earned by solving every item at maximum speed.";const next=document.getElementById("oSpinNext");next.textContent="Main menu";next.onclick=exitOceanSpin}
