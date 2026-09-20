@@ -1801,7 +1801,7 @@ button.climb-choice{cursor:pointer}
   main{height:calc(100dvh - 50px);padding:3px;overflow:hidden}
   .instruction{height:28px;margin:0;padding:5px 3px;font-size:11px;overflow:hidden}
   .game-field,#shapeField,#colourField,#patternField,#climbField,#spinField{height:calc(100dvh - 81px)!important;min-height:0!important;border-radius:10px}
-  .in-game-menu,.small-status{display:none!important}
+  .in-game-menu{display:none!important}.small-status{display:none!important}
   .red-zone{height:72px}
   .red-zone-label{top:4px;font-size:10px}
   .shape-pool,.colour-palette{bottom:76px!important;max-height:84px!important;min-height:64px!important;padding:5px!important}
@@ -1828,6 +1828,50 @@ button.climb-choice{cursor:pointer}
   #menuOverlay .menu-buttons{gap:7px;margin-top:12px}
   #menuOverlay .menu-btn,#menuOverlay .action-btn{padding:10px 12px;font-size:13px}
 }
+
+/* SEPTEMBER MOBILE LAYOUT: top return button, no bottom navigation. */
+#headerReturnMenu{display:none;border:1px solid #a7d8e9;background:#eaf9ff;color:#075985;border-radius:10px;font-weight:900;padding:8px 10px;cursor:pointer;white-space:nowrap}
+body:has(#menuOverlay:not(.hidden)) #headerReturnMenu{display:none!important}
+/* Five targets must all fit without first/last being clipped. */
+#shapeField:not(.memory-mode) .shape-target-track{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-evenly;gap:clamp(3px,1.5vw,10px);padding:2px 4px;width:100%;box-sizing:border-box}
+#shapeField:not(.memory-mode) .shape-target{flex:0 1 76px;min-width:0;max-width:76px;aspect-ratio:1;width:auto;height:auto;min-height:0;box-sizing:border-box}
+#shapeField:not(.memory-mode) .shape-target.combo-target{flex-basis:96px;max-width:96px;aspect-ratio:1.15}
+/* Put selection trays at the beginning of the challenge, not at the red zone. */
+#shapeField:not(.memory-mode) .shape-pool,#colourField:not(.memory-mode) .colour-palette{top:66px!important;bottom:auto!important;left:12px;right:12px;max-height:100px!important;min-height:74px!important;overflow-y:auto;align-content:center}
+#shapeField:not(.memory-mode) .shape-target-area{top:184px!important;height:calc(100% - 190px)!important}
+#colourField:not(.memory-mode) .colour-grid-wrapper{top:184px!important;height:calc(100% - 190px)!important}
+/* Ocean Spin controls must remain entirely visible, including Check selected items. */
+#spinField .spin-side{box-sizing:border-box;min-height:0}
+#spinField .spin-check{margin-top:0;flex-shrink:0}
+#spinField .spin-continue{flex-shrink:0}
+@media(max-width:760px){
+ header{min-height:54px;height:54px;flex-wrap:nowrap}
+ #headerReturnMenu{display:inline-flex;align-items:center;justify-content:center;font-size:11px;padding:7px 8px}
+ .logo{font-size:clamp(14px,4.1vw,19px)}
+ .brand-subtitle{font-size:7px;letter-spacing:.4px}
+ .header-info{margin-left:auto}
+ .info-box{font-size:clamp(9px,2.5vw,11px);padding:5px 5px}
+ main{height:calc(100dvh - 54px)}
+ .game-field,#shapeField,#colourField,#patternField,#climbField,#spinField{height:calc(100dvh - 85px)!important}
+ #shapeField:not(.memory-mode) .shape-pool,#colourField:not(.memory-mode) .colour-palette{top:46px!important;bottom:auto!important;left:7px;right:7px;max-height:95px!important;min-height:68px!important;padding:5px!important;gap:5px!important}
+ #shapeField:not(.memory-mode) .shape-target-area{top:154px!important;height:calc(100% - 158px)!important;left:6px;right:6px}
+ #colourField:not(.memory-mode) .colour-grid-wrapper{top:154px!important;height:calc(100% - 158px)!important}
+ #shapeField:not(.memory-mode) .shape-target-track{gap:clamp(2px,1vw,6px);padding:2px 3px}
+ #shapeField:not(.memory-mode) .shape-target{flex-basis:clamp(0px,17vw,65px);max-width:65px;border-width:2px}
+ #shapeField:not(.memory-mode) .shape-target.combo-target{flex-basis:clamp(0px,18vw,70px);max-width:70px}
+ #spinField .spin-shell{inset:3px 5px 7px!important;grid-template-rows:minmax(0,1fr) auto!important;gap:6px!important}
+ #spinField .spin-stage{min-height:0!important}
+ #spinField .spin-board{width:min(310px,77vw,42dvh)!important}
+ #spinField .spin-side{max-height:min(34dvh,270px)!important;overflow-y:auto!important;overflow-x:hidden!important;gap:7px!important;padding:9px!important;display:flex!important;flex-direction:column!important}
+ #spinField .spin-tray{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important}
+ #spinField .spin-choice{aspect-ratio:1.05;font-size:clamp(17px,5vw,26px);min-height:36px}
+ #spinField .spin-action{padding:10px 7px!important;font-size:clamp(11px,3vw,14px)!important;min-height:42px;line-height:1.2;white-space:normal}
+ #spinField .spin-check{min-height:45px!important;margin-bottom:3px!important}
+ #spinField .spin-meta{gap:3px;flex-shrink:0}
+ #spinField .spin-meta span{font-size:clamp(9px,2.6vw,12px);padding:5px 6px}
+}
+@media(max-width:370px){#spinField .spin-side{max-height:37dvh!important}#spinField .spin-board{width:min(280px,74vw,38dvh)!important}#shapeField:not(.memory-mode) .shape-target{flex-basis:16.5vw}}
+
 </style>
 </head>
 
@@ -1838,6 +1882,8 @@ button.climb-choice{cursor:pointer}
 <header>
 
     <div class="logo">TENOTEMO<span class="brand-subtitle">Under DMA Arena</span></div>
+
+    <button id="headerReturnMenu" type="button" aria-label="Return to main menu">⌂ Menu</button>
 
     <div class="header-info">
 
@@ -2443,7 +2489,7 @@ function getTotalPlayerScore() {
    TIMERS
 ============================================================ */
 
-const SHAPE_MEMORY_TIME = 30;
+const SHAPE_MEMORY_TIME = 20;
 
 // Selection time: Rounds 1-2 = 30 seconds, Round 3 onward = 60 seconds.
 const SHAPE_CHALLENGE_TIMES = [
@@ -2454,7 +2500,7 @@ const SHAPE_CHALLENGE_TIMES = [
     60
 ];
 
-const COLOUR_MEMORY_TIME = 30;
+const COLOUR_MEMORY_TIME = 20;
 
 // Selection time: Rounds 1-2 = 30 seconds, Round 3 onward = 60 seconds.
 const COLOUR_CHALLENGE_TIMES = [
@@ -5834,21 +5880,21 @@ const movementRounds = [
         columns: 2,
         rows: 10,
         picksPerRow: 1,
-        memoryTime: 30
+        memoryTime: 20
     },
 
     {
         columns: 6,
         rows: 6,
         picksPerRow: 2,
-        memoryTime: 30
+        memoryTime: 20
     },
 
     {
         columns: 8,
         rows: 6,
         picksPerRow: 3,
-        memoryTime: 30
+        memoryTime: 20
     }
 
 ];
@@ -7581,8 +7627,8 @@ function climbUpdateClock(){
 }
 function climbStartMemoryCountdown(p,next){
     clearInterval(climbChallengeTimer);
-    let memorySeconds=30;
-    document.getElementById("timerDisplay").textContent="Memorise: 30s";
+    let memorySeconds=p.diff==="easy"?10:20;
+    document.getElementById("timerDisplay").textContent="Memorise: "+memorySeconds+"s";
     climbChallengeTimer=setInterval(()=>{
         if(!climbRunning||climbPuzzle!==p){clearInterval(climbChallengeTimer);return;}
         memorySeconds--;
@@ -7952,6 +7998,13 @@ document.getElementById("oSpinCheck").addEventListener("click",oSpinCheck);
 document.getElementById("startClimbButton").addEventListener("click",()=>showSegmentRules("climb",startConstantClimb));
 document.getElementById("climbMenuButton").addEventListener("click",exitConstantClimb);
 
+
+/* Shared, always-visible mobile return control. */
+document.getElementById("headerReturnMenu").addEventListener("click",()=>{
+    if(typeof climbRunning!=="undefined" && climbRunning){exitConstantClimb();return;}
+    if(document.getElementById("spinField").style.display==="block"){exitOceanSpin();return;}
+    showMainMenu();
+});
 </script>
 
 </body>
