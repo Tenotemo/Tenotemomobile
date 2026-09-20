@@ -44,6 +44,7 @@ header {
     letter-spacing: 1px;
     color: #111827;
 }
+.brand-subtitle{display:block;margin-top:2px;font-size:11px;font-weight:800;letter-spacing:1.4px;color:#64748b;text-transform:uppercase}
 
 .header-info {
     display: flex;
@@ -716,6 +717,7 @@ main {
     color: #dc2626;
     text-shadow: 0 2px 8px rgba(255,255,255,.9);
 }
+.shape-piece,.colour-piece,.spin-choice{touch-action:none;-webkit-user-select:none;user-select:none}
 
 @keyframes scoreFloat {
     0% {
@@ -1768,6 +1770,13 @@ button.climb-choice{cursor:pointer}
 #segmentRulesStart{background:#087da8;color:#fff}
 #segmentRulesBack{background:#cfe8f0;color:#173f55}
 
+/* Keep the menu visually self-contained, without the game layer showing behind it. */
+#menuOverlay{background:#f4fbff}
+#menuOverlay .overlay-card{box-shadow:none;border:1px solid #d9edf5}
+
+/* The animated train is removed from all screens. */
+.climb-train{display:none!important}
+
 /* Challenge rows begin at the top edge instead of entering late mid-screen. */
 #shapeField:not(.memory-mode) .shape-target-area{top:54px;height:528px;padding-top:0}
 #shapeField:not(.memory-mode) .shape-target-track{top:0!important}
@@ -1776,6 +1785,41 @@ button.climb-choice{cursor:pointer}
 @media(max-width:700px){
   #shapeField:not(.memory-mode) .shape-target-area{top:50px;height:535px;padding-top:0}
   #colourField:not(.memory-mode) .colour-grid-wrapper{top:50px;height:535px;padding-top:0}
+}
+
+/* Phone game shell: every timed segment stays inside one viewport. */
+@media(max-width:760px){
+  html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+  .app{height:100dvh;min-height:0;overflow:hidden}
+  header{height:50px;padding:0 8px;gap:6px}
+  .logo{font-size:19px;line-height:1}
+  .brand-subtitle{font-size:8px;letter-spacing:.8px}
+  .header-info{gap:3px;flex-wrap:nowrap}
+  .info-box{padding:5px 6px;border-radius:7px;font-size:10px;white-space:nowrap}
+  main{height:calc(100dvh - 50px);padding:3px;overflow:hidden}
+  .instruction{height:28px;margin:0;padding:5px 3px;font-size:11px;overflow:hidden}
+  .game-field,#shapeField,#colourField,#patternField,#climbField,#spinField{height:calc(100dvh - 81px)!important;min-height:0!important;border-radius:10px}
+  .in-game-menu{top:6px;left:6px;padding:7px 9px;font-size:11px}
+  .small-status{top:7px;right:6px;padding:6px 8px;font-size:10px}
+  .red-zone{height:72px}
+  .red-zone-label{top:4px;font-size:10px}
+  .shape-pool,.colour-palette{bottom:76px!important;max-height:84px!important;min-height:64px!important;padding:5px!important}
+  #shapeField:not(.memory-mode) .shape-target-area,#colourField:not(.memory-mode) .colour-grid-wrapper{top:42px;height:calc(100% - 118px);padding-top:0}
+  .spin-shell{inset:42px 4px 4px;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:5px}
+  .spin-stage{min-height:0!important}
+  .spin-board{width:min(300px,70vw,43dvh)}
+  .spin-side{padding:6px;gap:5px;max-height:31dvh;overflow:hidden}
+  .spin-tray{grid-template-columns:repeat(7,1fr);gap:3px}
+  .spin-choice{font-size:20px;min-width:0}
+  .spin-action{padding:8px 7px;font-size:11px}
+  .spin-phase{bottom:4px;padding:5px 8px;font-size:10px}
+  .climb-panel{top:42px!important;bottom:6px!important;max-height:none!important;overflow:auto}
+  .overlay{padding:8px}
+  .overlay-card{max-height:96dvh;padding:18px}
+  #menuOverlay .overlay-card{padding:14px 16px}
+  #menuOverlay .overlay-card h1{font-size:25px;margin-bottom:4px}
+  #menuOverlay .menu-buttons{gap:7px;margin-top:12px}
+  #menuOverlay .menu-btn,#menuOverlay .action-btn{padding:10px 12px;font-size:13px}
 }
 </style>
 </head>
@@ -1786,7 +1830,7 @@ button.climb-choice{cursor:pointer}
 
 <header>
 
-    <div class="logo">TENOTEMO</div>
+    <div class="logo">TENOTEMO<span class="brand-subtitle">Under DMA Arena</span></div>
 
     <div class="header-info">
 
@@ -2000,7 +2044,7 @@ button.climb-choice{cursor:pointer}
 
     <div class="overlay-card">
 
-        <h1>Welcome to Tenotemo</h1>
+        <h1>Welcome to Tenotemo<span class="brand-subtitle">Under DMA Arena</span></h1>
 
         <p>
             Choose the memory challenge you want to play.
@@ -2417,7 +2461,7 @@ const COLOUR_CHALLENGE_TIMES = [
 
 const PATTERN_MEMORY_TIMES = [
     30,
-    60
+    30
 ];
 
 const PATTERN_CHALLENGE_TIME = 60;
@@ -5172,6 +5216,7 @@ function renderColourPalette() {
                 draggedColour = { ...combo };
                 event.dataTransfer.setData("text/plain", JSON.stringify(combo));
             });
+            piece.addEventListener("pointerdown", event => beginColourPointerDrag(event, { ...combo }, piece));
 
             palette.appendChild(piece);
         });
@@ -5190,6 +5235,7 @@ function renderColourPalette() {
             draggedColour = colour;
             event.dataTransfer.setData("text/plain", colour);
         });
+        piece.addEventListener("pointerdown", event => beginColourPointerDrag(event, colour, piece));
 
         palette.appendChild(piece);
     });
@@ -5254,6 +5300,42 @@ function startColourChallenge() {
 ============================================================ */
 
 let draggedColour = null;
+let colourPointerValue = null;
+let colourPointerGhost = null;
+
+function beginColourPointerDrag(event, value, piece) {
+    if (phase !== "challenge" || event.pointerType === "mouse") return;
+    event.preventDefault();
+    colourPointerValue = value;
+    colourPointerGhost = piece.cloneNode(true);
+    colourPointerGhost.style.position = "fixed";
+    colourPointerGhost.style.zIndex = "700";
+    colourPointerGhost.style.pointerEvents = "none";
+    colourPointerGhost.style.opacity = ".9";
+    colourPointerGhost.style.width = Math.max(42, piece.getBoundingClientRect().width) + "px";
+    document.body.appendChild(colourPointerGhost);
+    moveColourPointerGhost(event);
+    document.addEventListener("pointermove", moveColourPointerGhost, {passive:false});
+    document.addEventListener("pointerup", endColourPointerDrag, {once:true});
+    document.addEventListener("pointercancel", endColourPointerDrag, {once:true});
+}
+
+function moveColourPointerGhost(event) {
+    if (!colourPointerGhost) return;
+    event.preventDefault();
+    const rect = colourPointerGhost.getBoundingClientRect();
+    colourPointerGhost.style.left = (event.clientX - rect.width / 2) + "px";
+    colourPointerGhost.style.top = (event.clientY - rect.height / 2) + "px";
+}
+
+function endColourPointerDrag(event) {
+    document.removeEventListener("pointermove", moveColourPointerGhost);
+    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".colour-cell");
+    if (target && colourPointerValue) processColourAnswer(colourPointerValue, target);
+    if (colourPointerGhost) colourPointerGhost.remove();
+    colourPointerGhost = null;
+    colourPointerValue = null;
+}
 
 
 colourField.addEventListener(
@@ -5752,14 +5834,14 @@ const movementRounds = [
         columns: 6,
         rows: 6,
         picksPerRow: 2,
-        memoryTime: 60
+        memoryTime: 30
     },
 
     {
         columns: 8,
         rows: 6,
         picksPerRow: 3,
-        memoryTime: 60
+        memoryTime: 30
     }
 
 ];
@@ -7490,6 +7572,17 @@ function climbTimePoints(){
 function climbUpdateClock(){
     document.getElementById("timerDisplay").textContent="Time: "+Math.max(0,climbSecondsLeft)+"s • "+climbTimePoints()+" pts";
 }
+function climbStartMemoryCountdown(p,next){
+    clearInterval(climbChallengeTimer);
+    let memorySeconds=30;
+    document.getElementById("timerDisplay").textContent="Memorise: 30s";
+    climbChallengeTimer=setInterval(()=>{
+        if(!climbRunning||climbPuzzle!==p){clearInterval(climbChallengeTimer);return;}
+        memorySeconds--;
+        document.getElementById("timerDisplay").textContent="Memorise: "+Math.max(0,memorySeconds)+"s";
+        if(memorySeconds<=0){clearInterval(climbChallengeTimer);next();}
+    },1000);
+}
 function climbStartChallengeClock(p){
     clearInterval(climbChallengeTimer);
     climbSecondsLeft=climbStartingTime(p);
@@ -7623,7 +7716,7 @@ function climbNextStop(){
     climbAttemptLocked=false;
     climbRecheckMode=false;
     climbRecheckAvailable=false;
-    climbStartChallengeClock(climbPuzzle);
+    if(!["sequence","grid","wordSequence"].includes(type)) climbStartChallengeClock(climbPuzzle);
     document.getElementById("climbStatus").textContent="Pattern Stop "+climbStop;
     document.getElementById("climbPanel").classList.remove("hidden");
     climbRender();
@@ -7672,7 +7765,7 @@ function climbRender(){
       document.getElementById("climbHelp").textContent="Memorise the symbols in this exact order.";
       const row=document.createElement("div");row.className="climb-sequence";
       p.seq.forEach(x=>{const d=document.createElement("div");d.className="climb-token";d.textContent=x;row.appendChild(d)});board.appendChild(row);
-      climbTimeout=setTimeout(()=>climbSequencePlay(p),p.diff==="easy"?6000:p.diff==="medium"?9000:12000);
+      climbStartMemoryCountdown(p,()=>climbSequencePlay(p));
     }else if(p.type==="grid"){
       if(climbRecheckMode && climbSecondsLeft<=0){
         document.getElementById("climbHelp").textContent="Recreate the pattern again. Reward remains 2 points.";
@@ -7682,7 +7775,7 @@ function climbRender(){
       }
       document.getElementById("climbHelp").textContent="Memorise the highlighted positions.";
       board.appendChild(climbGrid(p,true));
-      climbTimeout=setTimeout(()=>{if(!climbRunning||climbPuzzle!==p)return;board.innerHTML="";board.appendChild(climbGrid(p,false));document.getElementById("climbHelp").textContent="Recreate the pattern.";const b=document.createElement("button");b.className="climb-submit";b.textContent="Submit Pattern";b.onclick=()=>climbCheckGrid(p);actions.appendChild(b)},p.diff==="easy"?5000:p.diff==="medium"?7000:9000);
+      climbStartMemoryCountdown(p,()=>{if(!climbRunning||climbPuzzle!==p)return;climbStartChallengeClock(p);board.innerHTML="";board.appendChild(climbGrid(p,false));document.getElementById("climbHelp").textContent="Recreate the pattern.";const b=document.createElement("button");b.className="climb-submit";b.textContent="Submit Pattern";b.onclick=()=>climbCheckGrid(p);actions.appendChild(b)});
     }else if(p.type==="numberPattern"){
       document.getElementById("climbHelp").textContent="Complete the number pattern.";
       const row=document.createElement("div");row.className="climb-sequence";
@@ -7698,7 +7791,7 @@ function climbRender(){
       document.getElementById("climbHelp").textContent="Memorise the words in this exact order.";
       const row=document.createElement("div");row.className="climb-sequence";
       p.seq.forEach(x=>{const d=document.createElement("div");d.className="climb-token";d.textContent=x;d.style.fontSize="18px";row.appendChild(d)});board.appendChild(row);
-      climbTimeout=setTimeout(()=>climbWordPlay(p),p.diff==="easy"?6500:p.diff==="medium"?9000:12000);
+      climbStartMemoryCountdown(p,()=>climbWordPlay(p));
     }else if(p.type==="odd"){
       document.getElementById("climbHelp").textContent="Quick! Pick the different symbol.";
       const row=document.createElement("div");row.className="climb-sequence";
@@ -7720,6 +7813,7 @@ function climbRender(){
 }
 function climbSequencePlay(p){
     if(!climbRunning||climbPuzzle!==p)return;
+    if(!climbRecheckMode)climbStartChallengeClock(p);
     const board=document.getElementById("climbBoard"), actions=document.getElementById("climbActions");
     board.innerHTML=""; actions.innerHTML=""; p.user=[];
     document.getElementById("climbHelp").textContent=`Recreate all ${p.answer.length} symbols in order. You can use a symbol more than once.`;
@@ -7753,6 +7847,7 @@ function climbSequencePlay(p){
 }
 function climbWordPlay(p){
     if(!climbRunning||climbPuzzle!==p)return;
+    if(!climbRecheckMode)climbStartChallengeClock(p);
     const board=document.getElementById("climbBoard"), actions=document.getElementById("climbActions");
     board.innerHTML=""; actions.innerHTML=""; p.user=[];
     document.getElementById("climbHelp").textContent=`Recreate all ${p.answer.length} words in the same order.`;
@@ -7829,7 +7924,11 @@ function startOceanSpin(){savePlayerName();clearTimer();stopAllAnimations();hide
 function oSpinNewRound(){oSpinStopIndex=0;oSpinAnswers={};const n=oSpinCounts[oSpinRoundIndex],spots=oSpinShuffle([...oSpinPositions]).slice(0,n),pool=oSpinShuffle([...oSpinIcons]);oSpinSolution=spots.map((p,i)=>({p,icon:pool[i],id:i,resolved:false}));document.getElementById("oSpinTargets").innerHTML=oSpinSolution.map(o=>`<button class="spin-target" data-id="${o.id}" style="left:${o.p.x}%;top:${o.p.y}%">+</button>`).join("");document.getElementById("oSpinComplete").classList.add("hidden");oSpinStart()}
 function oSpinHud(){const left=oSpinSolution.filter(o=>!o.resolved).length;document.getElementById("oSpinRound").textContent=`Round ${oSpinRoundIndex+1}/6`;document.getElementById("oSpinStop").textContent=`Stop ${oSpinStopIndex+1}/4`;document.getElementById("oSpinValue").textContent=`${oSpinPoints[oSpinStopIndex]} pts each`;roundDisplay.textContent=`Round ${oSpinRoundIndex+1} · Stop ${oSpinStopIndex+1}`;scoreDisplay.textContent=`Score: ${oSpinScore}`;timerDisplay.textContent=`Items left: ${left}`;document.getElementById("spinStatus").textContent=["Maximum Speed","Fast Speed","Medium Speed","Slow Speed"][oSpinStopIndex]}
 function oSpinStart(){oSpinAnswers={};oSpinSelected=null;oSpinHud();const board=document.getElementById("oSpinBoard"),wheel=document.getElementById("oSpinWheel");board.classList.remove("choosing");document.getElementById("oSpinContinue").style.display="none";document.getElementById("oSpinObjects").innerHTML=oSpinSolution.filter(o=>!o.resolved).map(o=>`<div class="spin-object" style="left:${o.p.x}%;top:${o.p.y}%">${o.icon}</div>`).join("");document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];t.className="spin-target"+(o.resolved?" good":"");t.textContent=o.resolved?o.icon:"+"});document.getElementById("oSpinHole").setAttribute("r","50");document.getElementById("oSpinHoleRim").style.display="block";document.getElementById("oSpinTray").innerHTML="";document.getElementById("oSpinCheck").disabled=true;document.getElementById("oSpinMessage").textContent="Watch through the opening.";oSpinActive=true;let angle=0,last=performance.now(),began=last;function tick(now){if(!oSpinActive)return;const dt=Math.min((now-last)/1000,.04),elapsed=(now-began)/1000;last=now;angle=(angle+oSpinSpeeds[oSpinStopIndex]*dt)%360;wheel.style.transform=`rotate(${angle}deg)`;document.getElementById("oSpinPhase").textContent=`WATCH · ${Math.max(0,5-elapsed).toFixed(1)}s`;if(elapsed>=5){oSpinStop();return}oSpinRaf=requestAnimationFrame(tick)}oSpinRaf=requestAnimationFrame(tick)}
-function oSpinStop(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);document.getElementById("oSpinWheel").style.transform="rotate(0deg)";document.getElementById("oSpinHole").setAttribute("r","0");document.getElementById("oSpinHoleRim").style.display="none";document.getElementById("oSpinBoard").classList.add("choosing");document.getElementById("oSpinPhase").textContent="PLACE THE OCEAN ITEMS";const left=oSpinSolution.filter(o=>!o.resolved),extra=oSpinShuffle(oSpinIcons.filter(x=>!oSpinSolution.some(o=>o.icon===x))).slice(0,3),choices=oSpinShuffle([...left.map(o=>o.icon),...extra]);document.getElementById("oSpinTray").innerHTML=choices.map(x=>`<button class="spin-choice" draggable="true" data-icon="${x}">${x}</button>`).join("");document.querySelectorAll(".spin-choice").forEach(b=>{b.onclick=()=>oSpinPick(b.dataset.icon);b.ondragstart=e=>{oSpinSelected=b.dataset.icon;e.dataTransfer.setData("text/plain",oSpinSelected)}});document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];if(o.resolved){t.disabled=true;return}t.disabled=false;t.onclick=()=>oSpinPlace(+t.dataset.id);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();oSpinSelected=e.dataTransfer.getData("text/plain");oSpinPlace(+t.dataset.id)}});const cont=document.getElementById("oSpinContinue");cont.style.display=oSpinStopIndex<3?"block":"none";if(oSpinStopIndex<3)cont.textContent=`Lock selected & continue · next ${oSpinPoints[oSpinStopIndex+1]} pts each`;document.getElementById("oSpinMessage").textContent=`Place only items you are sure about for ${oSpinPoints[oSpinStopIndex]} points each. Then lock them and continue spinning for the empty positions. Wrong placements lose 5 points.`}
+function oSpinStop(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);document.getElementById("oSpinWheel").style.transform="rotate(0deg)";document.getElementById("oSpinHole").setAttribute("r","0");document.getElementById("oSpinHoleRim").style.display="none";document.getElementById("oSpinBoard").classList.add("choosing");document.getElementById("oSpinPhase").textContent="PLACE THE OCEAN ITEMS";const left=oSpinSolution.filter(o=>!o.resolved),extra=oSpinShuffle(oSpinIcons.filter(x=>!oSpinSolution.some(o=>o.icon===x))).slice(0,3),choices=oSpinShuffle([...left.map(o=>o.icon),...extra]);document.getElementById("oSpinTray").innerHTML=choices.map(x=>`<button class="spin-choice" draggable="true" data-icon="${x}">${x}</button>`).join("");document.querySelectorAll(".spin-choice").forEach(b=>{b.onclick=()=>oSpinPick(b.dataset.icon);b.onpointerdown=e=>oSpinPointerStart(e,b);b.ondragstart=e=>{oSpinSelected=b.dataset.icon;e.dataTransfer.setData("text/plain",oSpinSelected)}});document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];if(o.resolved){t.disabled=true;return}t.disabled=false;t.onclick=()=>oSpinPlace(+t.dataset.id);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();oSpinSelected=e.dataTransfer.getData("text/plain");oSpinPlace(+t.dataset.id)}});const cont=document.getElementById("oSpinContinue");cont.style.display=oSpinStopIndex<3?"block":"none";if(oSpinStopIndex<3)cont.textContent=`Lock selected & continue · next ${oSpinPoints[oSpinStopIndex+1]} pts each`;document.getElementById("oSpinMessage").textContent=`Place only items you are sure about for ${oSpinPoints[oSpinStopIndex]} points each. Then lock them and continue spinning for the empty positions. Wrong placements lose 5 points.`}
+let oSpinPointerIcon=null,oSpinPointerGhost=null;
+function oSpinPointerStart(e,b){if(e.pointerType==="mouse"||b.classList.contains("used"))return;e.preventDefault();oSpinPointerIcon=b.dataset.icon;oSpinPointerGhost=b.cloneNode(true);Object.assign(oSpinPointerGhost.style,{position:"fixed",zIndex:"700",pointerEvents:"none",opacity:".9",width:"48px",height:"48px"});document.body.appendChild(oSpinPointerGhost);oSpinPointerMove(e);document.addEventListener("pointermove",oSpinPointerMove,{passive:false});document.addEventListener("pointerup",oSpinPointerEnd,{once:true});document.addEventListener("pointercancel",oSpinPointerEnd,{once:true})}
+function oSpinPointerMove(e){if(!oSpinPointerGhost)return;e.preventDefault();oSpinPointerGhost.style.left=(e.clientX-24)+"px";oSpinPointerGhost.style.top=(e.clientY-24)+"px"}
+function oSpinPointerEnd(e){document.removeEventListener("pointermove",oSpinPointerMove);const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("#oSpinTargets .spin-target");if(target&&oSpinPointerIcon){oSpinSelected=oSpinPointerIcon;oSpinPlace(+target.dataset.id)}if(oSpinPointerGhost)oSpinPointerGhost.remove();oSpinPointerGhost=null;oSpinPointerIcon=null}
 function oSpinPick(icon){if(Object.values(oSpinAnswers).includes(icon))return;oSpinSelected=icon;document.querySelectorAll(".spin-choice").forEach(b=>b.classList.toggle("selected",b.dataset.icon===icon))}
 function oSpinPlace(id){const o=oSpinSolution[id];if(!oSpinSelected||o.resolved)return;for(const k in oSpinAnswers)if(oSpinAnswers[k]===oSpinSelected){delete oSpinAnswers[k];const old=document.querySelector(`#oSpinTargets [data-id="${k}"]`);old.textContent="+"}oSpinAnswers[id]=oSpinSelected;const t=document.querySelector(`#oSpinTargets [data-id="${id}"]`);t.textContent=oSpinSelected;oSpinSelected=null;document.querySelectorAll(".spin-choice").forEach(b=>{b.classList.remove("selected");b.classList.toggle("used",Object.values(oSpinAnswers).includes(b.dataset.icon))});document.getElementById("oSpinCheck").disabled=Object.keys(oSpinAnswers).length===0}
 function oSpinGrade(autoContinue){let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinPoints[oSpinStopIndex]-wrong*5;oSpinScore+=net;oSpinHud();document.getElementById("oSpinCheck").disabled=true;setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
