@@ -1756,7 +1756,8 @@ button.climb-choice{cursor:pointer}
 #spinField{overflow:hidden;background:radial-gradient(circle at 16% 16%,rgba(255,255,255,.8) 0 3px,transparent 4px),radial-gradient(circle at 76% 30%,rgba(255,255,255,.55) 0 5px,transparent 6px),linear-gradient(180deg,#67dcf2 0,#159fc9 44%,#076b98 100%)}
 #spinField:after{content:"";position:absolute;left:0;right:0;bottom:0;height:20%;background:linear-gradient(165deg,transparent 0 45%,#064f72 46% 55%,transparent 56%) 0 0/180px 100% repeat-x;opacity:.7}
 .spin-shell{position:absolute;inset:54px 12px 14px;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px;z-index:2}.spin-stage,.spin-side{border-radius:24px;background:rgba(2,44,73,.72);border:2px solid rgba(255,255,255,.32);box-shadow:0 18px 45px rgba(0,44,72,.3)}.spin-stage{display:grid;place-items:center;position:relative;overflow:hidden}.spin-board{position:relative;width:min(430px,72vh,68vw);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#2c7995 0 64%,#156784 65% 71%,#063e5f 72%);box-shadow:0 20px 30px rgba(0,20,42,.55)}.spin-object{position:absolute;z-index:1;width:16%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;display:grid;place-items:center;background:#effcff;border:4px solid #93e9f4;font-size:clamp(30px,5vw,54px)}.spin-board.choosing .spin-object{opacity:0}.spin-wheel{position:absolute;z-index:3;inset:0;width:100%;height:100%;will-change:transform;filter:drop-shadow(0 6px 8px rgba(0,0,0,.45))}.spin-target{position:absolute;z-index:7;width:17%;aspect-ratio:1;transform:translate(-50%,-50%);border:3px dashed #fff18d;border-radius:50%;background:rgba(1,28,48,.86);display:none;place-items:center;color:#fff;font-size:clamp(28px,5vw,50px);cursor:pointer}.spin-board.choosing .spin-target{display:grid}.spin-target.good{border-style:solid;border-color:#66f0ad;background:#075f55}.spin-target.bad{border-color:#ff8797}.spin-side{padding:14px;display:flex;flex-direction:column;gap:10px;color:#fff}.spin-meta{display:flex;justify-content:space-between;gap:5px;font-weight:900;font-size:13px}.spin-meta span{background:rgba(0,20,40,.35);padding:7px 8px;border-radius:999px}.spin-tray{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.spin-choice{aspect-ratio:1;border-radius:13px;border:2px solid rgba(255,255,255,.38);background:#e9fbff;font-size:29px;cursor:grab}.spin-choice.selected{outline:4px solid #ffe970}.spin-choice.used{opacity:.3}.spin-action{border:0;border-radius:999px;padding:11px 14px;font-weight:900;cursor:pointer}.spin-check{margin-top:auto;background:#ffe970;color:#16445b}.spin-continue{background:transparent;color:#fff;border:2px solid #fff}.spin-action:disabled{opacity:.35}.spin-message{min-height:44px;font-weight:800;line-height:1.35}.spin-phase{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(0,25,45,.75);color:#fff;padding:7px 13px;border-radius:999px;font-weight:900;font-size:13px;white-space:nowrap}.spin-complete{position:absolute;z-index:20;inset:0;background:rgba(0,30,55,.9);display:grid;place-items:center;text-align:center;color:#fff;padding:24px}.spin-complete.hidden{display:none}.spin-complete h2{font-size:clamp(28px,5vw,48px);margin:0 0 10px}
-@media(max-width:760px){.spin-shell{grid-template-columns:1fr;inset:50px 7px 7px}.spin-stage{min-height:55vh}.spin-board{width:min(330px,78vw)}.spin-side{padding:10px}.spin-side .spin-message{display:none}.spin-tray{grid-template-columns:repeat(5,1fr)}.spin-choice{font-size:23px}.spin-action{padding:10px}.spin-meta{font-size:11px}}
+.spin-target.drag-near{transform:translate(-50%,-50%) scale(1.18);border-style:solid;border-color:#7dffb3;box-shadow:0 0 0 8px rgba(125,255,179,.22),0 0 24px rgba(125,255,179,.8)}
+@media(max-width:760px){.spin-shell{grid-template-columns:1fr;inset:50px 7px 7px}.spin-stage{min-height:55vh}.spin-board{width:min(330px,78vw)}.spin-side{padding:10px}.spin-side .spin-message{display:none}.spin-tray{grid-template-columns:repeat(5,1fr)}.spin-choice{font-size:23px}.spin-action{padding:10px}.spin-meta{font-size:11px}.spin-target{width:22%}}
 
 /* Rules shown before every game segment begins. */
 .segment-rules-overlay{position:fixed;inset:0;z-index:600;background:rgba(4,31,52,.84);display:grid;place-items:center;padding:18px}
@@ -1774,8 +1775,8 @@ button.climb-choice{cursor:pointer}
 #menuOverlay{background:#f4fbff}
 #menuOverlay .overlay-card{box-shadow:none;border:1px solid #d9edf5}
 
-/* The animated train is removed from all screens. */
-.climb-train{display:none!important}
+/* Constant Climb uses a clean static background with no moving scenery. */
+.climb-train,.climb-hills,.climb-track{display:none!important}
 
 /* Challenge rows begin at the top edge instead of entering late mid-screen. */
 #shapeField:not(.memory-mode) .shape-target-area{top:54px;height:528px;padding-top:0}
@@ -1794,18 +1795,20 @@ button.climb-choice{cursor:pointer}
   header{height:50px;padding:0 8px;gap:6px}
   .logo{font-size:19px;line-height:1}
   .brand-subtitle{font-size:8px;letter-spacing:.8px}
-  .header-info{gap:3px;flex-wrap:nowrap}
+  .header-info{gap:3px;flex-wrap:nowrap;min-width:0}
+  #modeDisplay,#roundDisplay{display:none}
   .info-box{padding:5px 6px;border-radius:7px;font-size:10px;white-space:nowrap}
   main{height:calc(100dvh - 50px);padding:3px;overflow:hidden}
   .instruction{height:28px;margin:0;padding:5px 3px;font-size:11px;overflow:hidden}
   .game-field,#shapeField,#colourField,#patternField,#climbField,#spinField{height:calc(100dvh - 81px)!important;min-height:0!important;border-radius:10px}
-  .in-game-menu{top:6px;left:6px;padding:7px 9px;font-size:11px}
-  .small-status{top:7px;right:6px;padding:6px 8px;font-size:10px}
+  .in-game-menu,.small-status{display:none!important}
   .red-zone{height:72px}
   .red-zone-label{top:4px;font-size:10px}
   .shape-pool,.colour-palette{bottom:76px!important;max-height:84px!important;min-height:64px!important;padding:5px!important}
-  #shapeField:not(.memory-mode) .shape-target-area,#colourField:not(.memory-mode) .colour-grid-wrapper{top:42px;height:calc(100% - 118px);padding-top:0}
-  .spin-shell{inset:42px 4px 4px;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:5px}
+  #shapeField:not(.memory-mode) .shape-target-area,#colourField:not(.memory-mode) .colour-grid-wrapper{top:0;height:calc(100% - 76px);padding-top:0}
+  #shapeField.memory-mode .shape-memory-area{top:8px!important;left:5px!important;right:5px!important;bottom:5px!important}
+  #colourField.memory-mode .colour-grid-wrapper{top:4px!important;left:50%;width:calc(100% - 8px);height:calc(100% - 8px)!important}
+  .spin-shell{inset:2px 4px 4px;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:5px}
   .spin-stage{min-height:0!important}
   .spin-board{width:min(300px,70vw,43dvh)}
   .spin-side{padding:6px;gap:5px;max-height:31dvh;overflow:hidden}
@@ -1813,7 +1816,11 @@ button.climb-choice{cursor:pointer}
   .spin-choice{font-size:20px;min-width:0}
   .spin-action{padding:8px 7px;font-size:11px}
   .spin-phase{bottom:4px;padding:5px 8px;font-size:10px}
-  .climb-panel{top:42px!important;bottom:6px!important;max-height:none!important;overflow:auto}
+  .climb-panel{top:4px!important;bottom:4px!important;left:4px!important;right:4px!important;width:auto!important;max-height:none!important;transform:none!important;overflow:auto;padding:10px}
+  .climb-board{min-height:100px}
+  .climb-token,.climb-choice{min-width:42px;padding:8px;font-size:21px}
+  .pattern-board-wrapper,.pattern-board,.movement-board{max-width:100%!important;overflow:hidden!important}
+  .memory-title,.climb-help,.instruction{white-space:normal;overflow-wrap:anywhere}
   .overlay{padding:8px}
   .overlay-card{max-height:96dvh;padding:18px}
   #menuOverlay .overlay-card{padding:14px 16px}
@@ -7927,8 +7934,9 @@ function oSpinStart(){oSpinAnswers={};oSpinSelected=null;oSpinHud();const board=
 function oSpinStop(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);document.getElementById("oSpinWheel").style.transform="rotate(0deg)";document.getElementById("oSpinHole").setAttribute("r","0");document.getElementById("oSpinHoleRim").style.display="none";document.getElementById("oSpinBoard").classList.add("choosing");document.getElementById("oSpinPhase").textContent="PLACE THE OCEAN ITEMS";const left=oSpinSolution.filter(o=>!o.resolved),extra=oSpinShuffle(oSpinIcons.filter(x=>!oSpinSolution.some(o=>o.icon===x))).slice(0,3),choices=oSpinShuffle([...left.map(o=>o.icon),...extra]);document.getElementById("oSpinTray").innerHTML=choices.map(x=>`<button class="spin-choice" draggable="true" data-icon="${x}">${x}</button>`).join("");document.querySelectorAll(".spin-choice").forEach(b=>{b.onclick=()=>oSpinPick(b.dataset.icon);b.onpointerdown=e=>oSpinPointerStart(e,b);b.ondragstart=e=>{oSpinSelected=b.dataset.icon;e.dataTransfer.setData("text/plain",oSpinSelected)}});document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];if(o.resolved){t.disabled=true;return}t.disabled=false;t.onclick=()=>oSpinPlace(+t.dataset.id);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();oSpinSelected=e.dataTransfer.getData("text/plain");oSpinPlace(+t.dataset.id)}});const cont=document.getElementById("oSpinContinue");cont.style.display=oSpinStopIndex<3?"block":"none";if(oSpinStopIndex<3)cont.textContent=`Lock selected & continue · next ${oSpinPoints[oSpinStopIndex+1]} pts each`;document.getElementById("oSpinMessage").textContent=`Place only items you are sure about for ${oSpinPoints[oSpinStopIndex]} points each. Then lock them and continue spinning for the empty positions. Wrong placements lose 5 points.`}
 let oSpinPointerIcon=null,oSpinPointerGhost=null;
 function oSpinPointerStart(e,b){if(e.pointerType==="mouse"||b.classList.contains("used"))return;e.preventDefault();oSpinPointerIcon=b.dataset.icon;oSpinPointerGhost=b.cloneNode(true);Object.assign(oSpinPointerGhost.style,{position:"fixed",zIndex:"700",pointerEvents:"none",opacity:".9",width:"48px",height:"48px"});document.body.appendChild(oSpinPointerGhost);oSpinPointerMove(e);document.addEventListener("pointermove",oSpinPointerMove,{passive:false});document.addEventListener("pointerup",oSpinPointerEnd,{once:true});document.addEventListener("pointercancel",oSpinPointerEnd,{once:true})}
-function oSpinPointerMove(e){if(!oSpinPointerGhost)return;e.preventDefault();oSpinPointerGhost.style.left=(e.clientX-24)+"px";oSpinPointerGhost.style.top=(e.clientY-24)+"px"}
-function oSpinPointerEnd(e){document.removeEventListener("pointermove",oSpinPointerMove);const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("#oSpinTargets .spin-target");if(target&&oSpinPointerIcon){oSpinSelected=oSpinPointerIcon;oSpinPlace(+target.dataset.id)}if(oSpinPointerGhost)oSpinPointerGhost.remove();oSpinPointerGhost=null;oSpinPointerIcon=null}
+function oSpinNearestTarget(x,y,limit=110){let nearest=null,best=Infinity;document.querySelectorAll("#oSpinTargets .spin-target:not(:disabled)").forEach(t=>{const r=t.getBoundingClientRect(),d=Math.hypot(x-(r.left+r.width/2),y-(r.top+r.height/2));if(d<best){best=d;nearest=t}});return best<=limit?nearest:null}
+function oSpinPointerMove(e){if(!oSpinPointerGhost)return;e.preventDefault();oSpinPointerGhost.style.left=(e.clientX-24)+"px";oSpinPointerGhost.style.top=(e.clientY-78)+"px";const near=oSpinNearestTarget(e.clientX,e.clientY);document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>t.classList.toggle("drag-near",t===near))}
+function oSpinPointerEnd(e){document.removeEventListener("pointermove",oSpinPointerMove);const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("#oSpinTargets .spin-target")||oSpinNearestTarget(e.clientX,e.clientY);document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>t.classList.remove("drag-near"));if(target&&oSpinPointerIcon){oSpinSelected=oSpinPointerIcon;oSpinPlace(+target.dataset.id)}if(oSpinPointerGhost)oSpinPointerGhost.remove();oSpinPointerGhost=null;oSpinPointerIcon=null}
 function oSpinPick(icon){if(Object.values(oSpinAnswers).includes(icon))return;oSpinSelected=icon;document.querySelectorAll(".spin-choice").forEach(b=>b.classList.toggle("selected",b.dataset.icon===icon))}
 function oSpinPlace(id){const o=oSpinSolution[id];if(!oSpinSelected||o.resolved)return;for(const k in oSpinAnswers)if(oSpinAnswers[k]===oSpinSelected){delete oSpinAnswers[k];const old=document.querySelector(`#oSpinTargets [data-id="${k}"]`);old.textContent="+"}oSpinAnswers[id]=oSpinSelected;const t=document.querySelector(`#oSpinTargets [data-id="${id}"]`);t.textContent=oSpinSelected;oSpinSelected=null;document.querySelectorAll(".spin-choice").forEach(b=>{b.classList.remove("selected");b.classList.toggle("used",Object.values(oSpinAnswers).includes(b.dataset.icon))});document.getElementById("oSpinCheck").disabled=Object.keys(oSpinAnswers).length===0}
 function oSpinGrade(autoContinue){let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinPoints[oSpinStopIndex]-wrong*5;oSpinScore+=net;oSpinHud();document.getElementById("oSpinCheck").disabled=true;setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
