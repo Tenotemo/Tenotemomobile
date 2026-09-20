@@ -1955,6 +1955,111 @@ header .header-info{min-width:0}
 #leaderboardTableContainer{overflow-x:auto;-webkit-overflow-scrolling:touch}
 #leaderboardTableContainer .leaderboard-table{min-width:360px;font-size:clamp(11px,2.7vw,14px)}
 #leaderboardTableContainer .leaderboard-table th,#leaderboardTableContainer .leaderboard-table td{padding:10px 6px}
+
+/* ==========================================================
+   SELECTION TRAY / MOVING TARGET SEPARATION (mobile + desktop)
+   Game 1 later rounds may have 12 compound choices; Game 2
+   later rounds may have 12 two-colour choices. Give each tray
+   its own top section, then start moving targets below it.
+========================================================== */
+#shapeField:not(.memory-mode) .shape-pool,
+#colourField:not(.memory-mode) .colour-palette {
+    box-sizing: border-box !important;
+    top: 12px !important;
+    bottom: auto !important;
+    left: 12px !important;
+    right: 12px !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-auto-rows: minmax(38px, auto);
+    align-content: center !important;
+    justify-items: stretch;
+    gap: 5px !important;
+    padding: 7px !important;
+    min-height: 0 !important;
+    max-height: 168px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    z-index: 11;
+}
+#shapeField:not(.memory-mode) .shape-pool > .shape-piece,
+#colourField:not(.memory-mode) .colour-palette > .colour-piece {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    justify-self: stretch;
+    align-self: center;
+}
+#shapeField:not(.memory-mode) .shape-pool > .combo-card {
+    padding: 2px !important;
+    gap: 2px !important;
+    overflow: hidden;
+}
+#shapeField:not(.memory-mode) .shape-pool .combo-icon {
+    width: 22px !important;
+    height: 22px !important;
+    flex: 0 0 22px;
+}
+#shapeField:not(.memory-mode) .shape-pool .combo-icon svg {
+    width: 21px !important;
+    height: 21px !important;
+}
+#shapeField:not(.memory-mode) .shape-pool .combo-animal {
+    font-size: 19px !important;
+    line-height: 1;
+}
+#shapeField:not(.memory-mode) .shape-target-area,
+#colourField:not(.memory-mode) .colour-grid-wrapper {
+    top: 192px !important;
+    height: calc(100% - 198px) !important;
+    box-sizing: border-box;
+}
+@media (max-width: 760px) {
+    #shapeField:not(.memory-mode) .shape-pool,
+    #colourField:not(.memory-mode) .colour-palette {
+        top: 8px !important;
+        left: 6px !important;
+        right: 6px !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-auto-rows: 41px;
+        gap: 4px !important;
+        padding: 5px !important;
+        max-height: 154px !important;
+        min-height: 0 !important;
+    }
+    #shapeField:not(.memory-mode) .shape-pool > .shape-piece,
+    #colourField:not(.memory-mode) .colour-palette > .colour-piece {
+        height: 39px !important;
+        min-height: 39px !important;
+    }
+    #shapeField:not(.memory-mode) .shape-target-area,
+    #colourField:not(.memory-mode) .colour-grid-wrapper {
+        top: 175px !important;
+        height: calc(100% - 181px) !important;
+    }
+    #shapeField:not(.memory-mode) .shape-pool .combo-icon {
+        width: 20px !important;
+        height: 20px !important;
+        flex-basis: 20px;
+    }
+    #shapeField:not(.memory-mode) .shape-pool .combo-icon svg {
+        width: 19px !important;
+        height: 19px !important;
+    }
+    #shapeField:not(.memory-mode) .shape-pool .combo-animal {
+        font-size: 18px !important;
+    }
+}
+@media (max-width: 340px) {
+    #shapeField:not(.memory-mode) .shape-pool,
+    #colourField:not(.memory-mode) .colour-palette { gap: 2px !important; padding: 4px !important; }
+    #shapeField:not(.memory-mode) .shape-pool .combo-animal { font-size: 16px !important; }
+}
+
 </style>
 </head>
 
@@ -7558,6 +7663,7 @@ const segmentRuleContent = {
         rules: [
             "Solve the challenge shown at every train stop.",
             "Easy challenges award 1 point, medium up to 3, and hard up to 5.",
+            "Time limits for memorising and solving: Easy 10 seconds, Medium 15 seconds, Hard 20 seconds.",
             "Faster correct answers keep more of the available points.",
             "If time expires, use Recheck Pattern and continue for 1 point. The train only moves after a correct solution."
         ]
@@ -7728,8 +7834,7 @@ function climbPuzzlePoints(p){
     return climbPts[p.diff];
 }
 function climbStartingTime(p){
-    if(p.type==="odd") return 20;
-    return {easy:30,medium:45,hard:60}[p.diff];
+    return {easy:10,medium:15,hard:20}[p.diff];
 }
 function climbTimePoints(){
     if(climbRecheckMode || climbRecheckAvailable || climbSecondsLeft<=0) return 1;
@@ -7787,7 +7892,7 @@ function climbOfferRecheck(p){
     actions.appendChild(b);
     const note=document.createElement("div");
     note.className="climb-recheck-note";
-    note.textContent="Rechecking gives a 2-point completion reward.";
+    note.textContent="Rechecking gives a 1-point completion reward.";
     actions.appendChild(note);
     document.getElementById("climbHelp").textContent="Time is up. You can keep solving, or recheck the pattern before trying again.";
 }
@@ -7800,7 +7905,7 @@ function climbRecheckPattern(p){
     const board=document.getElementById("climbBoard");
     const actions=document.getElementById("climbActions");
     board.innerHTML=""; actions.innerHTML="";
-    document.getElementById("climbHelp").textContent="Recheck the pattern carefully. You will earn 2 points when solved.";
+    document.getElementById("climbHelp").textContent="Recheck the pattern carefully. You will earn 1 point when solved.";
 
     if(p.type==="sequence" || p.type==="wordSequence"){
         const row=document.createElement("div"); row.className="climb-sequence";
@@ -7938,7 +8043,7 @@ function climbRender(){
       climbStartMemoryCountdown(p,()=>climbSequencePlay(p));
     }else if(p.type==="grid"){
       if(climbRecheckMode && climbSecondsLeft<=0){
-        document.getElementById("climbHelp").textContent="Recreate the pattern again. Reward remains 2 points.";
+        document.getElementById("climbHelp").textContent="Recreate the pattern again. Reward remains 1 point.";
         board.appendChild(climbGrid(p,false));
         const b=document.createElement("button");b.className="climb-submit";b.textContent="Submit Pattern";b.onclick=()=>climbCheckGrid(p);actions.appendChild(b);
         return;
