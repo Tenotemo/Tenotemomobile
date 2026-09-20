@@ -1,0 +1,7851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tenotemo</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f5f7fb;
+    color: #1f2937;
+    overflow-x: hidden;
+}
+
+button {
+    font-family: inherit;
+}
+
+.app {
+    min-height: 100vh;
+}
+
+header {
+    height: 72px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    position: relative;
+    z-index: 20;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #111827;
+}
+
+.header-info {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.info-box {
+    background: #f3f4f6;
+    border-radius: 10px;
+    padding: 8px 13px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.timer-box {
+    background: #111827;
+    color: white;
+}
+
+main {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.instruction {
+    text-align: center;
+    margin: 8px 0 16px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.game-field {
+    height: 680px;
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 30px rgba(0,0,0,.05);
+}
+
+#shapeField,
+#colourField,
+#patternField {
+    display: none;
+}
+
+.red-zone {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 105px;
+    background: rgba(239,68,68,.13);
+    border-top: 4px solid #ef4444;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.red-zone-label {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #dc2626;
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.in-game-menu {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 15;
+    border: none;
+    background: rgba(255,255,255,.95);
+    color: #111827;
+    padding: 9px 13px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,.12);
+}
+
+.small-status {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    z-index: 12;
+    background: #111827;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+/* =========================
+   OVERLAYS
+========================= */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17,24,39,.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.overlay-card {
+    width: min(650px,100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+.overlay-card h1 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 30px;
+}
+
+.overlay-card p {
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+.menu-buttons {
+    display: grid;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.menu-btn,
+.action-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 15px 20px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .15s;
+}
+
+.menu-btn:hover,
+.action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.shape-btn {
+    background: #4f46e5;
+    color: white;
+}
+
+.colour-btn {
+    background: #0891b2;
+    color: white;
+}
+
+.pattern-btn {
+    background: #059669;
+    color: white;
+}
+
+.leaderboard-btn {
+    background: #f59e0b;
+    color: white;
+}
+
+.secondary-btn {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.danger-btn {
+    background: #dc2626;
+    color: white;
+}
+
+.result-score {
+    font-size: 42px;
+    font-weight: 900;
+    margin: 18px 0;
+}
+
+/* =========================
+   PLAYER
+========================= */
+
+.player-box {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 20px;
+    text-align: left;
+}
+
+.player-box label {
+    display: block;
+    font-weight: 800;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.player-name-input {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 15px;
+}
+
+.player-status {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/* =========================
+   LEADERBOARD
+========================= */
+
+.leaderboard-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.leaderboard-tab {
+    flex: 1;
+    border: none;
+    padding: 13px;
+    border-radius: 10px;
+    background: #e5e7eb;
+    color: #374151;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.leaderboard-tab.active {
+    background: #111827;
+    color: white;
+}
+
+.subscription-box {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 18px;
+}
+
+.subscription-box h3 {
+    margin: 0 0 8px;
+}
+
+.subscription-status {
+    font-weight: 800;
+    margin: 8px 0;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.leaderboard-table th {
+    background: #f9fafb;
+    font-size: 13px;
+}
+
+.leaderboard-table td {
+    font-weight: 700;
+}
+
+.leaderboard-rank {
+    width: 55px;
+}
+
+.empty-leaderboard {
+    padding: 30px 10px;
+    color: #6b7280;
+}
+
+.locked-leaderboard {
+    padding: 25px 10px;
+    color: #6b7280;
+}
+
+.current-player-row {
+    background: #fef3c7;
+}
+
+
+/* =========================
+   LIVELY OCEAN BACKGROUND
+========================= */
+
+.game-field.ocean-theme {
+    background:
+        linear-gradient(
+            180deg,
+            #6dd5ed 0%,
+            #24b9dc 34%,
+            #087fb9 72%,
+            #075985 100%
+        );
+    border-color: rgba(255,255,255,.45);
+    box-shadow: 0 12px 35px rgba(3,105,161,.20);
+    isolation: isolate;
+}
+
+.game-field.ocean-theme::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,.78) 0 2px, transparent 3px),
+        radial-gradient(circle at 22% 34%, rgba(255,255,255,.55) 0 3px, transparent 4px),
+        radial-gradient(circle at 84% 20%, rgba(255,255,255,.65) 0 2px, transparent 3px),
+        radial-gradient(circle at 92% 48%, rgba(255,255,255,.48) 0 4px, transparent 5px),
+        radial-gradient(circle at 67% 73%, rgba(255,255,255,.38) 0 3px, transparent 4px);
+    animation: oceanBubbles 8s linear infinite;
+}
+
+.game-field.ocean-theme::after {
+    content: "";
+    position: absolute;
+    left: -10%;
+    right: -10%;
+    bottom: -35px;
+    height: 120px;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 18% 40%, rgba(20,184,166,.55) 0 18%, transparent 19%),
+        radial-gradient(ellipse at 48% 55%, rgba(14,165,233,.55) 0 20%, transparent 21%),
+        radial-gradient(ellipse at 78% 38%, rgba(20,184,166,.55) 0 17%, transparent 18%);
+    filter: blur(2px);
+    animation: oceanSway 5s ease-in-out infinite alternate;
+}
+
+.ocean-theme .small-status,
+.ocean-theme .in-game-menu {
+    backdrop-filter: blur(6px);
+}
+
+@keyframes oceanBubbles {
+    0% { transform: translateY(35px); opacity: .65; }
+    50% { transform: translateY(-10px); opacity: 1; }
+    100% { transform: translateY(-45px); opacity: .65; }
+}
+
+@keyframes oceanSway {
+    from { transform: translateX(-2%); }
+    to { transform: translateX(2%); }
+}
+
+/* Keep the game content above the animated scenery. */
+.shape-memory-area,
+.shape-target-area,
+.shape-pool,
+.colour-grid-wrapper,
+.colour-palette,
+.red-zone {
+    isolation: isolate;
+}
+
+/* =========================
+   COMPACT MEMORY ILLUSTRATIONS
+========================= */
+
+.shape-memory-area {
+    top: 82px;
+    left: 22px;
+    right: 22px;
+}
+
+.memory-title {
+    display: inline-block;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 18px;
+    margin-bottom: 14px;
+    border-radius: 999px;
+    color: white;
+    background: rgba(3,72,112,.82);
+    box-shadow: 0 5px 14px rgba(0,0,0,.14);
+    white-space: nowrap;
+}
+
+.memory-row {
+    gap: 7px;
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+/* The memory illustration is deliberately smaller than the draggable pool. */
+.shape-memory-area .shape-piece {
+    width: 42px;
+    height: 42px;
+}
+
+.shape-memory-area .shape-piece svg {
+    width: 34px;
+    height: 34px;
+}
+
+.shape-target-area {
+    left: 22px;
+    right: 22px;
+    top: 230px;
+    height: 355px;
+}
+
+.shape-target-track {
+    gap: 8px;
+    padding: 0 6px;
+}
+
+.shape-target {
+    width: 58px;
+    height: 58px;
+    border-width: 2px;
+    border-radius: 10px;
+}
+
+.shape-pool {
+    left: 22px;
+    right: 22px;
+    bottom: 112px;
+    min-height: 96px;
+    max-height: 112px;
+    padding: 7px 12px;
+    gap: 7px;
+    border: 2px solid rgba(255,255,255,.72);
+    border-radius: 16px;
+    background: rgba(255,255,255,.94);
+    box-shadow: 0 7px 18px rgba(0,0,0,.16);
+    backdrop-filter: blur(5px);
+}
+
+.shape-pool .shape-piece {
+    width: 42px;
+    height: 42px;
+}
+
+.shape-pool .shape-piece svg {
+    width: 35px;
+    height: 35px;
+}
+
+/* =========================
+   COMPACT COLOUR MEMORY GRID
+========================= */
+
+.colour-grid-wrapper {
+    top: 88px;
+    width: min(620px, calc(100% - 44px));
+    height: 365px;
+    padding: 8px 0;
+}
+
+.colour-grid {
+    --colour-cell-size: clamp(40px, 5.2vw, 58px);
+    gap: 7px;
+}
+
+.colour-cell {
+    width: var(--colour-cell-size);
+    height: var(--colour-cell-size);
+    border-width: 2px;
+    border-radius: 8px;
+}
+
+.colour-palette {
+    left: 22px;
+    right: 22px;
+    bottom: 112px;
+    min-height: 78px;
+    max-height: 92px;
+    padding: 8px 12px;
+    gap: 8px;
+    border: 2px solid rgba(255,255,255,.72);
+    border-radius: 16px;
+    background: rgba(255,255,255,.94);
+    box-shadow: 0 7px 18px rgba(0,0,0,.16);
+    backdrop-filter: blur(5px);
+}
+
+.colour-piece {
+    width: 40px;
+    height: 40px;
+    border-width: 2px;
+    border-radius: 7px;
+}
+
+/* The red zone stays visible without covering the draggable tray. */
+.red-zone {
+    height: 92px;
+    z-index: 4;
+    background: rgba(239,68,68,.16);
+    border-top-width: 3px;
+}
+
+.red-zone-label {
+    top: 5px;
+    font-size: 11px;
+    text-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+
+/* =========================
+   SHAPE GAME
+========================= */
+
+.shape-memory-area {
+    position: absolute;
+    top: 85px;
+    left: 30px;
+    right: 30px;
+    z-index: 8;
+}
+
+.memory-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 18px;
+    text-align: center;
+}
+
+.memory-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.shape-target-area {
+    position: absolute;
+    left: 30px;
+    right: 30px;
+    top: 250px;
+    height: 360px;
+    z-index: 6;
+    overflow: hidden;
+}
+
+.shape-target-track {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.shape-target {
+    width: 76px;
+    height: 76px;
+    border: 3px dashed #cbd5e1;
+    border-radius: 12px;
+    background: rgba(255,255,255,.97);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.shape-target.correct {
+    border-style: solid;
+    border-color: #22c55e;
+    background: #f0fdf4;
+}
+
+.shape-target.shake {
+    animation: shake .35s;
+}
+
+.shape-pool {
+    position: absolute;
+    bottom: 125px;
+    left: 30px;
+    right: 30px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    z-index: 10;
+    padding: 10px;
+}
+
+.shape-piece {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+}
+
+.shape-piece svg,
+.placed-shape svg {
+    width: 52px;
+    height: 52px;
+    display: block;
+}
+
+.placed-shape {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+@keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-7px); }
+    75% { transform: translateX(7px); }
+}
+
+.score-popup {
+    position: fixed;
+    z-index: 200;
+    font-size: 23px;
+    font-weight: 900;
+    color: #16a34a;
+    pointer-events: none;
+    animation: scoreFloat .9s forwards;
+}
+.score-popup.penalty {
+    color: #dc2626;
+    text-shadow: 0 2px 8px rgba(255,255,255,.9);
+}
+
+@keyframes scoreFloat {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-45px) scale(1.15);
+    }
+}
+
+/* =========================
+   COLOUR GAME
+========================= */
+
+.colour-grid-wrapper {
+    position: absolute;
+    top: 95px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(600px,calc(100% - 60px));
+    height: 480px;
+    overflow: hidden;
+    z-index: 6;
+}
+
+.colour-grid {
+    display: grid;
+    gap: 8px;
+    width: max-content;
+    margin: 0 auto;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.colour-cell {
+    width: 62px;
+    height: 62px;
+    border: 3px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.colour-cell.filled {
+    border-style: solid;
+    border-color: #94a3b8;
+}
+
+.colour-cell.shake {
+    animation: shake .35s;
+}
+
+.colour-palette {
+    position: absolute;
+    bottom: 125px;
+    left: 20px;
+    right: 20px;
+    min-height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    z-index: 10;
+}
+
+.colour-piece {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    cursor: grab;
+    border: 3px solid rgba(0,0,0,.1);
+    touch-action: none;
+}
+
+/* =========================
+   PATTERN GAME
+========================= */
+
+.pattern-board-wrapper {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(850px,calc(100% - 40px));
+    height: 535px;
+    overflow: auto;
+    z-index: 6;
+}
+
+.pattern-board {
+    display: grid;
+    row-gap: 13px;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 30px 30px;
+}
+
+.pattern-cell {
+    width: 27px;
+    height: 27px;
+    justify-self: center;
+    align-self: center;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    background: #fff;
+    cursor: pointer;
+    transition: transform .12s,background .12s;
+}
+
+.pattern-cell.active {
+    background: #f59e0b;
+    border-color: #d97706;
+    transform: scale(1.18);
+}
+
+.pattern-cell.player-selected {
+    background: #6366f1;
+    border-color: #4f46e5;
+    transform: scale(1.08);
+}
+
+/* =========================
+   GAME 3 — ROUND 3 OCEAN HOUSE
+========================= */
+
+.house-round-stage {
+    width: min(760px, 94vw);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 8px 24px;
+    box-sizing: border-box;
+}
+
+.house-memory-card {
+    width: min(720px, 92vw);
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border-radius: 18px;
+    background: rgba(255,255,255,.94);
+    border: 3px solid rgba(14,165,233,.28);
+    box-shadow: 0 10px 26px rgba(2,132,199,.18);
+    text-align: center;
+}
+
+.house-memory-card h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    color: #075985;
+}
+
+.house-memory-card p {
+    margin: 4px 0 10px;
+    font-size: 13px;
+    color: #334155;
+}
+
+.house-sequence {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.house-sequence-item {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    position: relative;
+    background: linear-gradient(180deg,#f0f9ff,#e0f2fe);
+    border: 2px solid #7dd3fc;
+    font-size: 28px;
+    box-shadow: 0 5px 12px rgba(2,132,199,.15);
+}
+
+.house-sequence-number {
+    position: absolute;
+    top: -7px;
+    left: -7px;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: #0ea5e9;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.ocean-house {
+    width: min(650px, 90vw);
+    position: relative;
+    margin-top: 70px;
+    padding: 24px 22px 28px;
+    box-sizing: border-box;
+    border: 5px solid #f59e0b;
+    border-radius: 20px 20px 28px 28px;
+    background:
+        linear-gradient(rgba(255,255,255,.18),rgba(255,255,255,.08)),
+        repeating-linear-gradient(0deg,#fbbf24 0 30px,#f59e0b 30px 33px);
+    box-shadow: 0 18px 35px rgba(3,105,161,.28);
+}
+
+.ocean-house::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -83px;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: min(310px,44vw) solid transparent;
+    border-right: min(310px,44vw) solid transparent;
+    border-bottom: 84px solid #fb7185;
+    filter: drop-shadow(0 -3px 0 #e11d48);
+    z-index: 0;
+}
+
+.ocean-house::after {
+    content: "OCEAN HOUSE";
+    position: absolute;
+    top: -58px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    color: white;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0,0,0,.25);
+    white-space: nowrap;
+}
+
+.house-door-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(80px, 1fr));
+    gap: 16px;
+}
+
+.house-door {
+    min-height: 94px;
+    border: 4px solid #7c2d12;
+    border-radius: 44px 44px 10px 10px;
+    background: linear-gradient(180deg,#fed7aa,#fb923c);
+    box-shadow: inset 0 0 0 5px rgba(255,255,255,.25), 0 6px 0 #9a3412;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 34px;
+    color: #7c2d12;
+    touch-action: manipulation;
+    transition: transform .14s, filter .14s;
+}
+
+.house-door:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+}
+
+.house-door.path-selected {
+    background: linear-gradient(180deg,#dbeafe,#93c5fd);
+    border-color: #1d4ed8;
+    box-shadow: inset 0 0 0 5px rgba(255,255,255,.28), 0 6px 0 #1e40af;
+}
+
+.house-door-step {
+    font-size: 12px;
+    font-weight: 900;
+    color: #1e3a8a;
+}
+
+.house-progress {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.94);
+    border: 2px solid #7dd3fc;
+    color: #075985;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+@media (max-width:700px) {
+    .house-round-stage {
+        width: 100%;
+        gap: 10px;
+    }
+    .house-memory-card {
+        padding: 9px 9px;
+    }
+    .house-sequence-item {
+        width: 42px;
+        height: 42px;
+        font-size: 23px;
+    }
+    .ocean-house {
+        width: 96%;
+        margin-top: 58px;
+        padding: 18px 10px 20px;
+    }
+    .ocean-house::before {
+        top: -68px;
+        border-left-width: 44vw;
+        border-right-width: 44vw;
+        border-bottom-width: 70px;
+    }
+    .ocean-house::after {
+        top: -48px;
+        font-size: 12px;
+    }
+    .house-door-grid {
+        grid-template-columns: repeat(3, minmax(62px,1fr));
+        gap: 9px;
+    }
+    .house-door {
+        min-height: 72px;
+        font-size: 27px;
+        border-width: 3px;
+    }
+}
+
+@media (max-width:700px) {
+
+    header {
+        height: auto;
+        min-height: 72px;
+        padding: 12px 14px;
+    }
+
+    .logo {
+        font-size: 23px;
+    }
+
+    .info-box {
+        padding: 6px 9px;
+        font-size: 11px;
+    }
+
+    main {
+        padding: 10px;
+    }
+
+    .game-field {
+        height: 650px;
+    }
+
+    .shape-target {
+        width: 58px;
+        height: 58px;
+    }
+
+    .shape-piece {
+        width: 48px;
+        height: 48px;
+    }
+
+    .shape-piece svg,
+    .placed-shape svg {
+        width: 42px;
+        height: 42px;
+    }
+
+    .colour-cell {
+        width: 50px;
+        height: 50px;
+    }
+
+    .pattern-cell {
+        width: 23px;
+        height: 23px;
+    }
+
+    .overlay-card {
+        padding: 24px 18px;
+    }
+}
+
+
+@media (max-width:700px) {
+    .game-field {
+        height: 650px;
+    }
+
+    .shape-memory-area {
+        top: 76px;
+    }
+
+    .memory-title {
+        font-size: 13px;
+        padding: 7px 13px;
+        margin-bottom: 10px;
+    }
+
+    .shape-memory-area .shape-piece {
+        width: 34px;
+        height: 34px;
+    }
+
+    .shape-memory-area .shape-piece svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .shape-target-area {
+        top: 205px;
+        height: 350px;
+    }
+
+    .shape-target {
+        width: 48px;
+        height: 48px;
+    }
+
+    .shape-pool {
+        bottom: 100px;
+        left: 12px;
+        right: 12px;
+        min-height: 86px;
+        max-height: 100px;
+        padding: 6px 8px;
+        gap: 5px;
+    }
+
+    .shape-pool .shape-piece {
+        width: 34px;
+        height: 34px;
+    }
+
+    .shape-pool .shape-piece svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .colour-grid-wrapper {
+        top: 78px;
+        width: calc(100% - 24px);
+        height: 360px;
+    }
+
+    .colour-grid {
+        --colour-cell-size: clamp(36px, 11vw, 48px);
+        gap: 6px;
+    }
+
+    .colour-palette {
+        left: 12px;
+        right: 12px;
+        bottom: 100px;
+        min-height: 68px;
+        max-height: 82px;
+        padding: 6px 8px;
+        gap: 5px;
+    }
+
+    .colour-piece {
+        width: 34px;
+        height: 34px;
+    }
+
+    .red-zone {
+        height: 82px;
+    }
+}
+
+
+/* =========================================================
+   SEA COMBO GAME 1 + TOP-TO-BOTTOM MOVEMENT UPDATE
+========================================================= */
+.shape-memory-area {
+    top: 78px;
+    left: 18px;
+    right: 18px;
+}
+.shape-memory-area .memory-title { margin-bottom: 10px; }
+.memory-row { gap: 8px; flex-wrap: nowrap; overflow: hidden; }
+.shape-memory-area .shape-piece { width: 46px; height: 46px; }
+.shape-memory-area .shape-piece svg { width: 34px; height: 34px; }
+.combo-card {
+    display:flex; align-items:center; justify-content:center; gap:5px;
+    min-width:0; padding:5px 7px; border-radius:12px;
+    background:rgba(255,255,255,.88); border:2px solid rgba(14,165,233,.45);
+    box-shadow:0 3px 9px rgba(0,0,0,.12);
+}
+.combo-card .combo-icon { width:30px; height:30px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+.combo-card .combo-icon svg { width:28px; height:28px; }
+.combo-animal { font-size:26px; line-height:1; }
+.memory-row .combo-card { flex:1 1 0; max-width:180px; }
+.shape-target-area { top: 210px; height: 365px; overflow:hidden; }
+.shape-target-track { top:0; gap:10px; flex-wrap:nowrap; align-items:center; }
+.shape-target { width:76px; height:76px; }
+.combo-target { width:96px; height:78px; padding:5px; }
+.combo-target .combo-icon { width:25px; height:25px; }
+.combo-target .combo-icon svg { width:23px; height:23px; }
+.combo-target .combo-animal { font-size:21px; }
+.combo-target .combo-mini { display:flex; align-items:center; justify-content:center; gap:2px; width:100%; height:100%; }
+.shape-pool { bottom:112px; left:14px; right:14px; min-height:94px; max-height:112px; gap:7px; padding:8px; overflow:hidden; }
+.shape-pool .combo-card { width:110px; min-height:48px; padding:4px 5px; cursor:grab; }
+.shape-pool .combo-icon { width:24px; height:24px; }
+.shape-pool .combo-icon svg { width:22px; height:22px; }
+.shape-pool .combo-animal { font-size:20px; }
+/* Make the moving tracks start exactly at the top of their movement areas. */
+.shape-target-track, .colour-grid { top:0; }
+.colour-grid-wrapper { top:88px; height:480px; overflow:hidden; }
+.colour-grid { margin-top:0; }
+.colour-palette { bottom:112px; }
+
+@media (max-width:700px) {
+    .shape-memory-area { top:74px; }
+    .memory-row { gap:4px; }
+    .memory-row .combo-card { padding:4px 3px; }
+    .combo-card .combo-icon { width:24px; height:24px; }
+    .combo-card .combo-icon svg { width:22px; height:22px; }
+    .combo-animal { font-size:21px; }
+    .shape-target-area { top:195px; height:360px; }
+    .combo-target { width:72px; height:64px; }
+    .combo-target .combo-icon { width:19px; height:19px; }
+    .combo-target .combo-icon svg { width:18px; height:18px; }
+    .combo-target .combo-animal { font-size:17px; }
+    .shape-pool { bottom:100px; min-height:86px; max-height:104px; gap:4px; }
+    .shape-pool .combo-card { width:88px; min-height:42px; }
+    .shape-pool .combo-icon { width:19px; height:19px; }
+    .shape-pool .combo-icon svg { width:18px; height:18px; }
+    .shape-pool .combo-animal { font-size:17px; }
+}
+
+
+/* =========================================================
+   SCREEN-FIT FIX FOR GAME 1 + GAME 2
+   Keeps the first moving row fully visible and prevents the
+   top of the play area from being hidden on shorter screens.
+========================================================= */
+#shapeField,
+#colourField {
+    min-height: 720px;
+}
+
+/* Give moving content a little breathing room from the top. */
+.shape-target-area {
+    top: 185px;
+    height: 395px;
+    padding-top: 12px;
+}
+
+.shape-target-track {
+    top: 12px !important;
+}
+
+.colour-grid-wrapper {
+    top: 78px;
+    height: 505px;
+    padding-top: 12px;
+}
+
+.colour-grid {
+    top: 12px !important;
+}
+
+/* Keep draggable trays clearly below the moving areas. */
+.shape-pool,
+.colour-palette {
+    bottom: 116px;
+}
+
+@media (max-width: 700px) {
+    #shapeField,
+    #colourField {
+        height: 720px;
+        min-height: 720px;
+    }
+
+    .shape-target-area {
+        top: 172px;
+        height: 410px;
+        left: 10px;
+        right: 10px;
+        padding-top: 10px;
+    }
+
+    .shape-target-track {
+        top: 10px !important;
+    }
+
+    .colour-grid-wrapper {
+        top: 74px;
+        height: 510px;
+        width: calc(100% - 20px);
+        padding-top: 10px;
+    }
+
+    .colour-grid {
+        top: 10px !important;
+    }
+
+    .shape-pool,
+    .colour-palette {
+        bottom: 104px;
+    }
+}
+
+@media (max-height: 780px) and (min-width: 701px) {
+    #shapeField,
+    #colourField {
+        height: 700px;
+        min-height: 700px;
+    }
+
+    .shape-target-area {
+        top: 170px;
+        height: 390px;
+    }
+
+    .colour-grid-wrapper {
+        top: 72px;
+        height: 490px;
+    }
+}
+
+
+/* =========================================================
+   MEMORY-PHASE FULL-VISIBILITY FIX
+   Later rounds must always show the complete illustration.
+========================================================= */
+
+/* During memorisation, reserve the centre of the screen for the pattern only. */
+#shapeField.memory-mode .shape-target-area,
+#shapeField.memory-mode .shape-pool,
+#shapeField.memory-mode .red-zone,
+#colourField.memory-mode .colour-palette,
+#colourField.memory-mode .red-zone {
+    display: none !important;
+}
+
+#shapeField.memory-mode .shape-memory-area {
+    top: 82px;
+    left: 18px;
+    right: 18px;
+    bottom: 34px;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: visible;
+}
+
+/* Shape-only rounds stay compact. */
+#shapeMemoryRow:not(.combo-memory) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow: visible;
+}
+
+/* Rounds 3-5: show every sea combo; never crop a combo off-screen. */
+#shapeMemoryRow.combo-memory {
+    width: min(920px, 100%);
+    display: grid;
+    grid-template-columns: repeat(var(--combo-count, 3), minmax(0, 1fr));
+    gap: 10px;
+    align-items: stretch;
+    justify-content: center;
+    overflow: visible;
+    padding: 4px;
+}
+
+#shapeMemoryRow.combo-memory > .shape-piece {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+}
+
+#shapeMemoryRow.combo-memory .combo-card {
+    width: 100%;
+    max-width: none;
+    min-height: 82px;
+    padding: 8px 5px;
+    gap: 4px;
+    box-sizing: border-box;
+}
+
+#shapeMemoryRow.combo-memory .combo-icon {
+    width: clamp(24px, 4vw, 38px);
+    height: clamp(24px, 4vw, 38px);
+}
+
+#shapeMemoryRow.combo-memory .combo-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+#shapeMemoryRow.combo-memory .combo-animal {
+    font-size: clamp(22px, 4vw, 36px);
+}
+
+/* Game 2 memory pattern gets a centred, non-moving presentation. */
+#colourField.memory-mode .colour-grid-wrapper {
+    top: 88px;
+    left: 18px;
+    right: 18px;
+    width: auto;
+    height: calc(100% - 135px);
+    padding: 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: visible;
+}
+
+#colourField.memory-mode .colour-grid {
+    position: relative;
+    top: 0 !important;
+    left: auto;
+    transform: none !important;
+    margin: 0 auto;
+    align-self: flex-start;
+    --colour-cell-size: clamp(42px, 8.2vw, 72px);
+    gap: clamp(5px, 1.2vw, 10px);
+}
+
+@media (max-width: 700px) {
+    #shapeField.memory-mode .shape-memory-area {
+        top: 70px;
+        left: 8px;
+        right: 8px;
+        bottom: 20px;
+    }
+
+    #shapeField.memory-mode .memory-title {
+        font-size: 13px;
+        padding: 6px 10px;
+        margin-bottom: 8px;
+        white-space: normal;
+        width: min(94%, 520px);
+        text-align: center;
+    }
+
+    #shapeMemoryRow.combo-memory {
+        /* Later rounds wrap instead of being clipped horizontally. */
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        width: 100%;
+    }
+
+    #shapeMemoryRow.combo-memory .combo-card {
+        min-height: 64px;
+        padding: 5px 2px;
+        gap: 1px;
+    }
+
+    #shapeMemoryRow.combo-memory .combo-icon {
+        width: clamp(19px, 7vw, 27px);
+        height: clamp(19px, 7vw, 27px);
+    }
+
+    #shapeMemoryRow.combo-memory .combo-animal {
+        font-size: clamp(18px, 7vw, 25px);
+    }
+
+    #colourField.memory-mode .colour-grid-wrapper {
+        top: 72px;
+        left: 8px;
+        right: 8px;
+        height: calc(100% - 100px);
+        padding: 8px;
+    }
+
+    #colourField.memory-mode .colour-grid {
+        --colour-cell-size: clamp(38px, 12vw, 54px);
+        gap: 6px;
+    }
+}
+
+@media (max-width: 430px) {
+    #shapeMemoryRow.combo-memory {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    #shapeMemoryRow.combo-memory[data-count="3"] {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    #shapeMemoryRow.combo-memory .combo-card {
+        min-height: 58px;
+    }
+
+    #colourField.memory-mode .colour-grid {
+        --colour-cell-size: clamp(34px, 11vw, 46px);
+        gap: 5px;
+    }
+}
+
+
+/* ============================================================
+   GAME 2 RESPONSIVE MEMORY + DOUBLE-COLOUR COMBOS
+============================================================ */
+#colourField.memory-mode .colour-grid-wrapper {
+    top: 76px !important;
+    width: min(720px, calc(100% - 24px)) !important;
+    height: calc(100% - 150px) !important;
+    min-height: 260px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 12px;
+    overflow: visible !important;
+}
+
+#colourField.memory-mode .colour-grid {
+    --colour-cell-size: clamp(38px, 7.2vw, 62px);
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    gap: clamp(6px, 1.5vw, 12px);
+}
+
+#colourField.memory-mode .colour-cell {
+    width: var(--colour-cell-size) !important;
+    height: var(--colour-cell-size) !important;
+}
+
+.colour-combo-piece,
+.double-colour-grid .colour-cell {
+    position: relative;
+    overflow: hidden;
+}
+
+.colour-combo-piece {
+    width: 62px;
+    height: 46px;
+    border-radius: 10px;
+    border: 3px solid rgba(255,255,255,.95);
+    outline: 2px solid rgba(15,23,42,.16);
+    box-shadow: 0 4px 10px rgba(15,23,42,.18);
+}
+
+.double-colour-grid .colour-cell {
+    border-radius: 11px;
+}
+
+@media (max-width: 700px), (max-height: 760px) {
+    #colourField.memory-mode .colour-grid-wrapper {
+        top: 68px !important;
+        height: calc(100% - 125px) !important;
+        padding-top: 6px;
+    }
+
+    #colourField.memory-mode .colour-grid {
+        --colour-cell-size: clamp(34px, 11vw, 50px);
+        gap: 6px;
+    }
+
+    .colour-palette {
+        gap: 6px !important;
+        padding: 7px 8px !important;
+        max-height: 110px !important;
+        overflow-y: auto;
+    }
+
+    .colour-combo-piece {
+        width: 52px;
+        height: 38px;
+    }
+}
+
+
+/* ============================================================
+   FINAL GAME 2 MEMORY CENTERING FIX
+   Removes older left/right constraints so every memorisation
+   box remains centred and visible on all screen sizes.
+============================================================ */
+#colourField.memory-mode .colour-grid-wrapper {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(720px, calc(100% - 24px)) !important;
+    max-width: calc(100% - 24px) !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+}
+
+#colourField.memory-mode .colour-grid {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: 100% !important;
+    width: max-content !important;
+    box-sizing: border-box !important;
+}
+
+/* Keep every memory cell compact enough to stay fully on-screen. */
+#colourField.memory-mode .colour-cell {
+    width: var(--colour-cell-size) !important;
+    height: var(--colour-cell-size) !important;
+    min-width: 0 !important;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 700px) {
+    #colourField.memory-mode .colour-grid-wrapper {
+        width: calc(100% - 16px) !important;
+        max-width: calc(100% - 16px) !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
+
+    #colourField.memory-mode .colour-grid {
+        --colour-cell-size: clamp(30px, 10vw, 46px) !important;
+        gap: 5px !important;
+    }
+}
+
+@media (max-width: 430px) {
+    #colourField.memory-mode .colour-grid-wrapper {
+        width: calc(100% - 10px) !important;
+        max-width: calc(100% - 10px) !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    #colourField.memory-mode .colour-grid {
+        --colour-cell-size: clamp(28px, 9.5vw, 40px) !important;
+        gap: 4px !important;
+    }
+}
+
+
+/* =========================================================
+   CONSTANT CLIMB — ENDLESS MODE
+========================================================= */
+.climb-menu-btn{
+    background:linear-gradient(135deg,#ffb347,#ff7a59)!important;
+    color:#082f49!important;
+    border:3px solid rgba(255,255,255,.8)!important;
+    box-shadow:0 8px 20px rgba(0,0,0,.16)!important;
+}
+#climbField{
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 20% 22%,rgba(255,255,255,.65) 0 4px,transparent 5px),
+      linear-gradient(180deg,#74d8ff 0 44%,#22a9db 44% 58%,#087ca8 58% 100%);
+}
+.climb-scene{position:absolute;inset:0;overflow:hidden}
+.climb-hills{
+    position:absolute;left:-5%;right:-5%;bottom:92px;height:42%;
+    opacity:.55;
+    background:linear-gradient(135deg,transparent 0 44%,#187d83 45% 55%,transparent 56%) 0 100%/250px 200px repeat-x;
+}
+.climb-track{
+    position:absolute;left:0;right:0;bottom:62px;height:14px;background:#263d49;
+    box-shadow:0 8px 0 #9a7957,0 15px 0 #4b382b;
+}
+.climb-track:after{
+    content:"";position:absolute;left:0;right:0;top:5px;height:4px;
+    background:repeating-linear-gradient(90deg,#e6eef2 0 42px,transparent 42px 70px);
+    animation:climbRails .65s linear infinite
+}
+@keyframes climbRails{to{background-position:-70px 0}}
+.climb-train{
+    position:absolute;left:5%;bottom:82px;width:220px;height:88px;z-index:2;
+    animation:climbBob .7s ease-in-out infinite alternate
+}
+@keyframes climbBob{to{transform:translateY(-3px)}}
+.climb-engine{position:absolute;left:0;bottom:0;width:135px;height:55px;border-radius:18px 28px 10px 10px;background:#ff6659;border:4px solid #713c35}
+.climb-engine:before{content:"";position:absolute;left:24px;top:-34px;width:66px;height:36px;border-radius:10px 10px 2px 2px;background:#ffd45d;border:4px solid #80652e}
+.climb-chimney{position:absolute;left:108px;top:-27px;width:20px;height:31px;background:#183847;border-radius:5px 5px 0 0}
+.climb-car{position:absolute;left:140px;bottom:0;width:78px;height:49px;border-radius:12px;background:#4bd18c;border:4px solid #176c4b}
+.climb-wheel{position:absolute;bottom:-14px;width:28px;height:28px;border-radius:50%;background:#183847;border:5px solid #e5f1f5;animation:climbWheel .5s linear infinite}
+.climb-wheel.a{left:22px}.climb-wheel.b{left:92px}.climb-wheel.c{left:165px}
+@keyframes climbWheel{to{transform:rotate(360deg)}}
+.climb-panel{
+    position:absolute;z-index:5;right:4%;top:50%;transform:translateY(-50%);
+    width:min(590px,88%);max-height:68%;overflow:auto;padding:18px;
+    border-radius:24px;background:rgba(255,255,255,.96);box-shadow:0 18px 50px rgba(0,40,65,.3)
+}
+.climb-panel.hidden{display:none}
+.climb-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.climb-badge{padding:6px 11px;border-radius:999px;color:#fff;font-weight:900}
+.climb-badge.easy{background:#20a464}.climb-badge.medium{background:#df951a}.climb-badge.hard{background:#df4c57}
+.climb-title{font-size:clamp(19px,3vw,28px);font-weight:900}
+.climb-help{font-weight:700;margin:7px 0 13px;color:#31576a}
+.climb-board{display:flex;justify-content:center;align-items:center;min-height:135px}
+.climb-sequence{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.climb-token,.climb-choice{min-width:52px;padding:11px;border-radius:13px;background:#eaf9ff;border:2px solid #a7d9e9;font-size:25px;text-align:center;font-weight:900}
+button.climb-choice{cursor:pointer}
+.climb-grid{display:grid;gap:7px;width:min(420px,100%)}
+.climb-cell{aspect-ratio:1;border-radius:10px;background:#eefaff;border:2px solid #abd6e5;cursor:pointer}
+.climb-cell.memory{background:#58d1ef}
+.climb-cell.selected{outline:4px solid #173f55;transform:scale(.9)}
+.climb-submit{margin-top:12px;border:0;border-radius:999px;background:#087da8;color:#fff;padding:10px 22px;font-weight:900;cursor:pointer}
+.climb-toast{position:absolute;z-index:8;left:50%;top:23%;transform:translate(-50%,-50%);background:#fff;padding:10px 17px;border-radius:999px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0}
+.climb-toast.show{animation:climbToast 1.2s ease}
+@keyframes climbToast{0%{opacity:0}15%,75%{opacity:1}100%{opacity:0}}
+@media(max-width:700px){
+  .climb-panel{left:4%;right:4%;width:auto;top:43%;max-height:60%}
+  .climb-train{transform:scale(.72);transform-origin:left bottom}
+}
+
+
+.climb-recheck{
+    margin-top:12px;border:0;border-radius:999px;padding:11px 22px;
+    font-weight:900;cursor:pointer;background:#ffb347;color:#16384a;
+    box-shadow:0 5px 14px rgba(0,0,0,.15)
+}
+.climb-recheck-note{margin-top:8px;font-size:13px;font-weight:800;color:#536f7d}
+
+/* TENOTEMO OCEAN SPIN SEGMENT */
+.spin-menu-btn{background:linear-gradient(135deg,#35d7e8,#087ca8)!important;color:#fff!important;border:3px solid rgba(255,255,255,.85)!important;box-shadow:0 8px 20px rgba(0,90,130,.24)!important}
+#spinField{overflow:hidden;background:radial-gradient(circle at 16% 16%,rgba(255,255,255,.8) 0 3px,transparent 4px),radial-gradient(circle at 76% 30%,rgba(255,255,255,.55) 0 5px,transparent 6px),linear-gradient(180deg,#67dcf2 0,#159fc9 44%,#076b98 100%)}
+#spinField:after{content:"";position:absolute;left:0;right:0;bottom:0;height:20%;background:linear-gradient(165deg,transparent 0 45%,#064f72 46% 55%,transparent 56%) 0 0/180px 100% repeat-x;opacity:.7}
+.spin-shell{position:absolute;inset:54px 12px 14px;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:14px;z-index:2}.spin-stage,.spin-side{border-radius:24px;background:rgba(2,44,73,.72);border:2px solid rgba(255,255,255,.32);box-shadow:0 18px 45px rgba(0,44,72,.3)}.spin-stage{display:grid;place-items:center;position:relative;overflow:hidden}.spin-board{position:relative;width:min(430px,72vh,68vw);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#2c7995 0 64%,#156784 65% 71%,#063e5f 72%);box-shadow:0 20px 30px rgba(0,20,42,.55)}.spin-object{position:absolute;z-index:1;width:16%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;display:grid;place-items:center;background:#effcff;border:4px solid #93e9f4;font-size:clamp(30px,5vw,54px)}.spin-board.choosing .spin-object{opacity:0}.spin-wheel{position:absolute;z-index:3;inset:0;width:100%;height:100%;will-change:transform;filter:drop-shadow(0 6px 8px rgba(0,0,0,.45))}.spin-target{position:absolute;z-index:7;width:17%;aspect-ratio:1;transform:translate(-50%,-50%);border:3px dashed #fff18d;border-radius:50%;background:rgba(1,28,48,.86);display:none;place-items:center;color:#fff;font-size:clamp(28px,5vw,50px);cursor:pointer}.spin-board.choosing .spin-target{display:grid}.spin-target.good{border-style:solid;border-color:#66f0ad;background:#075f55}.spin-target.bad{border-color:#ff8797}.spin-side{padding:14px;display:flex;flex-direction:column;gap:10px;color:#fff}.spin-meta{display:flex;justify-content:space-between;gap:5px;font-weight:900;font-size:13px}.spin-meta span{background:rgba(0,20,40,.35);padding:7px 8px;border-radius:999px}.spin-tray{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.spin-choice{aspect-ratio:1;border-radius:13px;border:2px solid rgba(255,255,255,.38);background:#e9fbff;font-size:29px;cursor:grab}.spin-choice.selected{outline:4px solid #ffe970}.spin-choice.used{opacity:.3}.spin-action{border:0;border-radius:999px;padding:11px 14px;font-weight:900;cursor:pointer}.spin-check{margin-top:auto;background:#ffe970;color:#16445b}.spin-continue{background:transparent;color:#fff;border:2px solid #fff}.spin-action:disabled{opacity:.35}.spin-message{min-height:44px;font-weight:800;line-height:1.35}.spin-phase{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:rgba(0,25,45,.75);color:#fff;padding:7px 13px;border-radius:999px;font-weight:900;font-size:13px;white-space:nowrap}.spin-complete{position:absolute;z-index:20;inset:0;background:rgba(0,30,55,.9);display:grid;place-items:center;text-align:center;color:#fff;padding:24px}.spin-complete.hidden{display:none}.spin-complete h2{font-size:clamp(28px,5vw,48px);margin:0 0 10px}
+@media(max-width:760px){.spin-shell{grid-template-columns:1fr;inset:50px 7px 7px}.spin-stage{min-height:55vh}.spin-board{width:min(330px,78vw)}.spin-side{padding:10px}.spin-side .spin-message{display:none}.spin-tray{grid-template-columns:repeat(5,1fr)}.spin-choice{font-size:23px}.spin-action{padding:10px}.spin-meta{font-size:11px}}
+
+/* Rules shown before every game segment begins. */
+.segment-rules-overlay{position:fixed;inset:0;z-index:600;background:rgba(4,31,52,.84);display:grid;place-items:center;padding:18px}
+.segment-rules-overlay.hidden{display:none}
+.segment-rules-card{width:min(620px,94vw);max-height:88vh;overflow:auto;border-radius:26px;background:linear-gradient(180deg,#effcff,#d8f5ff);border:3px solid #fff;box-shadow:0 24px 70px rgba(0,0,0,.38);padding:24px;color:#173f55}
+.segment-rules-card h1{margin:0 0 8px;font-size:clamp(28px,5vw,42px)}
+.segment-rules-card p{font-weight:800;color:#31576a}
+.segment-rules-card ul{padding-left:22px;line-height:1.55;font-weight:750}
+.segment-rules-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}
+.segment-rules-actions button{border:0;border-radius:999px;padding:12px 22px;font-weight:900;cursor:pointer}
+#segmentRulesStart{background:#087da8;color:#fff}
+#segmentRulesBack{background:#cfe8f0;color:#173f55}
+
+/* Challenge rows begin at the top edge instead of entering late mid-screen. */
+#shapeField:not(.memory-mode) .shape-target-area{top:54px;height:528px;padding-top:0}
+#shapeField:not(.memory-mode) .shape-target-track{top:0!important}
+#colourField:not(.memory-mode) .colour-grid-wrapper{top:54px;height:528px;padding-top:0}
+#colourField:not(.memory-mode) .colour-grid{top:0!important}
+@media(max-width:700px){
+  #shapeField:not(.memory-mode) .shape-target-area{top:50px;height:535px;padding-top:0}
+  #colourField:not(.memory-mode) .colour-grid-wrapper{top:50px;height:535px;padding-top:0}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+
+    <div class="logo">TENOTEMO</div>
+
+    <div class="header-info">
+
+        <div class="info-box" id="modeDisplay">
+            Main Menu
+        </div>
+
+        <div class="info-box" id="roundDisplay">
+            Round -
+        </div>
+
+        <div class="info-box" id="scoreDisplay">
+            Score: 0
+        </div>
+
+        <div class="info-box timer-box" id="timerDisplay">
+            Time: --
+        </div>
+
+    </div>
+
+</header>
+
+
+<main>
+
+<div class="instruction" id="instruction">
+    Choose a game to begin.
+</div>
+
+
+<!-- =========================================================
+     GAME 1
+========================================================== -->
+
+<div class="game-field ocean-theme" id="shapeField">
+
+    <button class="in-game-menu" id="shapeMenuButton">
+        Main Menu
+    </button>
+
+    <div class="small-status" id="shapeStatus">
+        Memorise
+    </div>
+
+    <div class="shape-memory-area" id="shapeMemoryArea">
+
+        <div class="memory-title">
+            Memorise the shapes in this exact order
+        </div>
+
+        <div class="memory-row" id="shapeMemoryRow"></div>
+
+    </div>
+
+    <div class="shape-target-area">
+
+        <div
+            class="shape-target-track"
+            id="shapeTargetTrack">
+        </div>
+
+    </div>
+
+    <div class="shape-pool" id="shapePool"></div>
+
+    <div class="red-zone">
+        <div class="red-zone-label">
+            Red Zone
+        </div>
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     GAME 2
+========================================================== -->
+
+<div class="game-field ocean-theme" id="colourField">
+
+    <button class="in-game-menu" id="colourMenuButton">
+        Main Menu
+    </button>
+
+    <div class="small-status" id="colourStatus">
+        Memorise
+    </div>
+
+    <div class="colour-grid-wrapper">
+
+        <div
+            class="colour-grid"
+            id="colourGrid">
+        </div>
+
+    </div>
+
+    <div
+        class="colour-palette"
+        id="colourPalette">
+    </div>
+
+    <div class="red-zone">
+        <div class="red-zone-label">
+            Red Zone
+        </div>
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     GAME 3
+========================================================== -->
+
+<div class="game-field ocean-theme" id="patternField">
+
+    <button class="in-game-menu" id="patternMenuButton">
+        Main Menu
+    </button>
+
+    <div class="small-status" id="patternStatus">
+        Memorise
+    </div>
+
+    <div class="pattern-board-wrapper">
+
+        <div
+            class="pattern-board"
+            id="patternBoard">
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     CONSTANT CLIMB
+========================================================== -->
+<div class="game-field" id="climbField">
+    <button class="in-game-menu" id="climbMenuButton">Main Menu</button>
+    <div class="small-status" id="climbStatus">Train Moving</div>
+    <div class="climb-scene">
+        <div class="climb-hills"></div>
+        <div class="climb-track"></div>
+        <div class="climb-train">
+            <div class="climb-engine"><div class="climb-chimney"></div></div>
+            <div class="climb-car"></div>
+            <div class="climb-wheel a"></div><div class="climb-wheel b"></div><div class="climb-wheel c"></div>
+        </div>
+        <div class="climb-panel hidden" id="climbPanel">
+            <div class="climb-top">
+                <span class="climb-badge easy" id="climbDifficulty">EASY</span>
+                <span class="climb-title" id="climbPuzzleTitle">Pattern Stop</span>
+            </div>
+            <div class="climb-help" id="climbHelp"></div>
+            <div class="climb-board" id="climbBoard"></div>
+            <div style="text-align:center" id="climbActions"></div>
+        </div>
+        <div class="climb-toast" id="climbToast"></div>
+    </div>
+</div>
+
+<!-- =========================================================
+     TENOTEMO OCEAN SPIN
+========================================================== -->
+<div class="game-field ocean-theme" id="spinField">
+    <button class="in-game-menu" id="spinMenuButton">Main Menu</button>
+    <div class="small-status" id="spinStatus">Maximum Speed</div>
+    <div class="spin-shell">
+        <section class="spin-stage">
+            <div class="spin-board" id="oSpinBoard">
+                <div id="oSpinObjects"></div>
+                <svg class="spin-wheel" id="oSpinWheel" viewBox="0 0 500 500" aria-label="Ocean wheel with one viewing hole">
+                    <defs>
+                        <radialGradient id="oSpinDisc"><stop offset="0" stop-color="#20c3d5"/><stop offset=".7" stop-color="#087da8"/><stop offset="1" stop-color="#034f78"/></radialGradient>
+                        <radialGradient id="oSpinHub"><stop stop-color="#fff4a3"/><stop offset=".65" stop-color="#f0ae2c"/><stop offset="1" stop-color="#90600b"/></radialGradient>
+                        <mask id="oSpinMask" maskUnits="userSpaceOnUse"><rect width="500" height="500" fill="white"/><circle id="oSpinHole" cx="250" cy="72" r="50" fill="black"/></mask>
+                    </defs>
+                    <circle cx="250" cy="250" r="242" fill="none" stroke="#8df2f6" stroke-width="16"/>
+                    <g mask="url(#oSpinMask)"><circle cx="250" cy="250" r="232" fill="url(#oSpinDisc)" stroke="#023c60" stroke-width="16"/><circle cx="250" cy="250" r="165" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="4"/><path d="M250 20V480M20 250H480M88 88L412 412M412 88L88 412" stroke="rgba(255,255,255,.18)" stroke-width="5"/></g>
+                    <circle id="oSpinHoleRim" cx="250" cy="72" r="52" fill="none" stroke="#fff18d" stroke-width="7"/>
+                    <circle cx="250" cy="250" r="48" fill="url(#oSpinHub)" stroke="#fff8bf" stroke-width="6"/>
+                </svg>
+                <div id="oSpinTargets"></div>
+            </div>
+            <div class="spin-phase" id="oSpinPhase">Watch through the opening</div>
+        </section>
+        <aside class="spin-side">
+            <div class="spin-meta"><span id="oSpinRound">Round 1/6</span><span id="oSpinStop">Stop 1/4</span><span id="oSpinValue">10 pts each</span></div>
+            <div class="spin-message" id="oSpinMessage">The choices appear when the wheel stops.</div>
+            <div class="spin-tray" id="oSpinTray"></div>
+            <button class="spin-action spin-continue" id="oSpinContinue" style="display:none">Continue spinning</button>
+            <button class="spin-action spin-check" id="oSpinCheck" disabled>Check selected items</button>
+        </aside>
+    </div>
+    <div class="spin-complete hidden" id="oSpinComplete"><div><h2 id="oSpinCompleteTitle">Ocean Spin complete!</h2><p id="oSpinCompleteText"></p><button class="spin-action spin-check" id="oSpinNext">Next round</button></div></div>
+</div>
+
+</main>
+</div>
+
+
+<!-- =========================================================
+     MAIN MENU
+========================================================== -->
+
+<div class="overlay" id="menuOverlay">
+
+    <div class="overlay-card">
+
+        <h1>Welcome to Tenotemo</h1>
+
+        <p>
+            Choose the memory challenge you want to play.
+        </p>
+
+        <div class="player-box">
+
+            <label for="playerNameInput">
+                Player Name
+            </label>
+
+            <input
+                type="text"
+                id="playerNameInput"
+                class="player-name-input"
+                maxlength="20"
+                placeholder="Enter your player name"
+            >
+
+            <div
+                class="player-status"
+                id="playerStatus">
+            </div>
+
+        </div>
+
+        <div class="menu-buttons">
+
+            <button
+                class="menu-btn shape-btn"
+                id="startShapeButton">
+                Shape Memory
+            </button>
+
+            <button
+                class="menu-btn colour-btn"
+                id="startColourButton">
+                Colour Grid Memory
+            </button>
+
+            <button
+                class="menu-btn pattern-btn"
+                id="startPatternButton">
+                Pattern Memory
+            </button>
+
+            <button
+                class="menu-btn climb-menu-btn"
+                id="startClimbButton">
+                🚂 Constant Climb
+            </button>
+
+            <button
+                class="menu-btn spin-menu-btn"
+                id="startSpinButton">
+                🌊 Ocean Spin
+            </button>
+
+            <button
+                class="menu-btn leaderboard-btn"
+                id="leaderboardButton">
+                Leaderboard
+            </button>
+
+            <button
+                class="action-btn danger-btn"
+                id="restartProgressButton">
+                Restart My Progress
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Rules displayed before entering any game segment -->
+<div class="segment-rules-overlay hidden" id="segmentRulesOverlay">
+    <section class="segment-rules-card" role="dialog" aria-modal="true" aria-labelledby="segmentRulesTitle">
+        <h1 id="segmentRulesTitle">Game Rules</h1>
+        <p id="segmentRulesIntro"></p>
+        <ul id="segmentRulesList"></ul>
+        <div class="segment-rules-actions">
+            <button id="segmentRulesBack">Back to menu</button>
+            <button id="segmentRulesStart">Start game</button>
+        </div>
+    </section>
+</div>
+
+
+<!-- =========================================================
+     RESULT
+========================================================== -->
+
+<div class="overlay hidden" id="resultOverlay">
+
+    <div class="overlay-card">
+
+        <h1 id="resultTitle">
+            Round Complete
+        </h1>
+
+        <p id="resultMessage"></p>
+
+        <div class="result-score" id="resultScore">
+            0
+        </div>
+
+        <div class="menu-buttons">
+
+            <button
+                class="action-btn shape-btn"
+                id="playAgainButton">
+                Next Round
+            </button>
+
+            <button
+                class="action-btn secondary-btn"
+                id="resultMenuButton">
+                Main Menu
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     LEADERBOARD
+========================================================== -->
+
+<div class="overlay hidden" id="leaderboardOverlay">
+
+    <div class="overlay-card">
+
+        <h1>Leaderboard</h1>
+
+        <p>
+            Compete for the highest daily and cumulative scores.
+        </p>
+
+        <div class="subscription-box">
+
+            <h3>Monthly Subscription</h3>
+
+            <div
+                class="subscription-status"
+                id="subscriptionStatus">
+                Leaderboard access: Locked
+            </div>
+
+            <p id="subscriptionMessage">
+                Leaderboards are available only to players with an active monthly subscription.
+            </p>
+
+            <button
+                class="action-btn leaderboard-btn"
+                id="subscriptionButton">
+                Activate Monthly Subscription
+            </button>
+
+        </div>
+
+        <div id="leaderboardContent">
+
+            <div class="leaderboard-tabs">
+
+                <button
+                    class="leaderboard-tab active"
+                    id="dailyTab">
+                    Daily
+                </button>
+
+                <button
+                    class="leaderboard-tab"
+                    id="cumulativeTab">
+                    Cumulative
+                </button>
+
+            </div>
+
+            <div id="leaderboardTableContainer"></div>
+
+        </div>
+
+        <div class="menu-buttons">
+
+            <button
+                class="action-btn secondary-btn"
+                id="leaderboardCloseButton">
+                Main Menu
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ============================================================
+   STORAGE KEYS
+============================================================ */
+
+const PROGRESS_STORAGE_KEY =
+    "tenotemo_progress_v2";
+
+const PLAYER_NAME_KEY =
+    "tenotemo_player_name";
+
+const SUBSCRIPTION_KEY =
+    "tenotemo_subscription";
+
+const DAILY_LEADERBOARD_KEY =
+    "tenotemo_daily_leaderboards_v2";
+
+const CUMULATIVE_LEADERBOARD_KEY =
+    "tenotemo_cumulative_leaderboard_v2";
+
+
+/* ============================================================
+   GLOBAL STATE
+============================================================ */
+
+let currentMode = null;
+
+let modeScores = {
+    shape: 0,
+    colour: 0,
+    movement: 0
+};
+
+let modeRounds = {
+    shape: 0,
+    colour: 0,
+    movement: 0
+};
+
+let score = 0;
+let roundIndex = 0;
+let roundStartScore = 0;
+
+/*
+   IMPORTANT:
+
+   Points earned during the current
+   round are held here.
+
+   They are only added to "score"
+   when the player successfully
+   completes the round.
+
+   This prevents failed attempts
+   from permanently adding points.
+*/
+
+let roundEarnedScore = 0;
+
+let timerInterval = null;
+let animationFrame = null;
+
+let phase = null;
+
+
+/* ============================================================
+   PLAYER / LEADERBOARD STATE
+============================================================ */
+
+let playerName =
+    localStorage.getItem(
+        PLAYER_NAME_KEY
+    ) || "Player";
+
+let hasSubscription =
+    localStorage.getItem(
+        SUBSCRIPTION_KEY
+    ) === "true";
+
+let leaderboardType = "daily";
+
+
+let dailyLeaderboards =
+    JSON.parse(
+        localStorage.getItem(
+            DAILY_LEADERBOARD_KEY
+        ) || "{}"
+    );
+
+
+let cumulativeLeaderboard =
+    JSON.parse(
+        localStorage.getItem(
+            CUMULATIVE_LEADERBOARD_KEY
+        ) || "[]"
+    );
+
+
+/* ============================================================
+   LOAD SAVED GAME PROGRESS
+============================================================ */
+
+function loadProgress() {
+
+    const saved =
+        JSON.parse(
+            localStorage.getItem(
+                PROGRESS_STORAGE_KEY
+            ) || "null"
+        );
+
+    if (
+        saved &&
+        saved.modeScores &&
+        saved.modeRounds
+    ) {
+
+        modeScores = {
+            shape:
+                Number(
+                    saved.modeScores.shape
+                ) || 0,
+
+            colour:
+                Number(
+                    saved.modeScores.colour
+                ) || 0,
+
+            movement:
+                Number(
+                    saved.modeScores.movement
+                ) || 0
+        };
+
+        modeRounds = {
+            shape:
+                Number(
+                    saved.modeRounds.shape
+                ) || 0,
+
+            colour:
+                Number(
+                    saved.modeRounds.colour
+                ) || 0,
+
+            movement:
+                Number(
+                    saved.modeRounds.movement
+                ) || 0
+        };
+    }
+}
+
+
+function saveProgress() {
+
+    localStorage.setItem(
+        PROGRESS_STORAGE_KEY,
+        JSON.stringify({
+            modeScores:
+                modeScores,
+
+            modeRounds:
+                modeRounds
+        })
+    );
+}
+
+
+/* ============================================================
+   TOTAL PLAYER SCORE
+============================================================ */
+
+function getTotalPlayerScore() {
+
+    return (
+        Number(modeScores.shape) +
+        Number(modeScores.colour) +
+        Number(modeScores.movement)
+    );
+}
+
+
+/* ============================================================
+   TIMERS
+============================================================ */
+
+const SHAPE_MEMORY_TIME = 30;
+
+// Selection time: Rounds 1-2 = 30 seconds, Round 3 onward = 60 seconds.
+const SHAPE_CHALLENGE_TIMES = [
+    30,
+    30,
+    60,
+    60,
+    60
+];
+
+const COLOUR_MEMORY_TIME = 30;
+
+// Selection time: Rounds 1-2 = 30 seconds, Round 3 onward = 60 seconds.
+const COLOUR_CHALLENGE_TIMES = [
+    30,
+    30,
+    60,
+    60,
+    60,
+    60
+];
+
+const PATTERN_MEMORY_TIMES = [
+    30,
+    60
+];
+
+const PATTERN_CHALLENGE_TIME = 60;
+
+
+/* ============================================================
+   RED ZONE SCORING
+============================================================ */
+
+function getPassingValue(passCount) {
+
+    const values = [
+        10,
+        8,
+        6,
+        4,
+        2,
+        0
+    ];
+
+    return values[
+        Math.min(
+            passCount,
+            values.length - 1
+        )
+    ];
+}
+
+
+/* ============================================================
+   DOM
+============================================================ */
+
+const modeDisplay =
+    document.getElementById(
+        "modeDisplay"
+    );
+
+const roundDisplay =
+    document.getElementById(
+        "roundDisplay"
+    );
+
+const scoreDisplay =
+    document.getElementById(
+        "scoreDisplay"
+    );
+
+const timerDisplay =
+    document.getElementById(
+        "timerDisplay"
+    );
+
+const instruction =
+    document.getElementById(
+        "instruction"
+    );
+
+const menuOverlay =
+    document.getElementById(
+        "menuOverlay"
+    );
+
+const resultOverlay =
+    document.getElementById(
+        "resultOverlay"
+    );
+
+const leaderboardOverlay =
+    document.getElementById(
+        "leaderboardOverlay"
+    );
+
+const resultTitle =
+    document.getElementById(
+        "resultTitle"
+    );
+
+const resultMessage =
+    document.getElementById(
+        "resultMessage"
+    );
+
+const resultScore =
+    document.getElementById(
+        "resultScore"
+    );
+
+const playAgainButton =
+    document.getElementById(
+        "playAgainButton"
+    );
+
+const resultMenuButton =
+    document.getElementById(
+        "resultMenuButton"
+    );
+
+const shapeField =
+    document.getElementById(
+        "shapeField"
+    );
+
+const colourField =
+    document.getElementById(
+        "colourField"
+    );
+
+const patternField =
+    document.getElementById(
+        "patternField"
+    );
+
+const subscriptionStatus =
+    document.getElementById(
+        "subscriptionStatus"
+    );
+
+const subscriptionMessage =
+    document.getElementById(
+        "subscriptionMessage"
+    );
+
+const subscriptionButton =
+    document.getElementById(
+        "subscriptionButton"
+    );
+
+const leaderboardTableContainer =
+    document.getElementById(
+        "leaderboardTableContainer"
+    );
+
+const playerNameInput =
+    document.getElementById(
+        "playerNameInput"
+    );
+
+const playerStatus =
+    document.getElementById(
+        "playerStatus"
+    );
+
+
+/* ============================================================
+   DATE
+============================================================ */
+
+function getTodayKey() {
+
+    const date =
+        new Date();
+
+    const year =
+        date.getFullYear();
+
+    const month =
+        String(
+            date.getMonth() + 1
+        ).padStart(2,"0");
+
+    const day =
+        String(
+            date.getDate()
+        ).padStart(2,"0");
+
+    return `${year}-${month}-${day}`;
+}
+
+
+/* ============================================================
+   LEADERBOARD STORAGE
+============================================================ */
+
+function saveLeaderboards() {
+
+    localStorage.setItem(
+        DAILY_LEADERBOARD_KEY,
+        JSON.stringify(
+            dailyLeaderboards
+        )
+    );
+
+    localStorage.setItem(
+        CUMULATIVE_LEADERBOARD_KEY,
+        JSON.stringify(
+            cumulativeLeaderboard
+        )
+    );
+}
+
+
+function cleanDailyLeaderboards() {
+
+    const today =
+        getTodayKey();
+
+    Object.keys(
+        dailyLeaderboards
+    ).forEach(
+        date => {
+
+            if (
+                date !== today
+            ) {
+
+                delete dailyLeaderboards[
+                    date
+                ];
+            }
+        }
+    );
+
+    saveLeaderboards();
+}
+
+
+/* ============================================================
+   PLAYER NAME
+============================================================ */
+
+function savePlayerName() {
+
+    let name =
+        playerNameInput.value.trim();
+
+    if (
+        !name
+    ) {
+
+        name =
+            "Player";
+    }
+
+    playerName =
+        name.substring(
+            0,
+            20
+        );
+
+    playerNameInput.value =
+        playerName;
+
+    localStorage.setItem(
+        PLAYER_NAME_KEY,
+        playerName
+    );
+
+    updatePlayerStatus();
+}
+
+
+function updatePlayerStatus() {
+
+    playerStatus.textContent =
+        hasSubscription
+            ?
+            "Leaderboard subscription: Active"
+            :
+            "Leaderboard subscription: Not active";
+}
+
+
+playerNameInput.value =
+    playerName;
+
+playerNameInput.addEventListener(
+    "change",
+    savePlayerName
+);
+
+playerNameInput.addEventListener(
+    "blur",
+    savePlayerName
+);
+
+
+/* ============================================================
+   LEADERBOARD PLAYER RECORD
+============================================================ */
+
+/*
+   IMPORTANT:
+
+   Leaderboards use the player's
+   current committed score.
+
+   They are updated only after
+   successful round advancement.
+
+   This means a player cannot earn
+   leaderboard points simply by
+   getting answers correct inside
+   an unfinished round.
+*/
+
+function recordLeaderboardScore(
+    points
+) {
+
+    if (
+        !hasSubscription
+    ) {
+
+        return;
+    }
+
+    cleanDailyLeaderboards();
+
+    const today =
+        getTodayKey();
+
+    if (
+        !dailyLeaderboards[today]
+    ) {
+
+        dailyLeaderboards[today] =
+            [];
+    }
+
+    const safePoints =
+        Math.max(
+            0,
+            Number(points) || 0
+        );
+
+
+    let dailyEntry =
+        dailyLeaderboards[today].find(
+            entry =>
+                entry.name ===
+                playerName
+        );
+
+
+    if (
+        !dailyEntry
+    ) {
+
+        dailyEntry = {
+
+            name:
+                playerName,
+
+            score:
+                safePoints
+        };
+
+        dailyLeaderboards[
+            today
+        ].push(
+            dailyEntry
+        );
+
+    } else {
+
+        /*
+           The current committed
+           score is recorded.
+
+           It does not add the same
+           score repeatedly.
+        */
+
+        dailyEntry.score =
+            safePoints;
+    }
+
+
+    let cumulativeEntry =
+        cumulativeLeaderboard.find(
+            entry =>
+                entry.name ===
+                playerName
+        );
+
+
+    if (
+        !cumulativeEntry
+    ) {
+
+        cumulativeEntry = {
+
+            name:
+                playerName,
+
+            score:
+                safePoints
+        };
+
+        cumulativeLeaderboard.push(
+            cumulativeEntry
+        );
+
+    } else {
+
+        cumulativeEntry.score =
+            safePoints;
+    }
+
+
+    saveLeaderboards();
+}
+
+
+/* ============================================================
+   RESET PLAYER LEADERBOARD SCORE
+============================================================ */
+
+function resetPlayerLeaderboardScore() {
+
+    const today =
+        getTodayKey();
+
+    cleanDailyLeaderboards();
+
+    if (
+        dailyLeaderboards[today]
+    ) {
+
+        dailyLeaderboards[today] =
+            dailyLeaderboards[today].filter(
+                entry =>
+                    entry.name !==
+                    playerName
+            );
+
+        /*
+           Add the reset score so
+           the leaderboard reflects
+           the player's new run.
+        */
+
+        dailyLeaderboards[today].push({
+            name:
+                playerName,
+
+            score:
+                0
+        });
+    }
+
+
+    const cumulativeEntry =
+        cumulativeLeaderboard.find(
+            entry =>
+                entry.name ===
+                playerName
+        );
+
+    if (
+        cumulativeEntry
+    ) {
+
+        cumulativeEntry.score =
+            0;
+
+    } else {
+
+        cumulativeLeaderboard.push({
+            name:
+                playerName,
+
+            score:
+                0
+        });
+    }
+
+    saveLeaderboards();
+}
+
+
+/* ============================================================
+   GET LEADERBOARD DATA
+============================================================ */
+
+function getLeaderboardData() {
+
+    cleanDailyLeaderboards();
+
+    if (
+        leaderboardType ===
+        "daily"
+    ) {
+
+        const today =
+            getTodayKey();
+
+        return (
+            dailyLeaderboards[
+                today
+            ] || []
+        )
+        .slice()
+        .sort(
+            (a,b) =>
+                b.score -
+                a.score
+        )
+        .slice(
+            0,
+            100
+        );
+    }
+
+    return cumulativeLeaderboard
+        .slice()
+        .sort(
+            (a,b) =>
+                b.score -
+                a.score
+        )
+        .slice(
+            0,
+            100
+        );
+}
+
+
+/* ============================================================
+   RENDER LEADERBOARD
+============================================================ */
+
+function renderLeaderboard() {
+
+    if (
+        !hasSubscription
+    ) {
+
+        leaderboardTableContainer.innerHTML = `
+            <div class="locked-leaderboard">
+
+                <h3>🔒 Leaderboard Locked</h3>
+
+                <p>
+                    An active monthly subscription is required
+                    to view the Tenotemo leaderboards.
+                </p>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    const data =
+        getLeaderboardData();
+
+
+    if (
+        data.length === 0
+    ) {
+
+        leaderboardTableContainer.innerHTML = `
+            <div class="empty-leaderboard">
+                No scores have been recorded yet.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    let html = `
+        <table class="leaderboard-table">
+
+            <thead>
+
+                <tr>
+
+                    <th class="leaderboard-rank">
+                        #
+                    </th>
+
+                    <th>
+                        Player
+                    </th>
+
+                    <th>
+                        Score
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+    `;
+
+
+    data.forEach(
+        (entry,index) => {
+
+            const isCurrentPlayer =
+                entry.name ===
+                playerName;
+
+            html += `
+                <tr class="${
+                    isCurrentPlayer
+                        ?
+                        "current-player-row"
+                        :
+                        ""
+                }">
+
+                    <td>
+                        ${index + 1}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            entry.name
+                        )}
+                        ${
+                            isCurrentPlayer
+                                ?
+                                " ⭐"
+                                :
+                                ""
+                        }
+                    </td>
+
+                    <td>
+                        ${entry.score}
+                    </td>
+
+                </tr>
+            `;
+        }
+    );
+
+
+    html += `
+            </tbody>
+
+        </table>
+    `;
+
+    leaderboardTableContainer.innerHTML =
+        html;
+}
+
+
+/* ============================================================
+   ESCAPE HTML
+============================================================ */
+
+function escapeHTML(
+    text
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        text;
+
+    return div.innerHTML;
+}
+
+
+/* ============================================================
+   LEADERBOARD WINDOW
+============================================================ */
+
+function openLeaderboard() {
+
+    clearTimer();
+    stopAllAnimations();
+
+    savePlayerName();
+
+    updateSubscriptionUI();
+
+    leaderboardType =
+        "daily";
+
+    document.getElementById(
+        "dailyTab"
+    ).classList.add(
+        "active"
+    );
+
+    document.getElementById(
+        "cumulativeTab"
+    ).classList.remove(
+        "active"
+    );
+
+    renderLeaderboard();
+
+    leaderboardOverlay.classList.remove(
+        "hidden"
+    );
+}
+
+
+function updateSubscriptionUI() {
+
+    if (
+        hasSubscription
+    ) {
+
+        subscriptionStatus.textContent =
+            "Leaderboard access: Active";
+
+        subscriptionStatus.style.color =
+            "#16a34a";
+
+        subscriptionMessage.textContent =
+            "Your monthly subscription is active. You can view the daily and cumulative leaderboards.";
+
+        subscriptionButton.textContent =
+            "Change Player Name";
+
+    } else {
+
+        subscriptionStatus.textContent =
+            "Leaderboard access: Locked";
+
+        subscriptionStatus.style.color =
+            "#dc2626";
+
+        subscriptionMessage.textContent =
+            "Leaderboards are available only to players with an active monthly subscription.";
+
+        subscriptionButton.textContent =
+            "Activate Monthly Subscription";
+    }
+}
+
+
+/* ============================================================
+   SUBSCRIPTION DEMO
+============================================================ */
+
+/*
+   IMPORTANT:
+
+   This is a prototype subscription
+   system.
+
+   A real commercial subscription
+   must be verified by a backend/payment
+   provider.
+
+   Users should NOT be able to unlock
+   paid leaderboard access simply by
+   editing browser storage.
+
+   This demo button is provided so the
+   game can be tested before the real
+   payment system is connected.
+*/
+
+subscriptionButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !hasSubscription
+        ) {
+
+            const confirmSubscription =
+                confirm(
+                    "Activate the monthly subscription for this prototype?"
+                );
+
+            if (
+                !confirmSubscription
+            ) {
+
+                return;
+            }
+
+            hasSubscription =
+                true;
+
+            localStorage.setItem(
+                SUBSCRIPTION_KEY,
+                "true"
+            );
+
+            savePlayerName();
+
+        } else {
+
+            savePlayerName();
+        }
+
+        updateSubscriptionUI();
+        updatePlayerStatus();
+        renderLeaderboard();
+    }
+);
+
+
+/* ============================================================
+   LEADERBOARD TABS
+============================================================ */
+
+document.getElementById(
+    "dailyTab"
+).addEventListener(
+    "click",
+    () => {
+
+        leaderboardType =
+            "daily";
+
+        document.getElementById(
+            "dailyTab"
+        ).classList.add(
+            "active"
+        );
+
+        document.getElementById(
+            "cumulativeTab"
+        ).classList.remove(
+            "active"
+        );
+
+        renderLeaderboard();
+    }
+);
+
+
+document.getElementById(
+    "cumulativeTab"
+).addEventListener(
+    "click",
+    () => {
+
+        leaderboardType =
+            "cumulative";
+
+        document.getElementById(
+            "cumulativeTab"
+        ).classList.add(
+            "active"
+        );
+
+        document.getElementById(
+            "dailyTab"
+        ).classList.remove(
+            "active"
+        );
+
+        renderLeaderboard();
+    }
+);
+
+
+document.getElementById(
+    "leaderboardCloseButton"
+).addEventListener(
+    "click",
+    () => {
+
+        leaderboardOverlay.classList.add(
+            "hidden"
+        );
+
+        showMainMenu();
+    }
+);
+
+
+/* ============================================================
+   RESET ALL PROGRESS
+============================================================ */
+
+function restartAllProgress() {
+
+    const confirmed =
+        confirm(
+            "Restart all progress? Your scores and completed rounds will be reset to zero."
+        );
+
+    if (
+        !confirmed
+    ) {
+
+        return;
+    }
+
+    clearTimer();
+    stopAllAnimations();
+
+    modeScores = {
+        shape: 0,
+        colour: 0,
+        movement: 0
+    };
+
+    modeRounds = {
+        shape: 0,
+        colour: 0,
+        movement: 0
+    };
+
+    score =
+        0;
+
+    roundIndex =
+        0;
+
+    roundStartScore =
+        0;
+
+    roundEarnedScore =
+        0;
+
+    currentMode =
+        null;
+
+    phase =
+        null;
+
+    saveProgress();
+
+    /*
+       Reset this player's leaderboard
+       score as well.
+
+       This prevents restarting the
+       game and then accumulating the
+       same points repeatedly.
+    */
+
+    resetPlayerLeaderboardScore();
+
+    showMainMenu();
+
+    alert(
+        "Your Tenotemo progress and points have been reset."
+    );
+}
+
+
+document.getElementById(
+    "restartProgressButton"
+).addEventListener(
+    "click",
+    restartAllProgress
+);
+
+
+/* ============================================================
+   UI
+============================================================ */
+
+function updateHeader() {
+
+    if (
+        !currentMode
+    ) {
+
+        modeDisplay.textContent =
+            "Main Menu";
+
+        roundDisplay.textContent =
+            "Round -";
+
+        scoreDisplay.textContent =
+            "Score: 0";
+
+        timerDisplay.textContent =
+            "Time: --";
+
+        return;
+    }
+
+
+    const names = {
+
+        shape:
+            "Shape Memory",
+
+        colour:
+            "Colour Grid",
+
+        movement:
+            "Pattern Memory"
+    };
+
+
+    modeDisplay.textContent =
+        names[currentMode];
+
+    roundDisplay.textContent =
+        "Round " +
+        (roundIndex + 1);
+
+    scoreDisplay.textContent =
+        "Score: " +
+        score;
+}
+
+
+function hideAllFields() {
+
+    shapeField.style.display =
+        "none";
+
+    colourField.style.display =
+        "none";
+
+    patternField.style.display =
+        "none";
+
+    document.getElementById("spinField").style.display =
+        "none";
+}
+
+
+function showMainMenu() {
+
+    clearTimer();
+    stopAllAnimations();
+
+    phase =
+        null;
+
+    currentMode =
+        null;
+
+    hideAllFields();
+
+    resultOverlay.classList.add(
+        "hidden"
+    );
+
+    leaderboardOverlay.classList.add(
+        "hidden"
+    );
+
+    menuOverlay.classList.remove(
+        "hidden"
+    );
+
+    instruction.textContent =
+        "Choose a game to begin.";
+
+    playerNameInput.value =
+        playerName;
+
+    updatePlayerStatus();
+
+    updateHeader();
+}
+
+
+/* ============================================================
+   START MODE
+============================================================ */
+
+function startMode(
+    mode
+) {
+
+    clearTimer();
+    stopAllAnimations();
+
+    savePlayerName();
+
+    currentMode =
+        mode;
+
+    /*
+       Resume at the next legitimate
+       round.
+
+       There is no round selector.
+
+       Therefore players cannot go
+       backwards to farm earlier rounds.
+    */
+
+    roundIndex =
+        modeRounds[mode];
+
+    score =
+        modeScores[mode];
+
+    /*
+       If the mode is already completed,
+       do not restart it automatically.
+
+       The player must explicitly use
+       Play Again, which resets that
+       mode's progress.
+    */
+
+    const totalRounds =
+        mode === "shape"
+            ?
+            shapeRounds.length
+            :
+            mode === "colour"
+                ?
+                colourRounds.length
+                :
+                movementRounds.length;
+
+    if (
+        roundIndex >=
+        totalRounds
+    ) {
+
+        menuOverlay.classList.add(
+            "hidden"
+        );
+
+        showGameComplete();
+
+        return;
+    }
+
+    roundStartScore =
+        score;
+
+    roundEarnedScore =
+        0;
+
+    menuOverlay.classList.add(
+        "hidden"
+    );
+
+    resultOverlay.classList.add(
+        "hidden"
+    );
+
+    hideAllFields();
+
+
+    if (
+        mode === "shape"
+    ) {
+
+        shapeField.style.display =
+            "block";
+
+        startShapeRound();
+    }
+
+
+    if (
+        mode === "colour"
+    ) {
+
+        colourField.style.display =
+            "block";
+
+        startColourRound();
+    }
+
+
+    if (
+        mode === "movement"
+    ) {
+
+        patternField.style.display =
+            "block";
+
+        startMovementRound();
+    }
+
+    // Always bring the newly opened game to the top of the viewport.
+    // This prevents Game 1 and Game 2 from opening with their first
+    // row hidden above the visible browser area.
+    requestAnimationFrame(() => {
+        const activeField =
+            mode === "shape" ? shapeField :
+            mode === "colour" ? colourField :
+            patternField;
+
+        if (activeField) {
+            activeField.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+    });
+
+    updateHeader();
+}
+
+
+/* ============================================================
+   STOP ANIMATIONS
+============================================================ */
+
+function stopAllAnimations() {
+
+    if (
+        animationFrame
+    ) {
+
+        cancelAnimationFrame(
+            animationFrame
+        );
+
+        animationFrame = null;
+    }
+
+    stopShapeMovement();
+    stopColourGridMovement();
+    stopPatternAnimation();
+}
+
+
+function clearTimer() {
+
+    if (
+        timerInterval
+    ) {
+
+        clearInterval(
+            timerInterval
+        );
+
+        timerInterval = null;
+    }
+}
+
+
+/* ============================================================
+   TIMER
+============================================================ */
+
+function startTimer(
+    seconds,
+    callback
+) {
+
+    clearTimer();
+
+    let remaining =
+        seconds;
+
+    timerDisplay.textContent =
+        "Time: " +
+        remaining;
+
+    timerInterval =
+        setInterval(
+            () => {
+
+                remaining--;
+
+                timerDisplay.textContent =
+                    "Time: " +
+                    remaining;
+
+                if (
+                    remaining <= 0
+                ) {
+
+                    clearTimer();
+
+                    timerDisplay.textContent =
+                        "Time: 0";
+
+                    callback();
+                }
+
+            },
+            1000
+        );
+}
+
+
+/* ============================================================
+   GAME 1 — SHAPE MEMORY
+============================================================ */
+
+const shapeRounds = [
+    3,
+    5,
+    7,
+    10,
+    15
+];
+
+const shapePoolSizes = [
+    8,
+    10,
+    12,
+    14,
+    14
+];
+
+const shapeNames = [
+    "circle",
+    "square",
+    "rectangle",
+    "triangle",
+    "diamond",
+    "pentagon",
+    "hexagon",
+    "heptagon",
+    "octagon",
+    "star",
+    "oval",
+    "parallelogram",
+    "trapezoid",
+    "cross"
+];
+
+const shapeColours = [
+    "#ef4444",
+    "#3b82f6",
+    "#22c55e",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ec4899",
+    "#06b6d4",
+    "#f97316",
+    "#14b8a6",
+    "#84cc16"
+];
+
+/* Sea animals and combo settings for Game 1. */
+const seaAnimals = [
+    "🦀", "🐙", "⭐", "🐟", "🐚", "🐢", "🐬", "🪼", "🦑", "🦐"
+];
+
+const comboCounts = [0, 0, 3, 4, 5];
+const comboPoolSizes = [0, 0, 8, 10, 12];
+
+function randomFrom(list) {
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+function makeSeaCombo() {
+    return {
+        shape1: randomFrom(shapeNames.slice(0, 6)),
+        animal: randomFrom(seaAnimals),
+        shape2: randomFrom(shapeNames.slice(0, 8))
+    };
+}
+
+function comboKey(combo) {
+    return [combo.shape1, combo.animal, combo.shape2].join("|");
+}
+
+function comboSVG(shapeType, animal, secondShape, colourA, colourB) {
+    return `
+        <div class="combo-mini">
+            <span class="combo-icon">${shapeSVG(shapeType, colourA)}</span>
+            <span class="combo-animal">${animal}</span>
+            <span class="combo-icon">${shapeSVG(secondShape, colourB)}</span>
+        </div>`;
+}
+
+function comboHTML(combo, compact=false) {
+    const colourA = shapeColours[(shapeNames.indexOf(combo.shape1) + 2) % shapeColours.length];
+    const colourB = shapeColours[(shapeNames.indexOf(combo.shape2) + 5) % shapeColours.length];
+    return `
+        <div class="combo-card ${compact ? 'combo-target' : ''}">
+            ${comboSVG(combo.shape1, combo.animal, combo.shape2, colourA, colourB)}
+        </div>`;
+}
+
+
+let shapeMemory = [];
+let shapeTargets = [];
+let shapePool = [];
+
+let shapeMatched = 0;
+
+let shapeMovementActive = false;
+let shapeMovementY = 0;
+let shapeMovementLastTime = 0;
+
+
+/* ============================================================
+   SHAPE SVG
+============================================================ */
+
+function shapeSVG(
+    type,
+    colour
+) {
+
+    const common =
+        `fill="${colour}" stroke="#111827" stroke-width="2"`;
+
+
+    if (
+        type === "circle"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="35" ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "square"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <rect x="18" y="18"
+                  width="64"
+                  height="64"
+                  ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "rectangle"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <rect x="10" y="25"
+                  width="80"
+                  height="50"
+                  ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "triangle"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="50,10 90,85 10,85"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "diamond"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="50,8 92,50 50,92 8,50"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "pentagon"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="50,8 94,38 77,90 23,90 6,38"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "hexagon"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="25,8 75,8 95,50 75,92 25,92 5,50"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "heptagon"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="50,5 89,25 98,67 72,94 28,94 2,67 11,25"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "octagon"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="30,5 70,5 95,30 95,70 70,95 30,95 5,70 5,30"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "star"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="
+                50,5
+                61,37
+                95,38
+                68,57
+                78,90
+                50,70
+                22,90
+                32,57
+                5,38
+                39,37"
+                ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "oval"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <ellipse cx="50" cy="50"
+                     rx="42"
+                     ry="27"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "parallelogram"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="25,15 90,15 75,85 10,85"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "trapezoid"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="25,15 75,15 92,85 8,85"
+                     ${common}/>
+        </svg>`;
+    }
+
+
+    if (
+        type === "cross"
+    ) {
+
+        return `
+        <svg viewBox="0 0 100 100">
+            <polygon points="
+                35,5 65,5
+                65,35 95,35
+                95,65 65,65
+                65,95 35,95
+                35,65 5,65
+                5,35 35,35"
+                ${common}/>
+        </svg>`;
+    }
+
+    return "";
+}
+
+
+/* ============================================================
+   GENERATE MEMORY SHAPES
+============================================================ */
+
+function generateMemoryShapes(count) {
+    /* Rounds 1-2 remain the original shape-only game. */
+    if (roundIndex < 2) {
+        const result = [];
+        for (let i = 0; i < count; i++) {
+            result.push({
+                type: randomFrom(shapeNames),
+                colour: randomFrom(shapeColours)
+            });
+        }
+        return result;
+    }
+
+    /* From Round 3, each memorised box contains a 3-item combo. */
+    const combos = [];
+    const comboCount = comboCounts[roundIndex] || 3;
+    const used = new Set();
+    while (combos.length < comboCount) {
+        const combo = makeSeaCombo();
+        const key = comboKey(combo);
+        if (!used.has(key)) {
+            used.add(key);
+            combos.push(combo);
+        }
+    }
+    return combos;
+}
+
+function renderShapeMemory() {
+    const container = document.getElementById("shapeMemoryRow");
+    container.innerHTML = "";
+
+    /* Later rounds use a responsive grid so no combo is clipped. */
+    container.classList.toggle("combo-memory", roundIndex >= 2);
+    container.dataset.count = String(shapeMemory.length);
+    container.style.setProperty("--combo-count", String(Math.max(1, shapeMemory.length)));
+
+    shapeMemory.forEach((item, index) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "shape-piece";
+        if (roundIndex >= 2) {
+            wrapper.innerHTML = comboHTML(item);
+        } else {
+            wrapper.innerHTML = shapeSVG(item.type, item.colour);
+        }
+        container.appendChild(wrapper);
+    });
+}
+
+function generateSelectionPool(poolSize) {
+    if (roundIndex < 2) {
+        const requiredTypes = [];
+        shapeMemory.forEach(shape => {
+            if (!requiredTypes.includes(shape.type)) requiredTypes.push(shape.type);
+        });
+        let additionalTypes = shapeNames.filter(type => !requiredTypes.includes(type));
+        additionalTypes.sort(() => Math.random() - 0.5);
+        const selectedTypes = [...requiredTypes];
+        for (let i = 0; selectedTypes.length < poolSize && i < additionalTypes.length; i++) {
+            selectedTypes.push(additionalTypes[i]);
+        }
+        selectedTypes.sort(() => Math.random() - 0.5);
+        return selectedTypes.map(type => ({ type, colour: randomFrom(shapeColours) }));
+    }
+
+    /* Pool contains the correct combos plus similar distractor combos. */
+    const pool = shapeMemory.map(combo => ({...combo}));
+    const used = new Set(pool.map(comboKey));
+
+    while (pool.length < poolSize) {
+        const base = randomFrom(shapeMemory);
+        const distractor = {...base};
+        const change = Math.floor(Math.random() * 3);
+        if (change === 0) distractor.shape1 = randomFrom(shapeNames.slice(0, 8));
+        if (change === 1) distractor.animal = randomFrom(seaAnimals);
+        if (change === 2) distractor.shape2 = randomFrom(shapeNames.slice(0, 8));
+        const key = comboKey(distractor);
+        if (!used.has(key)) {
+            used.add(key);
+            pool.push(distractor);
+        }
+    }
+    pool.sort(() => Math.random() - 0.5);
+    return pool;
+}
+
+/* ============================================================
+   CREATE TARGETS
+============================================================ */
+
+function createShapeTargets() {
+    const track = document.getElementById("shapeTargetTrack");
+    track.innerHTML = "";
+    shapeTargets = [];
+
+    shapeMemory.forEach((item, index) => {
+        const target = document.createElement("div");
+        target.className = "shape-target" + (roundIndex >= 2 ? " combo-target" : "");
+        target.dataset.index = index;
+
+        shapeTargets.push({
+            element: target,
+            expectedType: item.type,
+            expectedCombo: roundIndex >= 2 ? comboKey(item) : null,
+            matched: false,
+            passCount: 0,
+            points: 10,
+            insideRedZone: false
+        });
+        track.appendChild(target);
+    });
+}
+
+/* ============================================================
+   RENDER POOL
+============================================================ */
+
+function renderShapePool() {
+    const pool = document.getElementById("shapePool");
+    pool.innerHTML = "";
+
+    shapePool.forEach((item, index) => {
+        const piece = document.createElement("div");
+        piece.className = "shape-piece";
+        piece.draggable = true;
+        piece.dataset.index = index;
+
+        if (roundIndex >= 2) {
+            piece.dataset.combo = comboKey(item);
+            piece.dataset.comboData = JSON.stringify(item);
+            piece.innerHTML = comboHTML(item);
+        } else {
+            piece.dataset.type = item.type;
+            piece.dataset.colour = item.colour;
+            piece.innerHTML = shapeSVG(item.type, item.colour);
+        }
+
+        piece.addEventListener("dragstart", handleShapeDragStart);
+        piece.addEventListener("touchstart", handleShapeTouchStart, { passive:false });
+        pool.appendChild(piece);
+    });
+}
+
+/* ============================================================
+   START SHAPE ROUND
+============================================================ */
+
+function startShapeRound() {
+
+    clearTimer();
+
+    stopShapeMovement();
+
+    phase =
+        "memory";
+
+    /* Give the memorisation illustration the full play area. */
+    shapeField.classList.add("memory-mode");
+
+    shapeMatched =
+        0;
+
+    roundEarnedScore =
+        0;
+
+
+    const count =
+        shapeRounds[
+            roundIndex
+        ];
+
+
+    shapeMemory =
+        generateMemoryShapes(
+            count
+        );
+
+
+    shapePool =
+        generateSelectionPool(
+            roundIndex >= 2
+                ? (comboPoolSizes[roundIndex] || 10)
+                : shapePoolSizes[roundIndex]
+        );
+
+
+    createShapeTargets();
+
+    renderShapeMemory();
+
+    renderShapePool();
+
+
+    const track =
+        document.getElementById(
+            "shapeTargetTrack"
+        );
+
+    track.style.transform =
+        "translateY(0px)";
+
+
+    document.getElementById(
+        "shapeMemoryArea"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "shapeStatus"
+    ).textContent =
+        roundIndex >= 2 ? "Sea Combo" : "Memorise";
+
+
+    instruction.textContent =
+        roundIndex >= 2
+            ? "Memorise each sea combo and its exact left-to-right order."
+            : "Memorise the shapes and their exact left-to-right order.";
+
+
+    updateHeader();
+
+
+    startTimer(
+        SHAPE_MEMORY_TIME,
+        startShapeChallenge
+    );
+}
+
+
+/* ============================================================
+   START SHAPE CHALLENGE
+============================================================ */
+
+function startShapeChallenge() {
+
+    phase =
+        "challenge";
+
+    shapeField.classList.remove("memory-mode");
+
+
+    const memoryArea =
+        document.getElementById(
+            "shapeMemoryArea"
+        );
+
+    memoryArea.style.display =
+        "none";
+
+
+    document.getElementById(
+        "shapeMemoryRow"
+    ).innerHTML = "";
+
+
+    document.getElementById(
+        "shapeStatus"
+    ).textContent =
+        "Recreate";
+
+
+    instruction.textContent =
+        "Drag the correct shapes into the blank positions.";
+
+
+    updateHeader();
+
+
+    startShapeMovement();
+
+
+    const challengeTime =
+        SHAPE_CHALLENGE_TIMES[roundIndex] || 60;
+
+    startTimer(
+        challengeTime,
+        () =>
+            finishShapeRound()
+    );
+}
+
+
+/* ============================================================
+   SHAPE DRAG
+============================================================ */
+
+let draggedShape = null;
+
+
+function handleShapeDragStart(event) {
+    const piece = event.currentTarget;
+    if (roundIndex >= 2) {
+        draggedShape = {
+            combo: piece.dataset.combo,
+            comboData: JSON.parse(piece.dataset.comboData)
+        };
+    } else {
+        draggedShape = {
+            type: piece.dataset.type,
+            colour: piece.dataset.colour
+        };
+    }
+    event.dataTransfer.setData("text/plain", JSON.stringify(draggedShape));
+}
+
+shapeField.addEventListener(
+    "dragover",
+    event => {
+
+        if (
+            phase ===
+            "challenge"
+        ) {
+
+            event.preventDefault();
+        }
+    }
+);
+
+
+shapeField.addEventListener(
+    "drop",
+    event => {
+
+        if (
+            phase !==
+            "challenge"
+        ) {
+
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        const target =
+            event.target.closest(
+                ".shape-target"
+            );
+
+
+        if (
+            !target ||
+            !draggedShape
+        ) {
+
+            return;
+        }
+
+
+        processShapeAnswer(
+            draggedShape,
+            target
+        );
+
+
+        draggedShape =
+            null;
+    }
+);
+
+
+/* ============================================================
+   SHAPE TOUCH
+============================================================ */
+
+let touchShape = null;
+let touchClone = null;
+
+
+function handleShapeTouchStart(event) {
+    if (phase !== "challenge") return;
+    event.preventDefault();
+    const piece = event.currentTarget;
+
+    if (roundIndex >= 2) {
+        touchShape = {
+            combo: piece.dataset.combo,
+            comboData: JSON.parse(piece.dataset.comboData)
+        };
+    } else {
+        touchShape = {
+            type: piece.dataset.type,
+            colour: piece.dataset.colour
+        };
+    }
+
+    touchClone = piece.cloneNode(true);
+    touchClone.style.position = "fixed";
+    touchClone.style.zIndex = "300";
+    touchClone.style.pointerEvents = "none";
+    touchClone.style.opacity = ".85";
+    document.body.appendChild(touchClone);
+    moveTouchClone(event.touches[0]);
+    document.addEventListener("touchmove", handleShapeTouchMove, { passive:false });
+    document.addEventListener("touchend", handleShapeTouchEnd, { once:true });
+}
+
+function moveTouchClone(
+    touch
+) {
+
+    if (
+        !touchClone
+    ) {
+
+        return;
+    }
+
+
+    const rect = touchClone.getBoundingClientRect();
+    touchClone.style.left = (touch.clientX - rect.width / 2) + "px";
+    touchClone.style.top = (touch.clientY - rect.height / 2) + "px";
+}
+
+
+function handleShapeTouchMove(
+    event
+) {
+
+    event.preventDefault();
+
+    moveTouchClone(
+        event.touches[0]
+    );
+}
+
+
+function handleShapeTouchEnd(
+    event
+) {
+
+    if (
+        !touchShape
+    ) {
+
+        return;
+    }
+
+
+    const touch =
+        event.changedTouches[0];
+
+
+    const element =
+        document.elementFromPoint(
+            touch.clientX,
+            touch.clientY
+        );
+
+
+    const target =
+        element
+            ?
+            element.closest(
+                ".shape-target"
+            )
+            :
+            null;
+
+
+    if (
+        target
+    ) {
+
+        processShapeAnswer(
+            touchShape,
+            target
+        );
+    }
+
+
+    if (
+        touchClone
+    ) {
+
+        touchClone.remove();
+    }
+
+
+    touchClone =
+        null;
+
+    touchShape =
+        null;
+
+
+    document.removeEventListener(
+        "touchmove",
+        handleShapeTouchMove
+    );
+}
+
+
+/* ============================================================
+   PROCESS SHAPE ANSWER
+============================================================ */
+
+function processShapeAnswer(shape, target) {
+    const index = Number(target.dataset.index);
+    const data = shapeTargets[index];
+    if (!data || data.matched) return;
+
+    const isCorrect = roundIndex >= 2
+        ? !!shape.comboData && comboKey(shape.comboData) === data.expectedCombo
+        : shape.type === data.expectedType;
+
+    if (isCorrect) {
+        data.matched = true;
+        const points = getPassingValue(data.passCount);
+        data.points = points;
+        shapeMatched++;
+        target.classList.add("correct");
+
+        if (roundIndex >= 2) {
+            target.innerHTML = comboHTML(shape.comboData, true);
+        } else {
+            target.innerHTML = `<div class="placed-shape">${shapeSVG(shape.type, shape.colour)}</div>`;
+        }
+
+        roundEarnedScore += points;
+        showScorePopup(target, "+" + points);
+        checkShapeCompletion();
+    } else {
+        target.classList.remove("shake");
+        void target.offsetWidth;
+        target.classList.add("shake");
+    }
+}
+
+/* ============================================================
+   SHAPE COMPLETION
+============================================================ */
+
+function checkShapeCompletion() {
+
+    const total =
+        shapeTargets.length;
+
+    const percentage =
+        (
+            shapeMatched /
+            total
+        ) * 100;
+
+    // End immediately only when 100% of the items are correct.
+    // Reaching 70% is the pass mark, but the player can continue
+    // playing and earning points until the timer expires.
+    if (
+        percentage === 100
+    ) {
+        finishShapeRound(true);
+    }
+}
+
+
+/* ============================================================
+   SHAPE MOVEMENT
+============================================================ */
+
+function startShapeMovement() {
+
+    stopShapeMovement();
+
+    shapeMovementActive =
+        true;
+
+    shapeMovementY =
+        0;
+
+    const track = document.getElementById("shapeTargetTrack");
+    track.style.top = "";
+    track.style.transform = "translateY(0px)";
+
+    shapeMovementLastTime =
+        performance.now();
+
+    requestShapeMovement();
+}
+
+
+function stopShapeMovement() {
+
+    shapeMovementActive =
+        false;
+}
+
+
+function requestShapeMovement() {
+
+    if (
+        !shapeMovementActive
+    ) {
+
+        return;
+    }
+
+
+    animationFrame =
+        requestAnimationFrame(
+            updateShapeMovement
+        );
+}
+
+
+function updateShapeMovement(
+    now
+) {
+
+    if (
+        !shapeMovementActive
+    ) {
+
+        return;
+    }
+
+
+    const delta =
+        now -
+        shapeMovementLastTime;
+
+
+    shapeMovementLastTime =
+        now;
+
+
+    shapeMovementY +=
+        delta * .055;
+
+
+    const track =
+        document.getElementById(
+            "shapeTargetTrack"
+        );
+
+
+    track.style.transform =
+        `translateY(${shapeMovementY}px)`;
+
+
+    const fieldRect =
+        shapeField.getBoundingClientRect();
+
+
+    const redZoneTop =
+        fieldRect.bottom -
+        92;
+
+
+    shapeTargets.forEach(
+        targetData => {
+
+            if (
+                targetData.matched
+            ) {
+
+                return;
+            }
+
+
+            const rect =
+                targetData.element
+                    .getBoundingClientRect();
+
+
+            if (
+                rect.top <
+                    redZoneTop &&
+                rect.bottom >=
+                    redZoneTop
+            ) {
+
+                if (
+                    !targetData.insideRedZone
+                ) {
+
+                    targetData.insideRedZone =
+                        true;
+
+                    const previousPoints = targetData.points;
+                    targetData.passCount++;
+                    targetData.points = getPassingValue(targetData.passCount);
+                    const deduction = previousPoints - targetData.points;
+                    if (deduction > 0) {
+                        showScorePopup(targetData.element, "-" + deduction);
+                    }
+                }
+
+
+            } else if (
+                rect.top >
+                redZoneTop + 15
+            ) {
+
+                targetData.insideRedZone =
+                    false;
+            }
+        }
+    );
+
+
+    const trackRect =
+        track.getBoundingClientRect();
+
+
+    if (
+        trackRect.top >
+        fieldRect.bottom
+    ) {
+
+        shapeMovementY =
+            -trackRect.height;
+
+
+        track.style.transform =
+            `translateY(${shapeMovementY}px)`;
+
+
+        shapeTargets.forEach(
+            target => {
+
+                target.insideRedZone =
+                    false;
+            }
+        );
+    }
+
+
+    requestShapeMovement();
+}
+
+
+/* ============================================================
+   FINISH SHAPE ROUND
+============================================================ */
+
+function finishShapeRound(
+    perfect = false
+) {
+
+    if (
+        phase !==
+        "challenge"
+    ) {
+
+        return;
+    }
+
+
+    phase =
+        "result";
+
+
+    clearTimer();
+
+    stopShapeMovement();
+
+
+    /*
+       Calculate the final points
+       earned by this round.
+    */
+
+    let finalRoundPoints =
+        roundEarnedScore;
+
+
+    if (
+        perfect
+    ) {
+
+        let bonus =
+            0;
+
+
+        shapeTargets.forEach(
+            target => {
+
+                if (
+                    getPassingValue(
+                        target.passCount
+                    ) > 0
+                ) {
+
+                    bonus += 2;
+                }
+            }
+        );
+
+
+        finalRoundPoints +=
+            bonus;
+    }
+
+
+    const passed =
+        (
+            shapeMatched /
+            shapeTargets.length
+        ) * 100 >= 70;
+
+
+    if (
+        !passed
+    ) {
+
+        /*
+           FAILED:
+
+           Do not add round points.
+
+           Score remains exactly what
+           it was before this round.
+        */
+
+        score =
+            roundStartScore;
+
+        modeScores[currentMode] =
+            score;
+
+        saveProgress();
+
+
+        showResult(
+            "Round Failed",
+            "You need at least 70% to pass. Your points from this attempt have been reset.",
+            score,
+            true
+        );
+
+        return;
+    }
+
+
+    /*
+       SUCCESS:
+
+       Now commit the round points.
+    */
+
+    score =
+        roundStartScore +
+        finalRoundPoints;
+
+
+    modeScores[currentMode] =
+        score;
+
+
+    modeRounds[currentMode] =
+        roundIndex + 1;
+
+
+    saveProgress();
+
+
+    /*
+       Leaderboard only receives
+       successfully committed scores.
+    */
+
+    recordLeaderboardScore(
+        getTotalPlayerScore()
+    );
+
+
+    showResult(
+        perfect
+            ?
+            "Perfect Round!"
+            :
+            "Round Complete",
+
+        perfect
+            ?
+            "Excellent! You matched every target."
+            :
+            "Great job! You reached the 70% pass mark.",
+
+        score,
+
+        false
+    );
+}
+
+
+/* ============================================================
+   GAME 2 — COLOUR GRID
+============================================================ */
+
+const colourRounds = [
+
+    // Rounds 1-3 keep the original single-colour memory format.
+    { cells: 3, rows: 1, columns: 3, combo: false },
+    { cells: 4, rows: 2, columns: 2, combo: false },
+    { cells: 6, rows: 2, columns: 3, combo: false },
+
+    // From Round 4 onward, every box contains TWO different colours.
+    // The number of boxes increases by round as requested.
+    { cells: 3, rows: 1, columns: 3, combo: true },
+    { cells: 4, rows: 2, columns: 2, combo: true },
+    { cells: 6, rows: 2, columns: 3, combo: true }
+
+];
+
+
+const availableColours = [
+    "#ef4444",
+    "#3b82f6",
+    "#22c55e",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ec4899",
+    "#06b6d4",
+    "#f97316"
+];
+
+
+let colourPattern = [];
+let colourTargets = [];
+let colourMatched = 0;
+
+let colourMovementActive = false;
+let colourMovementY = 0;
+let colourMovementLastTime = 0;
+
+
+/* ============================================================
+   COLOUR PATTERN
+============================================================ */
+
+function generateColourPattern(count, comboMode = false) {
+
+    const result = [];
+
+    for (let i = 0; i < count; i++) {
+
+        if (!comboMode) {
+            result.push(
+                availableColours[
+                    Math.floor(Math.random() * availableColours.length)
+                ]
+            );
+            continue;
+        }
+
+        const first = availableColours[
+            Math.floor(Math.random() * availableColours.length)
+        ];
+
+        let second = first;
+        while (second === first) {
+            second = availableColours[
+                Math.floor(Math.random() * availableColours.length)
+            ];
+        }
+
+        result.push({
+            colour1: first,
+            colour2: second
+        });
+    }
+
+    return result;
+}
+
+function colourComboBackground(combo) {
+    return `linear-gradient(90deg, ${combo.colour1} 0 50%, ${combo.colour2} 50% 100%)`;
+}
+
+function colourComboKey(combo) {
+    return `${combo.colour1.toLowerCase()}|${combo.colour2.toLowerCase()}`;
+}
+
+function buildColourComboOptions() {
+    const options = [];
+    const seen = new Set();
+
+    const add = combo => {
+        if (!combo || combo.colour1 === combo.colour2) return;
+        const key = colourComboKey(combo);
+        if (seen.has(key)) return;
+        seen.add(key);
+        options.push(combo);
+    };
+
+    // Always include every correct answer.
+    colourPattern.forEach(combo => add({ ...combo }));
+
+    // Add close distractors by changing only one side of a correct combo.
+    colourPattern.forEach(combo => {
+        const alternatives = availableColours.filter(
+            colour => colour !== combo.colour1 && colour !== combo.colour2
+        );
+
+        if (alternatives.length) {
+            add({ colour1: combo.colour1, colour2: alternatives[0] });
+            add({ colour1: alternatives[alternatives.length - 1], colour2: combo.colour2 });
+            // Reversed order is deliberately confusing because order matters.
+            add({ colour1: combo.colour2, colour2: combo.colour1 });
+        }
+    });
+
+    // Keep the tray challenging but compact on screen.
+    const wanted = Math.min(12, Math.max(colourPattern.length + 3, colourPattern.length * 2));
+
+    while (options.length < wanted) {
+        const first = availableColours[Math.floor(Math.random() * availableColours.length)];
+        let second = first;
+        while (second === first) {
+            second = availableColours[Math.floor(Math.random() * availableColours.length)];
+        }
+        add({ colour1: first, colour2: second });
+    }
+
+    // Shuffle so correct choices are not grouped together.
+    return options
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(item => item.value);
+}
+
+
+
+/* ============================================================
+   CREATE COLOUR GRID
+============================================================ */
+
+function createColourGrid(round, showColours) {
+
+    const grid = document.getElementById("colourGrid");
+    grid.innerHTML = "";
+    grid.classList.toggle("double-colour-grid", !!round.combo);
+
+    grid.style.gridTemplateColumns =
+        `repeat(${round.columns},var(--colour-cell-size))`;
+
+    colourTargets = [];
+
+    colourPattern.forEach((patternItem, index) => {
+
+        const cell = document.createElement("div");
+        cell.className = "colour-cell";
+        cell.dataset.index = index;
+
+        if (showColours) {
+            cell.style.background = round.combo
+                ? colourComboBackground(patternItem)
+                : patternItem;
+            cell.classList.add("filled");
+        } else {
+            cell.style.background = "#fff";
+        }
+
+        colourTargets.push({
+            element: cell,
+            expectedColour: round.combo ? null : patternItem,
+            expectedCombo: round.combo ? { ...patternItem } : null,
+            matched: false,
+            passCount: 0,
+            points: 10,
+            insideRedZone: false
+        });
+
+        grid.appendChild(cell);
+    });
+}
+
+
+
+/* ============================================================
+   START COLOUR ROUND
+============================================================ */
+
+function startColourRound() {
+
+    clearTimer();
+
+    stopColourGridMovement();
+
+    phase =
+        "memory";
+
+    /* Hide challenge controls while the full colour pattern is memorised. */
+    colourField.classList.add("memory-mode");
+
+    colourMatched =
+        0;
+
+    roundEarnedScore =
+        0;
+
+
+    const round =
+        colourRounds[
+            roundIndex
+        ];
+
+
+    colourPattern =
+        generateColourPattern(
+            round.cells,
+            round.combo
+        );
+
+
+    createColourGrid(
+        round,
+        true
+    );
+
+
+    renderColourPalette();
+
+
+    document.getElementById(
+        "colourStatus"
+    ).textContent =
+        "Memorise";
+
+
+    instruction.textContent = round.combo
+        ? "Memorise both colours in every box. The left and right colour positions matter."
+        : "Memorise the colour of every square.";
+
+
+    updateHeader();
+
+
+    startTimer(
+        COLOUR_MEMORY_TIME,
+        startColourChallenge
+    );
+}
+
+
+/* ============================================================
+   COLOUR PALETTE
+============================================================ */
+
+function renderColourPalette() {
+
+    const palette = document.getElementById("colourPalette");
+    palette.innerHTML = "";
+
+    const round = colourRounds[roundIndex];
+
+    if (round.combo) {
+        const options = buildColourComboOptions();
+
+        options.forEach(combo => {
+            const piece = document.createElement("div");
+            piece.className = "colour-piece colour-combo-piece";
+            piece.style.background = colourComboBackground(combo);
+            piece.dataset.combo = JSON.stringify(combo);
+            piece.draggable = true;
+
+            piece.addEventListener("dragstart", event => {
+                draggedColour = { ...combo };
+                event.dataTransfer.setData("text/plain", JSON.stringify(combo));
+            });
+
+            palette.appendChild(piece);
+        });
+
+        return;
+    }
+
+    availableColours.forEach(colour => {
+        const piece = document.createElement("div");
+        piece.className = "colour-piece";
+        piece.style.background = colour;
+        piece.dataset.colour = colour;
+        piece.draggable = true;
+
+        piece.addEventListener("dragstart", event => {
+            draggedColour = colour;
+            event.dataTransfer.setData("text/plain", colour);
+        });
+
+        palette.appendChild(piece);
+    });
+}
+
+
+
+/* ============================================================
+   COLOUR CHALLENGE
+============================================================ */
+
+function startColourChallenge() {
+
+    phase =
+        "challenge";
+
+    colourField.classList.remove("memory-mode");
+
+
+    document.getElementById(
+        "colourStatus"
+    ).textContent =
+        "Recreate";
+
+
+    const round =
+        colourRounds[
+            roundIndex
+        ];
+
+
+    createColourGrid(
+        round,
+        false
+    );
+
+
+    instruction.textContent = round.combo
+        ? "Drag each two-colour box into the correct position. Both colours and their order must match."
+        : "Drag the colours into the correct squares.";
+
+
+    updateHeader();
+
+
+    startColourGridMovement();
+
+
+    const challengeTime =
+        COLOUR_CHALLENGE_TIMES[roundIndex] || 60;
+
+    startTimer(
+        challengeTime,
+        () =>
+            finishColourRound()
+    );
+}
+
+
+/* ============================================================
+   COLOUR DRAG
+============================================================ */
+
+let draggedColour = null;
+
+
+colourField.addEventListener(
+    "dragover",
+    event => {
+
+        if (
+            phase ===
+            "challenge"
+        ) {
+
+            event.preventDefault();
+        }
+    }
+);
+
+
+colourField.addEventListener(
+    "drop",
+    event => {
+
+        if (
+            phase !==
+            "challenge"
+        ) {
+
+            return;
+        }
+
+
+        event.preventDefault();
+
+
+        const cell =
+            event.target.closest(
+                ".colour-cell"
+            );
+
+
+        if (
+            !cell
+        ) {
+
+            return;
+        }
+
+
+        processColourAnswer(
+            draggedColour,
+            cell
+        );
+
+
+        draggedColour =
+            null;
+    }
+);
+
+
+/* ============================================================
+   COLOUR ANSWER
+============================================================ */
+
+function processColourAnswer(colour, cell) {
+
+    if (!colour) return;
+
+    const index = Number(cell.dataset.index);
+    const target = colourTargets[index];
+
+    if (!target || target.matched) return;
+
+    const round = colourRounds[roundIndex];
+
+    let correct = false;
+
+    if (round.combo) {
+        correct =
+            typeof colour === "object" &&
+            target.expectedCombo &&
+            colourComboKey(colour) === colourComboKey(target.expectedCombo);
+    } else {
+        correct =
+            typeof colour === "string" &&
+            colour.toLowerCase() === target.expectedColour.toLowerCase();
+    }
+
+    if (correct) {
+        target.matched = true;
+
+        const points = getPassingValue(target.passCount);
+        target.points = points;
+        colourMatched++;
+
+        cell.style.background = round.combo
+            ? colourComboBackground(colour)
+            : colour;
+
+        cell.classList.add("filled");
+        roundEarnedScore += points;
+        showScorePopup(cell, "+" + points);
+        checkColourCompletion();
+
+    } else {
+        cell.classList.remove("shake");
+        void cell.offsetWidth;
+        cell.classList.add("shake");
+    }
+}
+
+
+
+/* ============================================================
+   COLOUR COMPLETION
+============================================================ */
+
+function checkColourCompletion() {
+
+    const total =
+        colourTargets.length;
+
+    const percentage =
+        (
+            colourMatched /
+            total
+        ) * 100;
+
+    // End immediately only when 100% of the items are correct.
+    // Reaching 70% is the pass mark, but the player can continue
+    // playing and earning points until the timer expires.
+    if (
+        percentage === 100
+    ) {
+        finishColourRound(true);
+    }
+}
+
+
+/* ============================================================
+   COLOUR MOVEMENT
+============================================================ */
+
+function startColourGridMovement() {
+
+    stopColourGridMovement();
+
+    colourMovementActive =
+        true;
+
+    colourMovementY =
+        0;
+
+    const grid = document.getElementById("colourGrid");
+    grid.style.top = "";
+    grid.style.transform = "translateX(-50%) translateY(0px)";
+
+    colourMovementLastTime =
+        performance.now();
+
+    requestColourMovement();
+}
+
+
+function stopColourGridMovement() {
+
+    colourMovementActive =
+        false;
+}
+
+
+function requestColourMovement() {
+
+    if (
+        !colourMovementActive
+    ) {
+
+        return;
+    }
+
+
+    animationFrame =
+        requestAnimationFrame(
+            updateColourMovement
+        );
+}
+
+
+function updateColourMovement(
+    now
+) {
+
+    if (
+        !colourMovementActive
+    ) {
+
+        return;
+    }
+
+
+    const delta =
+        now -
+        colourMovementLastTime;
+
+
+    colourMovementLastTime =
+        now;
+
+
+    colourMovementY +=
+        delta * .05;
+
+
+    const grid =
+        document.getElementById(
+            "colourGrid"
+        );
+
+
+    grid.style.transform =
+        `translateX(-50%) translateY(${colourMovementY}px)`;
+
+
+    const fieldRect =
+        colourField.getBoundingClientRect();
+
+
+    const redZoneTop =
+        fieldRect.bottom -
+        92;
+
+
+    colourTargets.forEach(
+        target => {
+
+            if (
+                target.matched
+            ) {
+
+                return;
+            }
+
+
+            const rect =
+                target.element
+                    .getBoundingClientRect();
+
+
+            if (
+                rect.top <
+                    redZoneTop &&
+                rect.bottom >=
+                    redZoneTop
+            ) {
+
+                if (
+                    !target.insideRedZone
+                ) {
+
+                    target.insideRedZone =
+                        true;
+
+                    const previousPoints = target.points;
+                    target.passCount++;
+                    target.points = getPassingValue(target.passCount);
+                    const deduction = previousPoints - target.points;
+                    if (deduction > 0) {
+                        showScorePopup(target.element, "-" + deduction);
+                    }
+                }
+
+
+            } else if (
+                rect.top >
+                redZoneTop + 15
+            ) {
+
+                target.insideRedZone =
+                    false;
+            }
+        }
+    );
+
+
+    const gridRect =
+        grid.getBoundingClientRect();
+
+
+    if (
+        gridRect.top >
+        fieldRect.bottom
+    ) {
+
+        colourMovementY =
+            -gridRect.height;
+
+
+        grid.style.transform =
+            `translateX(-50%) translateY(${colourMovementY}px)`;
+
+
+        colourTargets.forEach(
+            target => {
+
+                target.insideRedZone =
+                    false;
+            }
+        );
+    }
+
+
+    requestColourMovement();
+}
+
+
+/* ============================================================
+   FINISH COLOUR
+============================================================ */
+
+function finishColourRound(
+    perfect = false
+) {
+
+    if (
+        phase !==
+        "challenge"
+    ) {
+
+        return;
+    }
+
+
+    phase =
+        "result";
+
+
+    clearTimer();
+
+    stopColourGridMovement();
+
+
+    let finalRoundPoints =
+        roundEarnedScore;
+
+
+    if (
+        perfect
+    ) {
+
+        let bonus =
+            0;
+
+
+        colourTargets.forEach(
+            target => {
+
+                if (
+                    getPassingValue(
+                        target.passCount
+                    ) > 0
+                ) {
+
+                    bonus += 2;
+                }
+            }
+        );
+
+
+        finalRoundPoints +=
+            bonus;
+    }
+
+
+    const passed =
+        (
+            colourMatched /
+            colourTargets.length
+        ) * 100 >= 70;
+
+
+    if (
+        !passed
+    ) {
+
+        score =
+            roundStartScore;
+
+        modeScores[currentMode] =
+            score;
+
+        saveProgress();
+
+
+        showResult(
+            "Round Failed",
+            "You need at least 70% to pass. Your points from this attempt have been reset.",
+            score,
+            true
+        );
+
+        return;
+    }
+
+
+    /*
+       SUCCESS:
+
+       Commit the points only now.
+    */
+
+    score =
+        roundStartScore +
+        finalRoundPoints;
+
+
+    modeScores[currentMode] =
+        score;
+
+
+    modeRounds[currentMode] =
+        roundIndex + 1;
+
+
+    saveProgress();
+
+
+    recordLeaderboardScore(
+        getTotalPlayerScore()
+    );
+
+
+    showResult(
+        perfect
+            ?
+            "Perfect Round!"
+            :
+            "Round Complete",
+
+        perfect
+            ?
+            "Excellent! You matched every colour."
+            :
+            "Great job! You reached the 70% pass mark.",
+
+        score,
+
+        false
+    );
+}
+
+
+/* ============================================================
+   GAME 3 — PATTERN MEMORY
+============================================================ */
+
+/*
+   ONLY TWO ROUNDS.
+
+   ROUND 1:
+   2 columns
+   10 rows
+   1 selected position per row
+   30 sec memory
+   60 sec recreation
+
+
+   ROUND 2:
+
+   6 COLUMNS
+   6 ROWS
+   2 selected positions per row
+   60 sec memory
+   60 sec recreation
+
+
+   IMPORTANT:
+
+   Round 2 is now:
+
+       6 columns × 6 rows
+
+   NOT:
+
+       6 columns × 10 rows
+*/
+
+const movementRounds = [
+
+    {
+        columns: 2,
+        rows: 10,
+        picksPerRow: 1,
+        memoryTime: 30
+    },
+
+    {
+        columns: 6,
+        rows: 6,
+        picksPerRow: 2,
+        memoryTime: 60
+    },
+
+    {
+        columns: 8,
+        rows: 6,
+        picksPerRow: 3,
+        memoryTime: 60
+    }
+
+];
+
+
+let movementPattern = [];
+
+let currentPatternRow = 0;
+
+let patternPlayerSelections = [];
+
+let patternMemoryActive = false;
+
+
+const PATTERN_ROW_DISPLAY_TIME =
+    1800;
+
+const PATTERN_MULTI_PICK_DELAY =
+    700;
+
+
+/* ============================================================
+   ROUND 3 — OCEAN HOUSE DOORWAY PATH
+============================================================ */
+
+const HOUSE_DOOR_SYMBOLS = [
+    { symbol: "🦀", name: "Crab" },
+    { symbol: "⭐", name: "Starfish" },
+    { symbol: "🐙", name: "Octopus" },
+    { symbol: "🐠", name: "Fish" },
+    { symbol: "🐚", name: "Shell" },
+    { symbol: "🐬", name: "Dolphin" },
+    { symbol: "🪼", name: "Jellyfish" },
+    { symbol: "🐢", name: "Turtle" },
+    { symbol: "🪸", name: "Coral" }
+];
+
+let houseDoorLayout = [];
+let houseCorrectPath = [];
+let housePlayerPath = [];
+
+function shuffledCopy(items) {
+    return [...items].sort(() => Math.random() - 0.5);
+}
+
+function startHouseRound() {
+    phase = "memory";
+    housePlayerPath = [];
+    houseDoorLayout = shuffledCopy(HOUSE_DOOR_SYMBOLS);
+    houseCorrectPath = shuffledCopy(houseDoorLayout)
+        .slice(0, movementRounds[roundIndex].pathLength);
+
+    document.getElementById("patternStatus").textContent = "Memorise Doorways";
+    instruction.textContent =
+        "Memorise the ocean doorway symbols in the exact order shown. The doorway key disappears when the challenge starts.";
+    updateHeader();
+    renderHouseMemory();
+
+    startTimer(
+        movementRounds[roundIndex].memoryTime,
+        startHouseChallenge
+    );
+}
+
+function houseMarkup(includeSequence) {
+    const sequenceMarkup = includeSequence
+        ? `
+            <div class="house-memory-card">
+                <h3>Memorise the doorway path</h3>
+                <p>Enter these ocean-symbol doorways in this exact order.</p>
+                <div class="house-sequence">
+                    ${houseCorrectPath.map((item, index) => `
+                        <div class="house-sequence-item" title="${item.name}">
+                            <span class="house-sequence-number">${index + 1}</span>
+                            <span aria-label="${item.name}">${item.symbol}</span>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>`
+        : `
+            <div class="house-progress" id="houseProgress">
+                Path 0 / ${houseCorrectPath.length}
+            </div>`;
+
+    return `
+        <div class="house-round-stage">
+            ${sequenceMarkup}
+            <div class="ocean-house" aria-label="Ocean house with symbol doorways">
+                <div class="house-door-grid">
+                    ${houseDoorLayout.map((item, index) => `
+                        <button
+                            type="button"
+                            class="house-door"
+                            data-house-door="${index}"
+                            aria-label="${item.name} doorway"
+                        >
+                            <span>${item.symbol}</span>
+                            <span class="house-door-step"></span>
+                        </button>
+                    `).join("")}
+                </div>
+            </div>
+        </div>`;
+}
+
+function renderHouseMemory() {
+    const board = document.getElementById("patternBoard");
+    board.style.gridTemplateColumns = "1fr";
+    board.innerHTML = houseMarkup(true);
+
+    board.querySelectorAll(".house-door").forEach(door => {
+        door.disabled = true;
+        door.style.cursor = "default";
+    });
+}
+
+function startHouseChallenge() {
+    if (roundIndex !== 2) return;
+
+    clearTimer();
+    phase = "challenge";
+    housePlayerPath = [];
+
+    document.getElementById("patternStatus").textContent = "Recreate Doorway Path";
+    instruction.textContent =
+        "Choose the doorway symbols in the order you remember. The game will not tell you which choices are correct until the path is complete.";
+    updateHeader();
+
+    const board = document.getElementById("patternBoard");
+    board.style.gridTemplateColumns = "1fr";
+    board.innerHTML = houseMarkup(false);
+
+    board.querySelectorAll(".house-door").forEach(door => {
+        door.addEventListener("click", handleHouseDoorClick);
+    });
+
+    startTimer(
+        movementRounds[roundIndex].challengeTime,
+        evaluateHousePath
+    );
+}
+
+function handleHouseDoorClick(event) {
+    if (phase !== "challenge" || roundIndex !== 2) return;
+
+    const door = event.currentTarget;
+    const doorIndex = Number(door.dataset.houseDoor);
+
+    if (door.classList.contains("path-selected")) return;
+    if (housePlayerPath.length >= houseCorrectPath.length) return;
+
+    housePlayerPath.push(houseDoorLayout[doorIndex]);
+    door.classList.add("path-selected");
+
+    const step = door.querySelector(".house-door-step");
+    if (step) step.textContent = `Step ${housePlayerPath.length}`;
+
+    const progress = document.getElementById("houseProgress");
+    if (progress) {
+        progress.textContent = `Path ${housePlayerPath.length} / ${houseCorrectPath.length}`;
+    }
+
+    // Deliberately no correct/incorrect feedback here.
+    // The full path is evaluated only after the player reaches the end.
+    if (housePlayerPath.length === houseCorrectPath.length) {
+        evaluateHousePath();
+    }
+}
+
+function evaluateHousePath() {
+    if (phase !== "challenge" || roundIndex !== 2) return;
+
+    phase = "result";
+    clearTimer();
+
+    const settings = movementRounds[roundIndex];
+    let correctDoorways = 0;
+
+    for (let i = 0; i < houseCorrectPath.length; i++) {
+        const expected = houseCorrectPath[i];
+        const actual = housePlayerPath[i];
+
+        if (actual && actual.symbol === expected.symbol) {
+            correctDoorways++;
+        }
+    }
+
+    const totalDoorways = houseCorrectPath.length;
+    const percentage = totalDoorways
+        ? (correctDoorways / totalDoorways) * 100
+        : 0;
+    const earned = correctDoorways * 10;
+    const passed = percentage >= settings.passPercentage;
+
+    if (!passed) {
+        score = roundStartScore;
+        modeScores[currentMode] = score;
+        saveProgress();
+
+        showResult(
+            "Round Failed",
+            `You recreated ${correctDoorways} of ${totalDoorways} doorways in the correct position (${Math.round(percentage)}%). Each correct doorway is worth 10 points. You need at least ${settings.passPercentage}% to pass.`,
+            score,
+            true
+        );
+        return;
+    }
+
+    score = roundStartScore + earned;
+    modeScores[currentMode] = score;
+    modeRounds[currentMode] = roundIndex + 1;
+    saveProgress();
+    recordLeaderboardScore(getTotalPlayerScore());
+
+    showResult(
+        percentage === 100 ? "Perfect Doorway Path!" : "Round Complete",
+        `You recreated ${correctDoorways} of ${totalDoorways} doorways in the correct position (${Math.round(percentage)}%). You earned ${earned} points.`,
+        score,
+        false
+    );
+}
+
+
+/* ============================================================
+   GENERATE PATTERN
+============================================================ */
+
+function generateMovementPattern(
+    columns,
+    rows,
+    picksPerRow
+) {
+
+    const pattern = [];
+
+
+    for (
+        let row = 0;
+        row < rows;
+        row++
+    ) {
+
+        const available =
+            Array.from(
+                {
+                    length:
+                        columns
+                },
+                (_,i) => i
+            );
+
+
+        available.sort(
+            () =>
+                Math.random() -
+                .5
+        );
+
+
+        pattern.push(
+            available
+                .slice(
+                    0,
+                    picksPerRow
+                )
+                .sort(
+                    (a,b) =>
+                        a-b
+                )
+        );
+    }
+
+
+    return pattern;
+}
+
+
+/* ============================================================
+   START MOVEMENT ROUND
+============================================================ */
+
+function startMovementRound() {
+
+    clearTimer();
+
+    stopPatternAnimation();
+
+    phase =
+        "memory";
+
+    roundEarnedScore =
+        0;
+
+
+    const settings =
+        movementRounds[
+            roundIndex
+        ];
+
+
+
+    movementPattern =
+        generateMovementPattern(
+            settings.columns,
+            settings.rows,
+            settings.picksPerRow
+        );
+
+
+    currentPatternRow =
+        0;
+
+
+    patternPlayerSelections =
+        Array.from(
+            {
+                length:
+                    settings.rows
+            },
+            () => []
+        );
+
+
+    createMovementGrid();
+
+
+    document.getElementById(
+        "patternStatus"
+    ).textContent =
+        "Memorise";
+
+
+    instruction.textContent =
+        roundIndex === 2
+            ? "Memorise the pattern across 8 columns. Three positions will highlight in each row."
+            : "Follow the moving highlights and memorise the pattern.";
+
+
+    updateHeader();
+
+
+    startMovementMemory();
+}
+
+
+/* ============================================================
+   CREATE PATTERN GRID
+============================================================ */
+
+function createMovementGrid() {
+
+    const board =
+        document.getElementById(
+            "patternBoard"
+        );
+
+
+    board.innerHTML = "";
+
+
+    const settings =
+        movementRounds[
+            roundIndex
+        ];
+
+
+    const cellSize =
+        settings.columns >= 8 ? 24 : 27;
+
+    board.style.gridTemplateColumns =
+        `repeat(${settings.columns},${cellSize}px)`;
+
+
+    for (
+        let row = 0;
+        row < settings.rows;
+        row++
+    ) {
+
+        for (
+            let col = 0;
+            col < settings.columns;
+            col++
+        ) {
+
+            const cell =
+                document.createElement(
+                    "div"
+                );
+
+
+            cell.className =
+                "pattern-cell";
+
+
+            cell.dataset.row =
+                row;
+
+
+            cell.dataset.col =
+                col;
+
+
+            cell.addEventListener(
+                "click",
+                handlePatternCellClick
+            );
+
+
+            board.appendChild(
+                cell
+            );
+        }
+    }
+}
+
+
+/* ============================================================
+   GET PATTERN CELL
+============================================================ */
+
+function getPatternCell(
+    row,
+    col
+) {
+
+    return document.querySelector(
+        `.pattern-cell[data-row="${row}"][data-col="${col}"]`
+    );
+}
+
+
+/* ============================================================
+   MEMORY
+============================================================ */
+
+function startMovementMemory() {
+
+    stopPatternAnimation();
+
+    patternMemoryActive =
+        true;
+
+
+    currentPatternRow =
+        0;
+
+
+    animatePatternRow(0);
+
+
+    const settings =
+        movementRounds[
+            roundIndex
+        ];
+
+
+    startTimer(
+        settings.memoryTime,
+        startMovementChallenge
+    );
+}
+
+
+/* ============================================================
+   ANIMATE PATTERN ROW
+============================================================ */
+
+function animatePatternRow(
+    row
+) {
+
+    if (
+        !patternMemoryActive
+    ) {
+
+        return;
+    }
+
+
+    if (
+        row >=
+        movementPattern.length
+    ) {
+
+        currentPatternRow =
+            0;
+
+
+        setTimeout(
+            () => {
+
+                if (
+                    patternMemoryActive
+                ) {
+
+                    animatePatternRow(
+                        0
+                    );
+                }
+
+            },
+            500
+        );
+
+
+        return;
+    }
+
+
+    clearPatternHighlights();
+
+
+    currentPatternRow =
+        row;
+
+
+    const positions =
+        movementPattern[row];
+
+
+    if (
+        positions.length ===
+        1
+    ) {
+
+        movePatternBallToCell(
+            row,
+            positions[0]
+        );
+
+
+        setTimeout(
+            () => {
+
+                animatePatternRow(
+                    row + 1
+                );
+
+            },
+            PATTERN_ROW_DISPLAY_TIME
+        );
+
+
+    } else {
+
+        animateMultiplePatternPositions(
+            row,
+            positions,
+            0
+        );
+    }
+}
+
+
+/* ============================================================
+   MULTIPLE POSITIONS
+============================================================ */
+
+function animateMultiplePatternPositions(
+    row,
+    positions,
+    positionIndex
+) {
+
+    if (
+        !patternMemoryActive
+    ) {
+
+        return;
+    }
+
+
+    if (
+        positionIndex >=
+        positions.length
+    ) {
+
+        setTimeout(
+            () => {
+
+                animatePatternRow(
+                    row + 1
+                );
+
+            },
+            500
+        );
+
+
+        return;
+    }
+
+
+    clearPatternHighlights();
+
+
+    movePatternBallToCell(
+        row,
+        positions[
+            positionIndex
+        ]
+    );
+
+
+    setTimeout(
+        () => {
+
+            animateMultiplePatternPositions(
+                row,
+                positions,
+                positionIndex + 1
+            );
+
+        },
+        PATTERN_MULTI_PICK_DELAY
+    );
+}
+
+
+/* ============================================================
+   HIGHLIGHT CELL
+============================================================ */
+
+function movePatternBallToCell(
+    row,
+    col
+) {
+
+    const cell =
+        getPatternCell(
+            row,
+            col
+        );
+
+
+    if (
+        !cell
+    ) {
+
+        return;
+    }
+
+
+    cell.classList.add(
+        "active"
+    );
+}
+
+
+/* ============================================================
+   CLEAR HIGHLIGHTS
+============================================================ */
+
+function clearPatternHighlights() {
+
+    document
+        .querySelectorAll(
+            ".pattern-cell.active"
+        )
+        .forEach(
+            cell => {
+
+                cell.classList.remove(
+                    "active"
+                );
+            }
+        );
+}
+
+
+/* ============================================================
+   STOP PATTERN
+============================================================ */
+
+function stopPatternAnimation() {
+
+    patternMemoryActive =
+        false;
+
+    clearPatternHighlights();
+}
+
+
+/* ============================================================
+   PATTERN CHALLENGE
+============================================================ */
+
+function startMovementChallenge() {
+
+    stopPatternAnimation();
+
+
+    phase =
+        "challenge";
+
+
+    currentPatternRow =
+        0;
+
+
+    patternPlayerSelections =
+        movementPattern.map(
+            () => []
+        );
+
+
+    createMovementGrid();
+
+
+    document.getElementById(
+        "patternStatus"
+    ).textContent =
+        "Recreate";
+
+
+    instruction.textContent =
+        "Recreate the pattern row by row. Your answers will be checked at the end.";
+
+
+    updateHeader();
+
+
+    startTimer(
+        PATTERN_CHALLENGE_TIME,
+        evaluateMovementAttempt
+    );
+}
+
+
+/* ============================================================
+   PATTERN CLICK
+============================================================ */
+
+function handlePatternCellClick(
+    event
+) {
+
+    if (
+        phase !==
+        "challenge"
+    ) {
+
+        return;
+    }
+
+
+    const cell =
+        event.currentTarget;
+
+
+    const row =
+        Number(
+            cell.dataset.row
+        );
+
+
+    const col =
+        Number(
+            cell.dataset.col
+        );
+
+
+    /*
+       The player can only work on
+       the current row.
+
+       Earlier rows cannot be changed.
+    */
+
+    if (
+        row !==
+        currentPatternRow
+    ) {
+
+        return;
+    }
+
+
+    const settings =
+        movementRounds[
+            roundIndex
+        ];
+
+
+    const selections =
+        patternPlayerSelections[
+            row
+        ];
+
+
+    const alreadySelected =
+        selections.includes(
+            col
+        );
+
+
+    if (
+        alreadySelected
+    ) {
+
+        const position =
+            selections.indexOf(
+                col
+            );
+
+
+        selections.splice(
+            position,
+            1
+        );
+
+
+        cell.classList.remove(
+            "player-selected"
+        );
+
+
+        return;
+    }
+
+
+    if (
+        selections.length >=
+        settings.picksPerRow
+    ) {
+
+        return;
+    }
+
+
+    selections.push(
+        col
+    );
+
+
+    selections.sort(
+        (a,b) =>
+            a-b
+    );
+
+
+    cell.classList.add(
+        "player-selected"
+    );
+
+
+    /*
+       No correctness feedback
+       during recreation.
+    */
+
+
+    if (
+        selections.length ===
+        settings.picksPerRow
+    ) {
+
+        if (
+            currentPatternRow <
+            settings.rows - 1
+        ) {
+
+            currentPatternRow++;
+
+        } else {
+
+            // Only end early if every required position is correct.
+            // Otherwise the player keeps playing until the 60-second
+            // challenge timer expires.
+            const totalPositions =
+                settings.rows * settings.picksPerRow;
+
+            const selectedPositions =
+                patternPlayerSelections.reduce(
+                    (total, rowSelections) =>
+                        total + rowSelections.length,
+                    0
+                );
+
+            let correctPositions = 0;
+
+            for (
+                let r = 0;
+                r < settings.rows;
+                r++
+            ) {
+                movementPattern[r].forEach(
+                    expectedCol => {
+                        if (
+                            patternPlayerSelections[r].includes(expectedCol)
+                        ) {
+                            correctPositions++;
+                        }
+                    }
+                );
+            }
+
+            if (
+                selectedPositions === totalPositions &&
+                correctPositions === totalPositions
+            ) {
+                evaluateMovementAttempt();
+            }
+        }
+    }
+}
+
+
+/* ============================================================
+   EVALUATE PATTERN
+============================================================ */
+
+function evaluateMovementAttempt() {
+
+    if (
+        phase !==
+        "challenge"
+    ) {
+
+        return;
+    }
+
+
+    phase =
+        "result";
+
+
+    clearTimer();
+
+
+    const settings =
+        movementRounds[
+            roundIndex
+        ];
+
+
+    const totalPositions =
+        settings.rows *
+        settings.picksPerRow;
+
+
+    let correctPositions =
+        0;
+
+
+    for (
+        let row = 0;
+        row < settings.rows;
+        row++
+    ) {
+
+        const expected =
+            movementPattern[row];
+
+
+        const actual =
+            patternPlayerSelections[
+                row
+            ];
+
+
+        expected.forEach(
+            col => {
+
+                if (
+                    actual.includes(
+                        col
+                    )
+                ) {
+
+                    correctPositions++;
+                }
+            }
+        );
+    }
+
+
+    /*
+       GAME 3 SCORING:
+
+       10 points for EVERY
+       correct position.
+
+       Example:
+
+       12 correct positions
+       × 10
+       =
+       120 points
+    */
+
+    const earned =
+        correctPositions *
+        10;
+
+
+    const percentage =
+        (
+            correctPositions /
+            totalPositions
+        ) * 100;
+
+
+    const passed =
+        percentage >= 50;
+
+
+    /*
+       Perfect pattern bonus.
+
+       2 additional points for
+       every position when the
+       entire pattern is correct.
+    */
+
+    let finalRoundPoints =
+        earned;
+
+
+    if (
+        passed &&
+        percentage === 100
+    ) {
+
+        finalRoundPoints +=
+            totalPositions *
+            2;
+    }
+
+
+    if (
+        !passed
+    ) {
+
+        /*
+           FAILED:
+
+           Do not add any of the
+           points earned during this
+           attempt.
+
+           Restore the exact score
+           from before the round.
+        */
+
+        score =
+            roundStartScore;
+
+
+        modeScores[currentMode] =
+            score;
+
+
+        saveProgress();
+
+
+        showResult(
+            "Round Failed",
+
+            `You scored ${Math.round(percentage)}%. You need at least 50%. Your points from this attempt have been reset.`,
+
+            score,
+
+            true
+        );
+
+
+        return;
+    }
+
+
+    /*
+       SUCCESS:
+
+       Only now do we add the
+       Game 3 round points.
+    */
+
+    score =
+        roundStartScore +
+        finalRoundPoints;
+
+
+    modeScores[currentMode] =
+        score;
+
+
+    modeRounds[currentMode] =
+        roundIndex + 1;
+
+
+    saveProgress();
+
+
+    /*
+       Leaderboard is updated only
+       because the player successfully
+       advanced.
+    */
+
+    recordLeaderboardScore(
+        getTotalPlayerScore()
+    );
+
+
+    showResult(
+        percentage === 100
+            ?
+            "Perfect Pattern!"
+            :
+            "Round Complete",
+
+        percentage === 100
+            ?
+            `You remembered all ${totalPositions} positions. You earned ${finalRoundPoints} points.`
+            :
+            `You remembered ${correctPositions} of ${totalPositions} positions (${Math.round(percentage)}%). You earned ${earned} points.`,
+
+        score,
+
+        false
+    );
+}
+
+
+/* ============================================================
+   RESULT
+============================================================ */
+
+let resultRetrySameRound =
+    false;
+
+let resultGameComplete =
+    false;
+
+
+function showResult(
+    title,
+    message,
+    currentScore,
+    retry
+) {
+
+    resultRetrySameRound =
+        retry;
+
+    resultGameComplete =
+        false;
+
+
+    resultTitle.textContent =
+        title;
+
+
+    resultMessage.textContent =
+        message;
+
+
+    resultScore.textContent =
+        "Score: " +
+        currentScore;
+
+
+    playAgainButton.textContent =
+        retry
+            ?
+            "Try Again"
+            :
+            "Next Round";
+
+
+    playAgainButton.style.display =
+        "block";
+
+
+    resultOverlay.classList.remove(
+        "hidden"
+    );
+}
+
+
+/* ============================================================
+   NEXT ROUND / RETRY
+============================================================ */
+
+playAgainButton.addEventListener(
+    "click",
+    () => {
+
+        resultOverlay.classList.add(
+            "hidden"
+        );
+
+
+        /*
+           If the entire game has
+           already been completed,
+           "Play Again" explicitly
+           resets that game's score
+           and progression.
+
+           It therefore cannot be
+           used to farm additional
+           leaderboard points.
+        */
+
+        if (
+            resultGameComplete
+        ) {
+
+            modeScores[currentMode] =
+                0;
+
+            modeRounds[currentMode] =
+                0;
+
+            score =
+                0;
+
+            roundIndex =
+                0;
+
+            roundStartScore =
+                0;
+
+            roundEarnedScore =
+                0;
+
+
+            saveProgress();
+
+
+            /*
+               Reset leaderboard score
+               for the new run.
+            */
+
+            resetPlayerLeaderboardScore();
+
+
+            startMode(
+                currentMode
+            );
+
+
+            return;
+        }
+
+
+        if (
+            resultRetrySameRound
+        ) {
+
+            /*
+               Failed round:
+
+               Keep the score from before
+               the round.
+            */
+
+            score =
+                roundStartScore;
+
+
+            modeScores[currentMode] =
+                score;
+
+
+            roundEarnedScore =
+                0;
+
+
+            saveProgress();
+
+
+        } else {
+
+            /*
+               Successful round:
+
+               The round was already
+               committed.
+
+               Advance to the next
+               round exactly once.
+            */
+
+            roundIndex++;
+
+
+            roundStartScore =
+                score;
+
+
+            roundEarnedScore =
+                0;
+
+
+            /*
+               GAME 1
+            */
+
+            if (
+                currentMode === "shape" &&
+                roundIndex >=
+                shapeRounds.length
+            ) {
+
+                showGameComplete();
+
+                return;
+            }
+
+
+            /*
+               GAME 2
+            */
+
+            if (
+                currentMode === "colour" &&
+                roundIndex >=
+                colourRounds.length
+            ) {
+
+                showGameComplete();
+
+                return;
+            }
+
+
+            /*
+               GAME 3
+            */
+
+            if (
+                currentMode === "movement" &&
+                roundIndex >=
+                movementRounds.length
+            ) {
+
+                showGameComplete();
+
+                return;
+            }
+
+
+            modeScores[currentMode] =
+                score;
+
+
+            modeRounds[currentMode] =
+                roundIndex;
+
+
+            saveProgress();
+        }
+
+
+        if (
+            currentMode ===
+            "shape"
+        ) {
+
+            startShapeRound();
+        }
+
+
+        if (
+            currentMode ===
+            "colour"
+        ) {
+
+            startColourRound();
+        }
+
+
+        if (
+            currentMode ===
+            "movement"
+        ) {
+
+            startMovementRound();
+        }
+    }
+);
+
+
+/* ============================================================
+   GAME COMPLETE
+============================================================ */
+
+function showGameComplete() {
+
+    clearTimer();
+
+    stopAllAnimations();
+
+
+    phase =
+        "complete";
+
+
+    const names = {
+
+        shape:
+            "Shape Memory",
+
+        colour:
+            "Colour Grid Memory",
+
+        movement:
+            "Pattern Memory"
+    };
+
+
+    /*
+       The final round was already
+       committed to the leaderboard.
+
+       We do NOT add points again here.
+
+       This is important because
+       otherwise completing a game
+       could duplicate the score.
+    */
+
+
+    resultTitle.textContent =
+        "Game Complete!";
+
+
+    resultMessage.textContent =
+        `You completed all rounds of ${names[currentMode]}. Your final score for this game is ${score}.`;
+
+
+    resultScore.textContent =
+        "Final Score: " +
+        score;
+
+
+    playAgainButton.textContent =
+        "Restart This Game";
+
+
+    resultGameComplete =
+        true;
+
+
+    resultRetrySameRound =
+        false;
+
+
+    playAgainButton.style.display =
+        "block";
+
+
+    resultOverlay.classList.remove(
+        "hidden"
+    );
+}
+
+
+/* ============================================================
+   RESULT MAIN MENU
+============================================================ */
+
+resultMenuButton.addEventListener(
+    "click",
+    () => {
+
+        resultOverlay.classList.add(
+            "hidden"
+        );
+
+        showMainMenu();
+    }
+);
+
+
+/* ============================================================
+   IN-GAME MAIN MENU
+============================================================ */
+
+document.getElementById(
+    "shapeMenuButton"
+).addEventListener(
+    "click",
+    showMainMenu
+);
+
+
+document.getElementById(
+    "colourMenuButton"
+).addEventListener(
+    "click",
+    showMainMenu
+);
+
+
+document.getElementById(
+    "patternMenuButton"
+).addEventListener(
+    "click",
+    showMainMenu
+);
+
+
+/* ============================================================
+   START BUTTONS
+============================================================ */
+
+const segmentRuleContent = {
+    shape: {
+        title: "Shape Memory Rules",
+        intro: "Memorise the shapes or sea combinations, then rebuild them in the same order.",
+        rules: [
+            "Study every item during the memorise phase.",
+            "Drag the matching item into each moving empty block.",
+            "Items lose value whenever their block passes through the red zone; the red minus sign shows the deduction.",
+            "Complete every position before time runs out for the best score."
+        ]
+    },
+    colour: {
+        title: "Colour Grid Rules",
+        intro: "Memorise the grid, then restore every square with the correct colour or colour pair.",
+        rules: [
+            "Study the full grid before it becomes blank.",
+            "Drag the correct colour into each moving empty square.",
+            "For two-colour squares, the left and right positions must also match.",
+            "Blocks lose value in the red zone; every deduction appears as a red minus sign."
+        ]
+    },
+    movement: {
+        title: "Pattern Memory Rules",
+        intro: "Watch the movement pattern carefully and reproduce it from memory.",
+        rules: [
+            "Memorise the highlighted pattern and its order.",
+            "Select the matching positions when the pattern disappears.",
+            "Follow the on-screen instruction for each round.",
+            "Accuracy and completing the pattern before time expires earn the score."
+        ]
+    },
+    climb: {
+        title: "Constant Climb Rules",
+        intro: "The train stops at random memory and logic challenges as it climbs.",
+        rules: [
+            "Solve the challenge shown at every train stop.",
+            "Easy challenges award about 5 points, medium challenges up to 12, and hard challenges up to 20.",
+            "Faster correct answers keep more of the available points.",
+            "If time expires, use Recheck Pattern and continue for a smaller reward."
+        ]
+    },
+    spin: {
+        title: "Ocean Spin Rules",
+        intro: "Watch ocean items through the opening in the spinning wheel and remember their positions.",
+        rules: [
+            "Faster spinning stops are worth more points.",
+            "Place only the items you remember, then lock them and continue spinning for the rest.",
+            "Correct placements stay locked; each incorrect placement deducts 5 points.",
+            "Later spins are slower and easier, but each item is worth fewer points."
+        ]
+    }
+};
+let pendingSegmentStart = null;
+function showSegmentRules(key, startGame) {
+    const data = segmentRuleContent[key];
+    pendingSegmentStart = startGame;
+    document.getElementById("segmentRulesTitle").textContent = data.title;
+    document.getElementById("segmentRulesIntro").textContent = data.intro;
+    document.getElementById("segmentRulesList").innerHTML = data.rules.map(rule => `<li>${rule}</li>`).join("");
+    document.getElementById("segmentRulesOverlay").classList.remove("hidden");
+}
+document.getElementById("segmentRulesBack").addEventListener("click", () => {
+    pendingSegmentStart = null;
+    document.getElementById("segmentRulesOverlay").classList.add("hidden");
+});
+document.getElementById("segmentRulesStart").addEventListener("click", () => {
+    const startGame = pendingSegmentStart;
+    pendingSegmentStart = null;
+    document.getElementById("segmentRulesOverlay").classList.add("hidden");
+    if (startGame) startGame();
+});
+
+document.getElementById(
+    "startShapeButton"
+).addEventListener(
+    "click",
+    () =>
+        showSegmentRules("shape", () => startMode("shape"))
+);
+
+
+document.getElementById(
+    "startColourButton"
+).addEventListener(
+    "click",
+    () =>
+        showSegmentRules("colour", () => startMode("colour"))
+);
+
+
+document.getElementById(
+    "startPatternButton"
+).addEventListener(
+    "click",
+    () =>
+        showSegmentRules("movement", () => startMode("movement"))
+);
+
+
+/* ============================================================
+   LEADERBOARD BUTTON
+============================================================ */
+
+document.getElementById(
+    "leaderboardButton"
+).addEventListener(
+    "click",
+    openLeaderboard
+);
+
+
+/* ============================================================
+   SCORE POPUP
+============================================================ */
+
+function showScorePopup(
+    element,
+    text
+) {
+
+    const rect =
+        element.getBoundingClientRect();
+
+
+    const popup =
+        document.createElement(
+            "div"
+        );
+
+
+    popup.className =
+        "score-popup";
+
+    if (String(text).trim().startsWith("-")) {
+        popup.classList.add("penalty");
+    }
+
+
+    popup.textContent =
+        text;
+
+
+    popup.style.left =
+        (
+            rect.left +
+            rect.width / 2 -
+            20
+        ) + "px";
+
+
+    popup.style.top =
+        (
+            rect.top -
+            5
+        ) + "px";
+
+
+    document.body.appendChild(
+        popup
+    );
+
+
+    setTimeout(
+        () => {
+
+            popup.remove();
+
+        },
+        900
+    );
+}
+
+
+/* ============================================================
+   INITIALISE
+============================================================ */
+
+loadProgress();
+
+cleanDailyLeaderboards();
+
+playerNameInput.value =
+    playerName;
+
+updatePlayerStatus();
+
+showMainMenu();
+
+
+/* =========================================================
+   CONSTANT CLIMB LOGIC
+========================================================= */
+let climbRunning=false, climbScore=0, climbSolved=0, climbStop=1, climbPuzzle=null, climbTimeout=null;
+let climbChallengeTimer=null, climbSecondsLeft=0, climbAttemptLocked=false, climbRecheckMode=false, climbRecheckAvailable=false;
+const climbSymbols=["🐙","🦀","⭐","🐠","🐬","🐚","🐢","🪸","⚓","🌊","🔷","🔶","🟣","🟩","🔺","❤️"];
+const climbWords=["BLUE","TRAIN","WAVE","STAR","CRAB","SHELL","OCEAN","TRACK","CORAL","TURTLE","DOLPHIN","ANCHOR","REEF","FISH"];
+const climbPts={easy:5,medium:12,hard:20};
+function climbPuzzlePoints(p){
+    /* Spot-the-change is intentionally a quick low-value challenge. */
+    if(p.type==="odd") return 5;
+    if(p.type==="numberPattern") return {easy:5,medium:12,hard:20}[p.diff];
+    if(p.type==="wordSequence") return {easy:5,medium:12,hard:20}[p.diff];
+    return climbPts[p.diff];
+}
+function climbStartingTime(p){
+    if(p.type==="odd") return 20;
+    return {easy:30,medium:45,hard:60}[p.diff];
+}
+function climbTimePoints(){
+    if(climbRecheckMode || climbRecheckAvailable || climbSecondsLeft<=0) return 2;
+    const maximum = climbPts[climbPuzzle?.diff || "easy"];
+    const total = climbPuzzle ? climbStartingTime(climbPuzzle) : 30;
+    const timeRatio = Math.max(0, Math.min(1, climbSecondsLeft / total));
+    return Math.max(2, Math.round(maximum * (.35 + .65 * timeRatio)));
+}
+function climbUpdateClock(){
+    document.getElementById("timerDisplay").textContent="Time: "+Math.max(0,climbSecondsLeft)+"s • "+climbTimePoints()+" pts";
+}
+function climbStartChallengeClock(p){
+    clearInterval(climbChallengeTimer);
+    climbSecondsLeft=climbStartingTime(p);
+    climbUpdateClock();
+    climbChallengeTimer=setInterval(()=>{
+        if(!climbRunning || climbPuzzle!==p){clearInterval(climbChallengeTimer);return;}
+        if(climbSecondsLeft>0) climbSecondsLeft--;
+        climbUpdateClock();
+        if(climbSecondsLeft<=0){
+            clearInterval(climbChallengeTimer);
+            climbRecheckAvailable=true;
+            climbRecheckMode=true;
+            climbUpdateClock();
+            climbOfferRecheck(p);
+        }
+    },1000);
+}
+function climbWrong(message="Not correct yet — keep trying."){
+    climbAttemptLocked=false;
+    const toast=document.getElementById("climbToast");
+    toast.textContent=message;
+    toast.classList.remove("show");void toast.offsetWidth;toast.classList.add("show");
+}
+function climbOfferRecheck(p){
+    if(!climbRunning || climbPuzzle!==p)return;
+    const actions=document.getElementById("climbActions");
+    if(actions.querySelector(".climb-recheck")) return;
+    const b=document.createElement("button");
+    b.className="climb-recheck";
+    b.textContent="🔁 Recheck Pattern";
+    b.onclick=()=>climbRecheckPattern(p);
+    actions.appendChild(b);
+    const note=document.createElement("div");
+    note.className="climb-recheck-note";
+    note.textContent="Rechecking gives a 2-point completion reward.";
+    actions.appendChild(note);
+    document.getElementById("climbHelp").textContent="Time is up. You can keep solving, or recheck the pattern before trying again.";
+}
+function climbRecheckPattern(p){
+    if(!climbRunning || climbPuzzle!==p)return;
+    climbRecheckMode=true;
+    climbRecheckAvailable=false;
+    clearInterval(climbChallengeTimer);
+    clearTimeout(climbTimeout);
+    const board=document.getElementById("climbBoard");
+    const actions=document.getElementById("climbActions");
+    board.innerHTML=""; actions.innerHTML="";
+    document.getElementById("climbHelp").textContent="Recheck the pattern carefully. You will earn 2 points when solved.";
+
+    if(p.type==="sequence" || p.type==="wordSequence"){
+        const row=document.createElement("div"); row.className="climb-sequence";
+        const seq=p.type==="sequence"?p.answer:p.answer;
+        seq.forEach(x=>{const d=document.createElement("div");d.className="climb-token";d.textContent=x;if(p.type==="wordSequence")d.style.fontSize="18px";row.appendChild(d)});
+        board.appendChild(row);
+    } else if(p.type==="grid"){
+        board.appendChild(climbGrid(p,true));
+    } else if(p.type==="numberPattern"){
+        const row=document.createElement("div");row.className="climb-sequence";
+        p.seq.forEach(n=>{const d=document.createElement("div");d.className="climb-token";d.textContent=n;row.appendChild(d)});board.appendChild(row);
+    } else if(p.type==="odd"){
+        const row=document.createElement("div");row.className="climb-sequence";
+        for(let i=0;i<p.total;i++){const d=document.createElement("div");d.className="climb-token";d.textContent=i===p.answer?p.odd:p.base;row.appendChild(d)}board.appendChild(row);
+    } else if(p.type==="count"){
+        const row=document.createElement("div");row.className="climb-sequence";
+        p.items.forEach(x=>{const d=document.createElement("div");d.className="climb-token";d.textContent=x;row.appendChild(d)});board.appendChild(row);
+    }
+
+    const reviewSeconds = p.diff==="hard" ? 12 : p.diff==="medium" ? 9 : 7;
+    climbSecondsLeft=reviewSeconds;
+    climbUpdateClock();
+    climbChallengeTimer=setInterval(()=>{
+        if(!climbRunning || climbPuzzle!==p){clearInterval(climbChallengeTimer);return;}
+        if(climbSecondsLeft>0)climbSecondsLeft--;
+        climbUpdateClock();
+        if(climbSecondsLeft<=0){
+            clearInterval(climbChallengeTimer);
+            climbRecheckAvailable=true;
+            climbRender();
+            climbRecheckMode=true;
+            climbSecondsLeft=0;
+            climbUpdateClock();
+            climbOfferRecheck(p);
+        }
+    },1000);
+}
+
+function climbShowOnlyField(){
+    document.querySelectorAll(".game-field").forEach(f=>f.style.display="none");
+    document.getElementById("climbField").style.display="block";
+}
+function startConstantClimb(){
+    climbRunning=true; climbScore=0; climbSolved=0; climbStop=1;
+    clearInterval(timerInterval); clearTimeout(climbTimeout); clearInterval(climbChallengeTimer);
+    document.getElementById("menuOverlay").classList.add("hidden");
+    document.getElementById("resultOverlay").classList.add("hidden");
+    climbShowOnlyField();
+    document.getElementById("modeDisplay").textContent="Constant Climb";
+    document.getElementById("roundDisplay").textContent="Stop 1";
+    document.getElementById("scoreDisplay").textContent="Score: 0";
+    document.getElementById("timerDisplay").textContent="Solved: 0";
+    document.getElementById("instruction").textContent="The train keeps moving. Solve each random pattern stop and climb the score.";
+    document.getElementById("climbPanel").classList.add("hidden");
+    document.getElementById("climbStatus").textContent="Train Moving";
+    climbTimeout=setTimeout(climbNextStop,450);
+}
+function exitConstantClimb(){
+    climbRunning=false; clearTimeout(climbTimeout); clearInterval(climbChallengeTimer);
+    document.getElementById("climbField").style.display="none";
+    if(typeof showMainMenu==="function"){ showMainMenu(); }
+    else{
+      document.getElementById("menuOverlay").classList.remove("hidden");
+      document.getElementById("modeDisplay").textContent="Main Menu";
+      document.getElementById("roundDisplay").textContent="Round -";
+      document.getElementById("timerDisplay").textContent="Time: --";
+      document.getElementById("instruction").textContent="Choose a game to begin.";
+    }
+}
+function climbRand(n){return Math.floor(Math.random()*n)}
+function climbShuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function climbDifficulty(){
+    const x=Math.random(); return x<.34?"easy":x<.68?"medium":"hard";
+}
+function climbNextStop(){
+    if(!climbRunning)return;
+    const types=["sequence","grid","odd","count","numberPattern","wordSequence"];
+    const type=types[climbRand(types.length)];
+    /* Spot the Change is always classified as Easy, regardless of item count. */
+    const diff=type==="odd"?"easy":climbDifficulty();
+    climbPuzzle=climbBuild(type,diff);
+    climbPuzzle.diff=diff;
+    climbAttemptLocked=false;
+    climbRecheckMode=false;
+    climbRecheckAvailable=false;
+    climbStartChallengeClock(climbPuzzle);
+    document.getElementById("climbStatus").textContent="Pattern Stop "+climbStop;
+    document.getElementById("climbPanel").classList.remove("hidden");
+    climbRender();
+}
+function climbBuild(type,diff){
+    const lv={easy:0,medium:1,hard:2}[diff];
+    if(type==="sequence"){
+      const len=[4,6,7][lv], seq=Array.from({length:len},()=>climbSymbols[climbRand(climbSymbols.length)]);
+      return {type,title:"Symbol Sequence",seq,answer:seq,user:[]};
+    }
+    if(type==="grid"){
+      const size=[3,4,5][lv], count=[3,5,8][lv], pool=climbShuffle([...Array(size*size).keys()]);
+      return {type,title:"Grid Memory",size,chosen:pool.slice(0,count)};
+    }
+    if(type==="numberPattern"){
+      const len=[4,5,6][lv];
+      const start=climbRand(20)+1;
+      const step=[2,3,4,5,6][climbRand(5)];
+      const seq=Array.from({length:len},(_,i)=>start+(i*step));
+      const missing=climbRand(len-1)+1;
+      const answer=seq[missing];
+      return {type,title:"Number Pattern",seq,missing,answer,step};
+    }
+    if(type==="wordSequence"){
+      const len=[3,4,5][lv];
+      const seq=climbShuffle(climbWords).slice(0,len);
+      return {type,title:"Word Memory",seq,answer:[...seq],user:[]};
+    }
+    if(type==="odd"){
+      const total=[6,8,10][lv], base=climbSymbols[climbRand(8)];
+      let odd=climbSymbols[climbRand(8)]; while(odd===base)odd=climbSymbols[climbRand(8)];
+      return {type,title:"Spot the Change",total,base,odd,answer:climbRand(total)};
+    }
+    const total=[6,9,12][lv], target=climbSymbols[climbRand(8)];
+    const items=Array.from({length:total},()=>Math.random()<.45?target:climbSymbols[climbRand(8)]);
+    if(!items.includes(target))items[0]=target;
+    return {type:"count",title:"Quick Count",target,items,answer:items.filter(x=>x===target).length};
+}
+function climbRender(){
+    const p=climbPuzzle, badge=document.getElementById("climbDifficulty"), board=document.getElementById("climbBoard"), actions=document.getElementById("climbActions");
+    badge.className="climb-badge "+p.diff; badge.textContent=p.diff.toUpperCase()+" • UP TO "+climbPts[p.diff]+" PTS";
+    document.getElementById("climbPuzzleTitle").textContent=p.title;
+    board.innerHTML=""; actions.innerHTML="";
+    if(p.type==="sequence"){
+      if(climbRecheckMode && climbSecondsLeft<=0){ climbSequencePlay(p); return; }
+      document.getElementById("climbHelp").textContent="Memorise the symbols in this exact order.";
+      const row=document.createElement("div");row.className="climb-sequence";
+      p.seq.forEach(x=>{const d=document.createElement("div");d.className="climb-token";d.textContent=x;row.appendChild(d)});board.appendChild(row);
+      climbTimeout=setTimeout(()=>climbSequencePlay(p),p.diff==="easy"?6000:p.diff==="medium"?9000:12000);
+    }else if(p.type==="grid"){
+      if(climbRecheckMode && climbSecondsLeft<=0){
+        document.getElementById("climbHelp").textContent="Recreate the pattern again. Reward remains 2 points.";
+        board.appendChild(climbGrid(p,false));
+        const b=document.createElement("button");b.className="climb-submit";b.textContent="Submit Pattern";b.onclick=()=>climbCheckGrid(p);actions.appendChild(b);
+        return;
+      }
+      document.getElementById("climbHelp").textContent="Memorise the highlighted positions.";
+      board.appendChild(climbGrid(p,true));
+      climbTimeout=setTimeout(()=>{if(!climbRunning||climbPuzzle!==p)return;board.innerHTML="";board.appendChild(climbGrid(p,false));document.getElementById("climbHelp").textContent="Recreate the pattern.";const b=document.createElement("button");b.className="climb-submit";b.textContent="Submit Pattern";b.onclick=()=>climbCheckGrid(p);actions.appendChild(b)},p.diff==="easy"?5000:p.diff==="medium"?7000:9000);
+    }else if(p.type==="numberPattern"){
+      document.getElementById("climbHelp").textContent="Complete the number pattern.";
+      const row=document.createElement("div");row.className="climb-sequence";
+      p.seq.forEach((n,i)=>{const d=document.createElement("div");d.className="climb-token";d.textContent=i===p.missing?"?":n;row.appendChild(d)});board.appendChild(row);
+      const opts=climbShuffle([...new Set([p.answer,p.answer+p.step,p.answer-p.step,p.answer+1,p.answer-1])]).filter(n=>n>=0).slice(0,4);
+      if(!opts.includes(p.answer))opts[0]=p.answer;
+      opts.forEach(n=>{const b=document.createElement("button");b.className="climb-choice";b.textContent=n;b.onclick=()=>{
+          if(n===p.answer) climbFinish(true);
+          else climbWrong("Not correct — choose again.");
+        };actions.appendChild(b)});
+    }else if(p.type==="wordSequence"){
+      if(climbRecheckMode && climbSecondsLeft<=0){ climbWordPlay(p); return; }
+      document.getElementById("climbHelp").textContent="Memorise the words in this exact order.";
+      const row=document.createElement("div");row.className="climb-sequence";
+      p.seq.forEach(x=>{const d=document.createElement("div");d.className="climb-token";d.textContent=x;d.style.fontSize="18px";row.appendChild(d)});board.appendChild(row);
+      climbTimeout=setTimeout(()=>climbWordPlay(p),p.diff==="easy"?6500:p.diff==="medium"?9000:12000);
+    }else if(p.type==="odd"){
+      document.getElementById("climbHelp").textContent="Quick! Pick the different symbol.";
+      const row=document.createElement("div");row.className="climb-sequence";
+      for(let i=0;i<p.total;i++){const b=document.createElement("button");b.className="climb-choice";b.textContent=i===p.answer?p.odd:p.base;b.onclick=()=>{
+          if(i===p.answer) climbFinish(true);
+          else climbWrong("Not that one — keep looking.");
+        };row.appendChild(b)}board.appendChild(row);
+    }else{
+      document.getElementById("climbHelp").textContent="How many "+p.target+" symbols are shown?";
+      const row=document.createElement("div");row.className="climb-sequence";
+      p.items.forEach(x=>{const d=document.createElement("div");d.className="climb-token";d.textContent=x;row.appendChild(d)});board.appendChild(row);
+      const choices=climbShuffle([...new Set([p.answer,Math.max(0,p.answer-1),p.answer+1,p.answer+2])]).slice(0,3);
+      if(!choices.includes(p.answer))choices[0]=p.answer;
+      choices.forEach(n=>{const b=document.createElement("button");b.className="climb-choice";b.textContent=n;b.onclick=()=>{
+          if(n===p.answer) climbFinish(true);
+          else climbWrong("Not correct — choose again.");
+        };actions.appendChild(b)});
+    }
+}
+function climbSequencePlay(p){
+    if(!climbRunning||climbPuzzle!==p)return;
+    const board=document.getElementById("climbBoard"), actions=document.getElementById("climbActions");
+    board.innerHTML=""; actions.innerHTML=""; p.user=[];
+    document.getElementById("climbHelp").textContent=`Recreate all ${p.answer.length} symbols in order. You can use a symbol more than once.`;
+
+    const wrap=document.createElement("div"); wrap.style.width="100%";
+    const slots=document.createElement("div"); slots.className="climb-sequence"; slots.style.marginBottom="14px";
+    for(let i=0;i<p.answer.length;i++){
+      const d=document.createElement("div"); d.className="climb-token"; d.dataset.slot=i; d.textContent="?"; d.style.opacity=".72"; slots.appendChild(d);
+    }
+    wrap.appendChild(slots);
+
+    const pool=climbShuffle([...new Set([...p.answer,...climbShuffle(climbSymbols).slice(0,6)])]);
+    const choices=document.createElement("div"); choices.className="climb-sequence";
+    pool.forEach(x=>{
+      const b=document.createElement("button"); b.className="climb-choice"; b.textContent=x;
+      b.onclick=()=>{
+        if(p.user.length>=p.answer.length)return;
+        p.user.push(x);
+        const slot=slots.querySelector(`[data-slot="${p.user.length-1}"]`);
+        slot.textContent=x; slot.style.opacity="1";
+      };
+      choices.appendChild(b);
+    });
+    wrap.appendChild(choices); board.appendChild(wrap);
+
+    const undo=document.createElement("button"); undo.className="climb-submit"; undo.textContent="Undo Last"; undo.style.marginRight="8px";
+    undo.onclick=()=>{ if(!p.user.length)return; const i=p.user.length-1; p.user.pop(); const slot=slots.querySelector(`[data-slot="${i}"]`); slot.textContent="?"; slot.style.opacity=".72"; };
+    const submit=document.createElement("button"); submit.className="climb-submit"; submit.textContent="Submit Sequence";
+    submit.onclick=()=>{ if(p.user.length!==p.answer.length){ document.getElementById("climbHelp").textContent=`Choose ${p.answer.length-p.user.length} more symbol(s) before submitting.`; return; } climbFinish(p.user.every((v,i)=>v===p.answer[i])); };
+    actions.appendChild(undo); actions.appendChild(submit);
+}
+function climbWordPlay(p){
+    if(!climbRunning||climbPuzzle!==p)return;
+    const board=document.getElementById("climbBoard"), actions=document.getElementById("climbActions");
+    board.innerHTML=""; actions.innerHTML=""; p.user=[];
+    document.getElementById("climbHelp").textContent=`Recreate all ${p.answer.length} words in the same order.`;
+
+    const wrap=document.createElement("div");wrap.style.width="100%";
+    const slots=document.createElement("div");slots.className="climb-sequence";slots.style.marginBottom="14px";
+    for(let i=0;i<p.answer.length;i++){
+      const d=document.createElement("div");d.className="climb-token";d.dataset.wordslot=i;d.textContent="?";d.style.fontSize="18px";slots.appendChild(d);
+    }
+    wrap.appendChild(slots);
+
+    const distractors=climbShuffle(climbWords.filter(w=>!p.answer.includes(w))).slice(0,p.diff==="hard"?5:3);
+    const pool=climbShuffle([...p.answer,...distractors]);
+    const choices=document.createElement("div");choices.className="climb-sequence";
+    pool.forEach(w=>{
+      const b=document.createElement("button");b.className="climb-choice";b.textContent=w;b.style.fontSize="16px";
+      b.onclick=()=>{
+        if(p.user.length>=p.answer.length)return;
+        p.user.push(w);
+        const slot=slots.querySelector(`[data-wordslot="${p.user.length-1}"]`);
+        slot.textContent=w;
+      };
+      choices.appendChild(b);
+    });
+    wrap.appendChild(choices);board.appendChild(wrap);
+
+    const undo=document.createElement("button");undo.className="climb-submit";undo.textContent="Undo Last";undo.style.marginRight="8px";
+    undo.onclick=()=>{if(!p.user.length)return;const i=p.user.length-1;p.user.pop();slots.querySelector(`[data-wordslot="${i}"]`).textContent="?";};
+    const submit=document.createElement("button");submit.className="climb-submit";submit.textContent="Submit Words";
+    submit.onclick=()=>{if(p.user.length!==p.answer.length){document.getElementById("climbHelp").textContent=`Choose ${p.answer.length-p.user.length} more word(s).`;return;}if(p.user.every((v,i)=>v===p.answer[i])) climbFinish(true);
+      else { p.user=[]; climbWrong("Wrong word order — try again."); climbWordPlay(p); }
+    };
+    actions.appendChild(undo);actions.appendChild(submit);
+}
+function climbGrid(p,memory){
+    const g=document.createElement("div");g.className="climb-grid";g.style.gridTemplateColumns=`repeat(${p.size},1fr)`;
+    for(let i=0;i<p.size*p.size;i++){const c=document.createElement("div");c.className="climb-cell"+(memory&&p.chosen.includes(i)?" memory":"");c.dataset.i=i;if(!memory)c.onclick=()=>c.classList.toggle("selected");g.appendChild(c)}return g;
+}
+function climbCheckGrid(p){
+    const got=[...document.querySelectorAll("#climbBoard .climb-cell.selected")].map(x=>+x.dataset.i).sort((a,b)=>a-b), want=[...p.chosen].sort((a,b)=>a-b);
+    const ok=got.length===want.length&&got.every((v,i)=>v===want[i]);
+    if(ok) climbFinish(true);
+    else {
+      document.querySelectorAll("#climbBoard .climb-cell.selected").forEach(c=>c.classList.remove("selected"));
+      climbWrong("Pattern not correct yet — try again.");
+    }
+}
+function climbFinish(correct){
+    if(!climbRunning || !correct)return;
+    clearInterval(climbChallengeTimer);
+    const pts=climbTimePoints();
+    climbScore+=pts;
+    climbSolved++;
+    const toast=document.getElementById("climbToast");
+    toast.textContent=`Solved! +${pts} points 🚂`;
+    toast.classList.remove("show");void toast.offsetWidth;toast.classList.add("show");
+    climbStop++;
+    document.getElementById("scoreDisplay").textContent="Score: "+climbScore;
+    document.getElementById("roundDisplay").textContent="Stop "+climbStop;
+    document.getElementById("timerDisplay").textContent="Solved: "+climbSolved;
+    document.getElementById("climbPanel").classList.add("hidden");
+    document.getElementById("climbStatus").textContent="Train Moving";
+    climbTimeout=setTimeout(climbNextStop,150);
+}
+/* =========================================================
+   TENOTEMO OCEAN SPIN
+========================================================= */
+const oSpinIcons=["🐠","🐙","🐬","🦀","🐚","⚓","🪸","🦈","🐡","🐳","🦞","🪼","🏝️","🐢"];
+const oSpinPositions=[{x:50,y:14.4},{x:75.2,y:24.8},{x:85.6,y:50},{x:75.2,y:75.2},{x:50,y:85.6},{x:24.8,y:75.2},{x:14.4,y:50},{x:24.8,y:24.8}];
+const oSpinCounts=[1,2,3,4,5,6],oSpinSpeeds=[900,650,450,280],oSpinPoints=[10,7,4,1];
+let oSpinRoundIndex=0,oSpinStopIndex=0,oSpinScore=0,oSpinSolution=[],oSpinAnswers={},oSpinSelected=null,oSpinRaf=0,oSpinActive=false;
+function oSpinShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function startOceanSpin(){savePlayerName();clearTimer();stopAllAnimations();hideAllFields();document.getElementById("climbField").style.display="none";menuOverlay.classList.add("hidden");resultOverlay.classList.add("hidden");leaderboardOverlay.classList.add("hidden");document.getElementById("spinField").style.display="block";instruction.textContent="Watch the ocean items through the spinning opening.";oSpinRoundIndex=0;oSpinStopIndex=0;oSpinScore=0;modeDisplay.textContent="Ocean Spin";oSpinNewRound()}
+function oSpinNewRound(){oSpinStopIndex=0;oSpinAnswers={};const n=oSpinCounts[oSpinRoundIndex],spots=oSpinShuffle([...oSpinPositions]).slice(0,n),pool=oSpinShuffle([...oSpinIcons]);oSpinSolution=spots.map((p,i)=>({p,icon:pool[i],id:i,resolved:false}));document.getElementById("oSpinTargets").innerHTML=oSpinSolution.map(o=>`<button class="spin-target" data-id="${o.id}" style="left:${o.p.x}%;top:${o.p.y}%">+</button>`).join("");document.getElementById("oSpinComplete").classList.add("hidden");oSpinStart()}
+function oSpinHud(){const left=oSpinSolution.filter(o=>!o.resolved).length;document.getElementById("oSpinRound").textContent=`Round ${oSpinRoundIndex+1}/6`;document.getElementById("oSpinStop").textContent=`Stop ${oSpinStopIndex+1}/4`;document.getElementById("oSpinValue").textContent=`${oSpinPoints[oSpinStopIndex]} pts each`;roundDisplay.textContent=`Round ${oSpinRoundIndex+1} · Stop ${oSpinStopIndex+1}`;scoreDisplay.textContent=`Score: ${oSpinScore}`;timerDisplay.textContent=`Items left: ${left}`;document.getElementById("spinStatus").textContent=["Maximum Speed","Fast Speed","Medium Speed","Slow Speed"][oSpinStopIndex]}
+function oSpinStart(){oSpinAnswers={};oSpinSelected=null;oSpinHud();const board=document.getElementById("oSpinBoard"),wheel=document.getElementById("oSpinWheel");board.classList.remove("choosing");document.getElementById("oSpinContinue").style.display="none";document.getElementById("oSpinObjects").innerHTML=oSpinSolution.filter(o=>!o.resolved).map(o=>`<div class="spin-object" style="left:${o.p.x}%;top:${o.p.y}%">${o.icon}</div>`).join("");document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];t.className="spin-target"+(o.resolved?" good":"");t.textContent=o.resolved?o.icon:"+"});document.getElementById("oSpinHole").setAttribute("r","50");document.getElementById("oSpinHoleRim").style.display="block";document.getElementById("oSpinTray").innerHTML="";document.getElementById("oSpinCheck").disabled=true;document.getElementById("oSpinMessage").textContent="Watch through the opening.";oSpinActive=true;let angle=0,last=performance.now(),began=last;function tick(now){if(!oSpinActive)return;const dt=Math.min((now-last)/1000,.04),elapsed=(now-began)/1000;last=now;angle=(angle+oSpinSpeeds[oSpinStopIndex]*dt)%360;wheel.style.transform=`rotate(${angle}deg)`;document.getElementById("oSpinPhase").textContent=`WATCH · ${Math.max(0,5-elapsed).toFixed(1)}s`;if(elapsed>=5){oSpinStop();return}oSpinRaf=requestAnimationFrame(tick)}oSpinRaf=requestAnimationFrame(tick)}
+function oSpinStop(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);document.getElementById("oSpinWheel").style.transform="rotate(0deg)";document.getElementById("oSpinHole").setAttribute("r","0");document.getElementById("oSpinHoleRim").style.display="none";document.getElementById("oSpinBoard").classList.add("choosing");document.getElementById("oSpinPhase").textContent="PLACE THE OCEAN ITEMS";const left=oSpinSolution.filter(o=>!o.resolved),extra=oSpinShuffle(oSpinIcons.filter(x=>!oSpinSolution.some(o=>o.icon===x))).slice(0,3),choices=oSpinShuffle([...left.map(o=>o.icon),...extra]);document.getElementById("oSpinTray").innerHTML=choices.map(x=>`<button class="spin-choice" draggable="true" data-icon="${x}">${x}</button>`).join("");document.querySelectorAll(".spin-choice").forEach(b=>{b.onclick=()=>oSpinPick(b.dataset.icon);b.ondragstart=e=>{oSpinSelected=b.dataset.icon;e.dataTransfer.setData("text/plain",oSpinSelected)}});document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];if(o.resolved){t.disabled=true;return}t.disabled=false;t.onclick=()=>oSpinPlace(+t.dataset.id);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();oSpinSelected=e.dataTransfer.getData("text/plain");oSpinPlace(+t.dataset.id)}});const cont=document.getElementById("oSpinContinue");cont.style.display=oSpinStopIndex<3?"block":"none";if(oSpinStopIndex<3)cont.textContent=`Lock selected & continue · next ${oSpinPoints[oSpinStopIndex+1]} pts each`;document.getElementById("oSpinMessage").textContent=`Place only items you are sure about for ${oSpinPoints[oSpinStopIndex]} points each. Then lock them and continue spinning for the empty positions. Wrong placements lose 5 points.`}
+function oSpinPick(icon){if(Object.values(oSpinAnswers).includes(icon))return;oSpinSelected=icon;document.querySelectorAll(".spin-choice").forEach(b=>b.classList.toggle("selected",b.dataset.icon===icon))}
+function oSpinPlace(id){const o=oSpinSolution[id];if(!oSpinSelected||o.resolved)return;for(const k in oSpinAnswers)if(oSpinAnswers[k]===oSpinSelected){delete oSpinAnswers[k];const old=document.querySelector(`#oSpinTargets [data-id="${k}"]`);old.textContent="+"}oSpinAnswers[id]=oSpinSelected;const t=document.querySelector(`#oSpinTargets [data-id="${id}"]`);t.textContent=oSpinSelected;oSpinSelected=null;document.querySelectorAll(".spin-choice").forEach(b=>{b.classList.remove("selected");b.classList.toggle("used",Object.values(oSpinAnswers).includes(b.dataset.icon))});document.getElementById("oSpinCheck").disabled=Object.keys(oSpinAnswers).length===0}
+function oSpinGrade(autoContinue){let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinPoints[oSpinStopIndex]-wrong*5;oSpinScore+=net;oSpinHud();document.getElementById("oSpinCheck").disabled=true;setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
+function oSpinCheck(){oSpinGrade(false)}
+function oSpinAfterCheck(correct,wrong,net){const left=oSpinSolution.filter(o=>!o.resolved).length,box=document.getElementById("oSpinComplete"),result=[];box.classList.remove("hidden");if(correct)result.push(`${correct} correct`);if(wrong)result.push(`${wrong} incorrect`);document.getElementById("oSpinCompleteTitle").textContent=`${result.join(" · ") || "No items checked"} · ${net>=0?"+":""}${net} points`;const next=document.getElementById("oSpinNext");if(!left){document.getElementById("oSpinCompleteText").textContent="Every ocean item is correct.";next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}else if(oSpinStopIndex<3){document.getElementById("oSpinCompleteText").textContent=`Correct items are locked. ${left} item${left===1?"":"s"} remain for the next, slower spin at ${oSpinPoints[oSpinStopIndex+1]} points each. Each wrong placement costs 5 points.`;next.textContent="Continue spinning";next.onclick=()=>{oSpinStopIndex++;box.classList.add("hidden");oSpinStart()}}else{document.getElementById("oSpinCompleteText").textContent=`Final stop complete. ${left} item${left===1?"":"s"} remained unresolved.`;next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}}
+function oSpinFinish(){document.getElementById("oSpinCompleteTitle").textContent=`Ocean Spin complete · ${oSpinScore}/210`;document.getElementById("oSpinCompleteText").textContent="Maximum score is earned by solving every item at maximum speed.";const next=document.getElementById("oSpinNext");next.textContent="Main menu";next.onclick=exitOceanSpin}
+function oSpinContinue(){if(oSpinStopIndex>=3)return;if(Object.keys(oSpinAnswers).length){oSpinGrade(true)}else{oSpinStopIndex++;oSpinStart()}}
+function exitOceanSpin(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);document.getElementById("spinField").style.display="none";showMainMenu()}
+document.getElementById("startSpinButton").addEventListener("click",()=>showSegmentRules("spin",startOceanSpin));
+document.getElementById("spinMenuButton").addEventListener("click",exitOceanSpin);
+document.getElementById("oSpinContinue").addEventListener("click",oSpinContinue);
+document.getElementById("oSpinCheck").addEventListener("click",oSpinCheck);
+document.getElementById("startClimbButton").addEventListener("click",()=>showSegmentRules("climb",startConstantClimb));
+document.getElementById("climbMenuButton").addEventListener("click",exitConstantClimb);
+
+</script>
+
+</body>
+</html>
