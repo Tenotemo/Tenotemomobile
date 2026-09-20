@@ -1903,6 +1903,37 @@ body:has(#menuOverlay:not(.hidden)) #headerReturnMenu{display:none!important}
 #tenotemoProfilePanel .t-auth-card{max-width:470px}
 #tenotemoProfileButton{background:#eaf9ff;color:#075985;border:1px solid #a7d8e9;border-radius:9px;font-weight:800;padding:7px;cursor:pointer}
 @media(max-width:760px){#tenotemoProfileButton{font-size:10px;padding:5px}.t-auth-card{padding:16px}}
+
+/* TENOTEMO: responsive profile, total and rank — no overlapping chips. */
+#totalPointsDisplay{background:#dcfce7!important;color:#14532d!important;border:2px solid #4ade80!important;font-weight:900!important;font-variant-numeric:tabular-nums}
+#positionDisplay{background:#f1f5f9;color:#0f172a;font-weight:900;font-variant-numeric:tabular-nums}
+#menuOverlay{align-items:safe center;overflow-y:auto;overscroll-behavior:contain;padding:12px 8px}
+#menuOverlay .overlay-card{flex:0 0 auto;margin:auto;max-height:calc(100dvh - 24px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;box-sizing:border-box}
+#menuOverlay #tenotemoMenuProfile{display:block;margin:16px auto 10px;max-width:100%;position:static;clear:both}
+#menuOverlay .player-box{margin-bottom:0}
+#menuOverlay .tenotemo-player-summary{margin:10px 0 14px;clear:both}
+header{gap:7px}
+header .logo{flex:0 0 auto}
+header .header-info{min-width:0}
+@media(max-width:760px){
+  header{height:80px!important;min-height:80px!important;padding:5px 9px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:30px 34px;align-content:center;column-gap:7px;row-gap:4px}
+  header .logo{grid-column:1;grid-row:1;font-size:clamp(16px,4.5vw,20px);min-width:0;white-space:nowrap}
+  header .brand-subtitle{font-size:7px}
+  #tenotemoProfileButton{grid-column:2;grid-row:1;justify-self:end;min-width:35px;max-width:40px;height:30px;overflow:hidden;font-size:0!important;padding:4px!important;white-space:nowrap}
+  #tenotemoProfileButton::before{content:'👤';font-size:17px}
+  #headerReturnMenu{grid-column:3;grid-row:1;height:30px;font-size:11px!important;padding:4px 7px!important}
+  header .header-info{grid-column:1/-1;grid-row:2;display:flex!important;justify-content:flex-end;gap:5px!important;margin:0!important;max-width:100%;overflow:hidden}
+  header .info-box{font-size:clamp(10px,2.8vw,12px)!important;padding:6px 7px!important;flex:0 0 auto}
+  #totalPointsDisplay,#positionDisplay{font-size:clamp(12px,3.2vw,14px)!important;min-width:37px;text-align:center;padding:5px 7px!important}
+  main{height:calc(100dvh - 80px)!important}
+  .game-field,#shapeField,#colourField,#patternField,#climbField,#spinField{height:calc(100dvh - 111px)!important}
+  #menuOverlay{padding:12px 8px!important;align-items:safe center!important}
+  #menuOverlay .overlay-card{max-height:calc(100dvh - 24px)!important;padding:15px 16px 18px!important}
+  #menuOverlay #tenotemoMenuProfile{margin:16px auto 10px!important}
+  #menuOverlay .tenotemo-player-summary{margin:10px 0 13px!important;gap:8px}
+}
+@media(max-width:360px){header{column-gap:4px;padding:5px!important}header .info-box{padding:5px!important;font-size:10px!important}#totalPointsDisplay,#positionDisplay{min-width:32px;padding:5px!important}}
+
 </style>
 </head>
 
@@ -1910,7 +1941,7 @@ body:has(#menuOverlay:not(.hidden)) #headerReturnMenu{display:none!important}
 
 <div id="tenotemoAuthGate" role="dialog" aria-modal="true" aria-labelledby="tenotemoAuthTitle">
  <div class="t-auth-card">
-  <h2 id="tenotemoAuthTitle">Welcome to Tenotemo</h2><p id="tenotemoAuthHint">Sign in to save your profile and compete on the leaderboard.</p>
+  <h2 id="tenotemoAuthTitle">Create Tenotemo account</h2><p id="tenotemoAuthHint">New player? Register to save your progress across devices.</p>
   <form id="tenotemoAuthForm">
    <div id="tenotemoNameWrap" hidden><label for="tenotemoAuthName">Player name</label><input id="tenotemoAuthName" maxlength="20" autocomplete="nickname"></div>
    <label for="tenotemoAuthEmail">Email address</label><input id="tenotemoAuthEmail" type="email" autocomplete="email" required>
@@ -1921,7 +1952,7 @@ body:has(#menuOverlay:not(.hidden)) #headerReturnMenu{display:none!important}
    <button class="t-auth-primary" id="tenotemoAuthSubmit" type="submit">Sign in</button>
   </form>
   <div id="tenotemoAuthMessage" class="t-auth-message" role="status" aria-live="polite"></div>
-  <div class="t-auth-actions"><button type="button" class="t-auth-secondary" id="tenotemoSwitchSignup">Create account</button><button type="button" class="t-auth-secondary" id="tenotemoForgot">Forgot password?</button><button type="button" class="t-auth-secondary" id="tenotemoBackLogin" hidden>Back to sign in</button></div>
+  <div class="t-auth-actions"><button type="button" class="t-auth-secondary" id="tenotemoSwitchSignup">Create account</button><button type="button" class="t-auth-secondary" id="tenotemoForgot">Forgot password?</button><button type="button" class="t-auth-secondary" id="tenotemoBackLogin" hidden>Already registered? Sign in</button><button type="button" class="t-auth-secondary" id="tenotemoResendConfirmation">Resend confirmation email</button></div>
  </div>
 </div>
 <div id="tenotemoProfilePanel" role="dialog" aria-modal="true" aria-labelledby="tenotemoProfileTitle"><div class="t-auth-card">
@@ -1948,8 +1979,8 @@ body:has(#menuOverlay:not(.hidden)) #headerReturnMenu{display:none!important}
             Round -
         </div>
 
-        <div class="info-box" id="totalPointsDisplay" aria-live="polite">Total: 0</div>
-        <div class="info-box" id="positionDisplay" aria-live="polite">🔒 Position</div>
+        <div class="info-box" id="totalPointsDisplay" aria-live="polite" aria-label="Total points: 0">0</div>
+        <div class="info-box" id="positionDisplay" aria-live="polite" aria-label="Leaderboard position locked"># 🔒</div>
 
         <div class="info-box" id="scoreDisplay">
             Score: 0
@@ -3000,17 +3031,17 @@ function recordLeaderboardScore(
    Global positions require Supabase and are not represented as global ranks. */
 function refreshPlayerSummary(){
     const total=getTotalPlayerScore();
-    const totalText="Total: "+total;
+    const totalText=String(total);
     const totalHeader=document.getElementById("totalPointsDisplay");
     const totalMenu=document.getElementById("menuTotalPoints");
-    if(totalHeader)totalHeader.textContent=totalText;
+    if(totalHeader){totalHeader.textContent=totalText;totalHeader.setAttribute("aria-label","Total points: "+total);}
     if(totalMenu)totalMenu.textContent="Total points: "+total;
-    let position="🔒 Position";
+    let position="# 🔒";
     let menuPosition="🔒 Leaderboard position · Subscribe to unlock";
     if(hasSubscription){
         const ranked=cumulativeLeaderboard.slice().sort((a,b)=>Number(b.score)-Number(a.score));
         const index=ranked.findIndex(entry=>entry.name===playerName);
-        position=index>=0?"Local #"+(index+1):"Local: Unranked";
+        position=index>=0?"#"+(index+1):"# —";
         menuPosition=index>=0?"Local leaderboard position: #"+(index+1):"Local leaderboard position: Unranked";
     }
     const posHeader=document.getElementById("positionDisplay");
@@ -8082,7 +8113,7 @@ document.getElementById("headerReturnMenu").addEventListener("click",()=>{
 const tGate=document.getElementById('tenotemoAuthGate');
 const tForm=document.getElementById('tenotemoAuthForm');
 const tMsg=document.getElementById('tenotemoAuthMessage');
-let tClient=null,tUser=null,tAuthMode='login',tRank=null,tSyncTimer=null,tSessionReady=false,tRemoteLoading=false;
+let tClient=null,tUser=null,tAuthMode='signup',tRank=null,tSyncTimer=null,tSessionReady=false,tRemoteLoading=false;
 function tMessage(message,good=false){tMsg.textContent=message;tMsg.classList.toggle('good',good)}
 function tPasswordValid(p){return p.length>=12 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p) && /[^A-Za-z0-9]/.test(p)}
 function tSetMode(mode){tAuthMode=mode;const signup=mode==='signup',reset=mode==='reset',change=mode==='change';
@@ -8096,22 +8127,32 @@ function tSetMode(mode){tAuthMode=mode;const signup=mode==='signup',reset=mode==
  document.getElementById('tenotemoAuthEmail').hidden=change;
  document.getElementById('tenotemoAuthEmail').required=!change;
  document.getElementById('tenotemoAuthPassword').required=!reset;
+ document.getElementById('tenotemoAuthPassword').minLength=signup||change?12:0;
  document.getElementById('tenotemoAuthPassword').autocomplete=signup||change?'new-password':'current-password';
  document.getElementById('tenotemoAuthConfirm').required=signup||change;
  document.getElementById('tenotemoAuthSubmit').textContent=signup?'Create account':reset?'Send reset link':change?'Update password':'Sign in';
  document.getElementById('tenotemoSwitchSignup').hidden=mode!=='login';
+ document.getElementById('tenotemoResendConfirmation').hidden=!(mode==='login'||mode==='signup');
  document.getElementById('tenotemoForgot').hidden=mode!=='login';
  document.getElementById('tenotemoBackLogin').hidden=mode==='login';tMessage('');
 }
 document.getElementById('tenotemoSwitchSignup').onclick=()=>tSetMode('signup');
 document.getElementById('tenotemoForgot').onclick=()=>tSetMode('reset');
 document.getElementById('tenotemoBackLogin').onclick=()=>tSetMode('login');
+document.getElementById('tenotemoResendConfirmation').onclick=async()=>{
+ const email=document.getElementById('tenotemoAuthEmail').value.trim();
+ if(!email||!document.getElementById('tenotemoAuthEmail').checkValidity()){tMessage('Enter your registered email address first, then select Resend confirmation email.');return}
+ if(!tClient){tMessage('Cannot connect to Supabase. Check your internet connection.');return}
+ const btn=document.getElementById('tenotemoResendConfirmation');btn.disabled=true;tMessage('Requesting confirmation email…');
+ try{const {error}=await tClient.auth.resend({type:'signup',email,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage('If this address has an unconfirmed account, a new confirmation email has been requested. Check Inbox and Spam. Please wait before requesting again.',true)}
+ catch(e){tMessage(/rate limit|security purposes|too many/i.test(e.message)?'Too many email requests. Wait a few minutes and try again.': 'Unable to resend: '+e.message)}finally{btn.disabled=false}
+};
 document.getElementById('tenotemoShowPassword').onchange=e=>{document.getElementById('tenotemoAuthPassword').type=e.target.checked?'text':'password';document.getElementById('tenotemoAuthConfirm').type=e.target.checked?'text':'password'};
 function tConfigured(){return /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(window.TENOTEMO_SUPABASE_URL||'') && !String(window.TENOTEMO_SUPABASE_PUBLISHABLE_KEY||'').startsWith('PASTE_')}
 async function tMembership(){if(!tClient||!tUser)return false;const {data,error}=await tClient.from('tenotemo_memberships').select('active_until').eq('user_id',tUser.id).maybeSingle();if(error)throw error;return Boolean(data?.active_until && new Date(data.active_until)>new Date())}
 async function tGetRank(){tRank=null;if(!hasSubscription)return;const {data,error}=await tClient.rpc('tenotemo_leaderboard',{p_limit:1000});if(error)throw error;const entry=(data||[]).find(x=>x.user_id===tUser.id);tRank=entry?.position||null}
-function tRefresh(){const total=getTotalPlayerScore();document.getElementById('totalPointsDisplay').textContent='Total: '+total;document.getElementById('menuTotalPoints').textContent='Total points: '+total;
- const position=hasSubscription?(tRank?'#'+tRank:'Unranked'):'🔒 Position';document.getElementById('positionDisplay').textContent=position;document.getElementById('menuPosition').textContent=hasSubscription?'Global leaderboard position: '+position:'🔒 Leaderboard position · Subscribe to unlock';
+function tRefresh(){const total=getTotalPlayerScore();document.getElementById('totalPointsDisplay').textContent=String(total);document.getElementById('totalPointsDisplay').setAttribute('aria-label','Total points: '+total);document.getElementById('menuTotalPoints').textContent='Total points: '+total;
+ const position=hasSubscription?(tRank?'#'+tRank:'# —'):'# 🔒';document.getElementById('positionDisplay').textContent=position;document.getElementById('positionDisplay').setAttribute('aria-label',hasSubscription?(tRank?'Leaderboard position '+tRank:'Leaderboard position unranked'):'Leaderboard position locked; subscribe to unlock');document.getElementById('menuPosition').textContent=hasSubscription?'Global leaderboard position: '+position:'🔒 Leaderboard position · Subscribe to unlock';
  document.getElementById('tenotemoProfileTotal').textContent='Total points: '+total;document.getElementById('tenotemoProfileRank').textContent='Leaderboard position: '+position;
  document.getElementById('tenotemoProfileMembership').textContent=hasSubscription?'Subscription: active':'Subscription: inactive · leaderboard locked';
 }
@@ -8158,15 +8199,15 @@ tForm.onsubmit=async e=>{e.preventDefault();if(!tClient){tMessage('Supabase conf
  const button=document.getElementById('tenotemoAuthSubmit');button.disabled=true;tMessage('Please wait…');try{
  if(tAuthMode==='reset'){const {error}=await tClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;tMessage('If the email is registered, a reset link will be sent.',true);return}
  if(tAuthMode==='signup'||tAuthMode==='change'){if(!tPasswordValid(pass))throw Error('Use at least 12 characters, uppercase, lowercase, number and symbol.');if(pass!==confirmPass)throw Error('Passwords do not match.')}
- if(tAuthMode==='signup'){const name=document.getElementById('tenotemoAuthName').value.trim().slice(0,20);if(!name)throw Error('Enter a player name.');const {data,error}=await tClient.auth.signUp({email,password:pass,options:{data:{player_name:name},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage(data.session?'Account created. Loading…':'Check your email to confirm your account, then sign in.',true);if(data.session)await tLoadPlayer(data.user);return}
+ if(tAuthMode==='signup'){const name=document.getElementById('tenotemoAuthName').value.trim().slice(0,20);if(!name)throw Error('Enter a player name.');const {data,error}=await tClient.auth.signUp({email,password:pass,options:{data:{player_name:name},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage(data.session?'Account created. Loading…':'Account request received. Check your Inbox and Spam for the confirmation email. If it does not arrive, use Resend confirmation email. After confirming, select Back to sign in.',true);if(data.session)await tLoadPlayer(data.user);return}
  if(tAuthMode==='change'){const {error}=await tClient.auth.updateUser({password:pass});if(error)throw error;tGate.classList.add('hidden');tSetMode('login');alert('Password updated.');return}
  const {data,error}=await tClient.auth.signInWithPassword({email,password:pass});if(error)throw error;await tLoadPlayer(data.user);
- }catch(err){tMessage(err.message)}finally{button.disabled=false}};
-async function tBoot(){tGate.classList.remove('hidden');if(!tConfigured()){tMessage('Supabase not configured yet. Add your Project URL and publishable key to the HTML file.');return}
+ }catch(err){const message=err.message||'Unknown error';tMessage(/invalid login credentials/i.test(message)?'Email or password not recognised. New player? Select Create account. Already registered? Confirm your email, or use Forgot password.':/email not confirmed/i.test(message)?'Your email is not confirmed yet. Enter your email and select Resend confirmation email.':message)}finally{button.disabled=false}};
+async function tBoot(){tGate.classList.remove('hidden');tSetMode('signup');if(!tConfigured()){tMessage('Supabase not configured yet. Add your Project URL and publishable key to the HTML file.');return}
  if(!window.supabase?.createClient){tMessage('Supabase library could not load. Check your connection.');return}
  tClient=window.supabase.createClient(window.TENOTEMO_SUPABASE_URL,window.TENOTEMO_SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  tClient.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){tGate.classList.remove('hidden');tSetMode('change')}if(event==='SIGNED_OUT'){tGate.classList.remove('hidden')}});
- const {data,error}=await tClient.auth.getUser();if(error||!data.user){tSetMode('login');return}if(!location.hash.includes('type=recovery')&&!location.search.includes('type=recovery'))tSetMode('login');await tLoadPlayer(data.user);
+ const {data,error}=await tClient.auth.getUser();if(error||!data.user){tSetMode('signup');return}if(!location.hash.includes('type=recovery')&&!location.search.includes('type=recovery'))tSetMode('login');await tLoadPlayer(data.user);
 }
 window.addEventListener('load',tBoot);
 
