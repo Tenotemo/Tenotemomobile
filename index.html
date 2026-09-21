@@ -2143,6 +2143,29 @@ header .header-info{min-width:0}
   #shapeField:not(.memory-mode) .shape-pool .combo-icon svg {width:18px!important;height:18px!important}
 }
 
+
+/* Compact colour-choice palette: 13 options fit in three rows, not four tall rows.
+   This restores vertical room for moving placeholders on narrow phones. */
+@media(max-width:760px){
+  #colourField:not(.memory-mode) .colour-palette{
+    top:7px!important;left:7px!important;right:7px!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    grid-auto-rows:clamp(32px,9vw,40px)!important;
+    gap:4px!important;padding:5px!important;
+    max-height:none!important;height:auto!important;
+    overflow:visible!important;
+  }
+  #colourField:not(.memory-mode) .colour-palette > .colour-piece{
+    height:clamp(32px,9vw,40px)!important;
+    max-height:40px!important;min-height:0!important;
+    border-radius:9px!important;border-width:2px!important;
+  }
+  #colourField:not(.memory-mode) .colour-grid-wrapper,
+  #colourField:not(.memory-mode):has(.colour-palette > :nth-child(13)) .colour-grid-wrapper{
+    top:clamp(121px,31vw,144px)!important;
+    height:calc(100% - clamp(127px,31vw + 6px,150px))!important;
+  }
+}
 </style>
 </head>
 
@@ -8381,6 +8404,8 @@ function tSetMode(mode){tAuthMode=mode;const signup=mode==='signup',reset=mode==
  document.getElementById('tenotemoAuthTitle').textContent=signup?'Create Tenotemo account':reset?'Reset your password':change?'Choose a new password':'Welcome to Tenotemo';
  document.getElementById('tenotemoAuthHint').textContent=signup?'Register to save your progress across devices.':reset?'We will email you a password reset link.':change?'Enter and confirm a strong new password.':'Sign in to access your profile and saved progress.';
  document.getElementById('tenotemoNameWrap').hidden=!signup;
+ // Hidden required fields block HTML form submission without firing submit.
+ document.getElementById('tenotemoAuthName').required=signup;
  document.getElementById('tenotemoPasswordWrap').hidden=reset;
  document.getElementById('tenotemoConfirmWrap').hidden=!(signup||change);
  document.getElementById('tenotemoPasswordRules').hidden=!(signup||change);document.getElementById('tenotemoGeneratePassword').hidden=!(signup||change);document.getElementById('tenotemoPasswordFeedback').textContent='';
@@ -8389,6 +8414,7 @@ function tSetMode(mode){tAuthMode=mode;const signup=mode==='signup',reset=mode==
  document.getElementById('tenotemoAuthEmail').required=!change;
  document.getElementById('tenotemoAuthPassword').required=!reset;
  document.getElementById('tenotemoAuthPassword').minLength=signup||change?12:0;
+ document.getElementById('tenotemoAuthPassword').setCustomValidity('');
  document.getElementById('tenotemoAuthPassword').autocomplete=signup||change?'new-password':'current-password';
  document.getElementById('tenotemoAuthConfirm').required=signup||change;
  document.getElementById('tenotemoAuthSubmit').textContent=signup?'Create account':reset?'Send reset link':change?'Update password':'Sign in';
