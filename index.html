@@ -2149,7 +2149,8 @@ header .header-info{min-width:0}
 <body>
 
 <div id="tenotemoAuthGate" role="dialog" aria-modal="true" aria-labelledby="tenotemoAuthTitle">
- <div class="t-auth-card">
+ <div id="tenotemoBootScreen" role="status" aria-live="polite" style="background:white;color:#193047;border-radius:20px;padding:30px 24px;text-align:center;width:min(100%,410px);box-shadow:0 14px 40px #002b4560"><h2 style="margin:0 0 12px">TENOTEMO</h2><p id="tenotemoBootText" style="margin:0">Restoring your account and scores…</p><button id="tenotemoBootRetry" type="button" style="display:none;margin:18px auto 0;padding:12px 20px;border:0;border-radius:12px;background:#147ea6;color:white;font-weight:700">Try again</button></div>
+ <div class="t-auth-card" id="tenotemoAuthCard" style="display:none">
   <h2 id="tenotemoAuthTitle">Create Tenotemo account</h2><p id="tenotemoAuthHint">New player? Register to save your progress across devices.</p>
   <form id="tenotemoAuthForm">
    <div id="tenotemoNameWrap" hidden><label for="tenotemoAuthName">Player name</label><input id="tenotemoAuthName" maxlength="20" autocomplete="nickname" required><small style="display:block;margin-top:5px;color:#52677b">3–20 letters, numbers or underscores only. Example: Valentine_Smith98 (not Valentine@Smith98).</small><small id="tenotemoNameAvailability" role="status" aria-live="polite" style="display:block;margin-top:5px"></small></div>
@@ -8323,6 +8324,10 @@ const tGate=document.getElementById('tenotemoAuthGate');
 const tForm=document.getElementById('tenotemoAuthForm');
 const tMsg=document.getElementById('tenotemoAuthMessage');
 let tClient=null,tUser=null,tAuthMode='signup',tRank=null,tSyncTimer=null,tSessionReady=false,tRemoteLoading=false;
+const tBootScreen=document.getElementById('tenotemoBootScreen'),tAuthCard=document.getElementById('tenotemoAuthCard');
+function tShowAuth(mode='signup'){tBootScreen.style.display='none';tAuthCard.style.display='block';tGate.classList.remove('hidden');tSetMode(mode)}
+function tShowBoot(message='Restoring your account and scores…',retry=false){tGate.classList.remove('hidden');tAuthCard.style.display='none';tBootScreen.style.display='block';document.getElementById('tenotemoBootText').textContent=message;document.getElementById('tenotemoBootRetry').style.display=retry?'block':'none'}
+document.getElementById('tenotemoBootRetry').onclick=()=>tBoot();
 function tMessage(message,good=false){tMsg.textContent=message;tMsg.classList.toggle('good',good)}
 async function tCheckNameAvailable(name){
  const {data,error}=await tClient.rpc('tenotemo_username_available',{p_name:name});
@@ -8431,9 +8436,9 @@ async function tLoadPlayer(user){tRemoteLoading=true;tUser=user;try{
  modeRounds={shape:g.data.shape_round,colour:g.data.colour_round,movement:g.data.pattern_round};
  localStorage.setItem(PLAYER_NAME_KEY,playerName);localStorage.setItem(PROGRESS_STORAGE_KEY,JSON.stringify({modeScores,modeRounds,extraModeScores}));
  document.getElementById('playerNameInput').value=playerName;document.getElementById('tenotemoProfileName').value=playerName;document.getElementById('tenotemoProfileEmail').textContent=user.email||'';
- if(tAuthMode!=='change')tGate.classList.add('hidden');tSessionReady=true;await tAdminCheck();try{await tGetRank()}catch(e){console.warn('Rank:',e.message)}
- tRefresh();updatePlayerStatus();showMainMenu();
- }catch(e){tMessage('Profile setup failed: '+e.message);tGate.classList.remove('hidden')}finally{tRemoteLoading=false}}
+ tSessionReady=true;await tAdminCheck();try{await tGetRank()}catch(e){console.warn('Rank:',e.message)}
+ tRefresh();updatePlayerStatus();showMainMenu();if(tAuthMode!=='change')tGate.classList.add('hidden');
+ }catch(e){tShowBoot('Unable to restore your account: '+e.message+'. Check your connection and try again.',true)}finally{tRemoteLoading=false}}
 function tSaveSoon(){if(!tSessionReady||!tUser||tRemoteLoading)return;clearTimeout(tSyncTimer);tSyncTimer=setTimeout(()=>tSaveNow().catch(e=>console.error('Progress sync failed:',e)),450)}
 async function tSaveNow(){if(!tClient||!tUser||tRemoteLoading)return;
  const payload={shape_points:Math.max(0,Math.floor(modeScores.shape)),colour_points:Math.max(0,Math.floor(modeScores.colour)),pattern_points:Math.max(0,Math.floor(modeScores.movement)),climb_points:Math.max(0,Math.floor(extraModeScores.climb)),spin_points:Math.floor(extraModeScores.spin),shape_round:Math.max(0,Math.floor(modeRounds.shape)),colour_round:Math.max(0,Math.floor(modeRounds.colour)),pattern_round:Math.max(0,Math.floor(modeRounds.movement)),updated_at:new Date().toISOString()};
@@ -8510,7 +8515,7 @@ document.getElementById('tenotemoProfileSave').onclick=async()=>{
  await tChangePlayerName(document.getElementById('tenotemoProfileName'),document.getElementById('tenotemoProfileMessage'));
 };
 document.getElementById('tenotemoProfilePassword').onclick=()=>{document.getElementById('tenotemoProfilePanel').classList.remove('open');tGate.classList.remove('hidden');tSetMode('change')};
-document.getElementById('tenotemoSignOut').onclick=async()=>{clearTimeout(tSyncTimer);await tSaveNow().catch(console.warn);await tClient.auth.signOut();tUser=null;tSessionReady=false;hasSubscription=false;tRank=null;modeScores={shape:0,colour:0,movement:0};extraModeScores={climb:0,spin:0};modeRounds={shape:0,colour:0,movement:0};localStorage.removeItem(PROGRESS_STORAGE_KEY);localStorage.removeItem(PLAYER_NAME_KEY);document.getElementById('tenotemoProfilePanel').classList.remove('open');document.getElementById('tAdminOpen').hidden=true;document.getElementById('tAdminPanel').classList.remove('open');document.getElementById('tEftPanel').classList.remove('open');showMainMenu();tGate.classList.remove('hidden');tSetMode('login')};
+document.getElementById('tenotemoSignOut').onclick=async()=>{clearTimeout(tSyncTimer);await tSaveNow().catch(console.warn);await tClient.auth.signOut();tUser=null;tSessionReady=false;hasSubscription=false;tRank=null;modeScores={shape:0,colour:0,movement:0};extraModeScores={climb:0,spin:0};modeRounds={shape:0,colour:0,movement:0};localStorage.removeItem(PROGRESS_STORAGE_KEY);localStorage.removeItem(PLAYER_NAME_KEY);document.getElementById('tenotemoProfilePanel').classList.remove('open');document.getElementById('tAdminOpen').hidden=true;document.getElementById('tAdminPanel').classList.remove('open');document.getElementById('tEftPanel').classList.remove('open');showMainMenu();tShowAuth('login')};
 tForm.onsubmit=async e=>{e.preventDefault();if(!tClient){tMessage('Supabase configuration is missing. Ask the administrator to connect this game.');return}
  const email=document.getElementById('tenotemoAuthEmail').value.trim(),pass=document.getElementById('tenotemoAuthPassword').value,confirmPass=document.getElementById('tenotemoAuthConfirm').value;
  const button=document.getElementById('tenotemoAuthSubmit');button.disabled=true;tMessage('Please wait…');try{
@@ -8583,11 +8588,24 @@ async function tAdminLoad(){
  };row.append(btn)}box.append(row)}
 }
 
-async function tBoot(){tGate.classList.remove('hidden');tSetMode('signup');if(!tConfigured()){tMessage('Supabase not configured yet. Add your Project URL and publishable key to the HTML file.');return}
- if(!window.supabase?.createClient){tMessage('Supabase library could not load. Check your connection.');return}
- tClient=window.supabase.createClient(window.TENOTEMO_SUPABASE_URL,window.TENOTEMO_SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- tClient.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){tGate.classList.remove('hidden');tSetMode('change')}if(event==='SIGNED_OUT'){tGate.classList.remove('hidden')}});
- const {data,error}=await tClient.auth.getUser();if(error||!data.user){tSetMode('signup');return}if(!location.hash.includes('type=recovery')&&!location.search.includes('type=recovery'))tSetMode('login');await tLoadPlayer(data.user);
+async function tBoot(){
+ tShowBoot();
+ if(!tConfigured()){tShowBoot('Supabase configuration is missing. Contact the game administrator.',true);return}
+ if(!window.supabase?.createClient){tShowBoot('Cannot load the account service. Check your connection and try again.',true);return}
+ try{
+  if(!tClient){
+   tClient=window.supabase.createClient(window.TENOTEMO_SUPABASE_URL,window.TENOTEMO_SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+   tClient.auth.onAuthStateChange((event,session)=>{
+    if(event==='PASSWORD_RECOVERY')tShowAuth('change');
+    if(event==='SIGNED_OUT' && tSessionReady){tSessionReady=false;tShowAuth('login')}
+   });
+  }
+  const {data,error}=await tClient.auth.getUser();
+  if(error){tShowBoot('Unable to verify your saved sign-in: '+error.message+'. Check your connection and try again.',true);return}
+  if(!data?.user){tShowAuth('signup');return}
+  if(!location.hash.includes('type=recovery')&&!location.search.includes('type=recovery'))tSetMode('login');
+  await tLoadPlayer(data.user);
+ }catch(e){tShowBoot('Account loading failed: '+e.message+'. Try again.',true)}
 }
 window.addEventListener('load',tBoot);
 
