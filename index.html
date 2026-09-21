@@ -8600,9 +8600,20 @@ async function tBoot(){
     if(event==='SIGNED_OUT' && tSessionReady){tSessionReady=false;tShowAuth('login')}
    });
   }
+  // A missing auth session is an ordinary signed-out state, not a network failure.
+  // getUser() alone returns AuthSessionMissingError for first-time or signed-out visitors.
+  const {data:sessionData,error:sessionError}=await tClient.auth.getSession();
+  if(sessionError){
+   if(/auth session missing|session missing|session not found/i.test(sessionError.message||'')){tShowAuth('login');return}
+   tShowBoot('Unable to restore your sign-in: '+sessionError.message+'. Check your connection and try again.',true);return;
+  }
+  if(!sessionData?.session){tShowAuth('login');return}
   const {data,error}=await tClient.auth.getUser();
-  if(error){tShowBoot('Unable to verify your saved sign-in: '+error.message+'. Check your connection and try again.',true);return}
-  if(!data?.user){tShowAuth('signup');return}
+  if(error){
+   if(/auth session missing|session missing|session not found|refresh token not found|invalid refresh token/i.test(error.message||'')){tShowAuth('login');return}
+   tShowBoot('Unable to verify your saved sign-in: '+error.message+'. Check your connection and try again.',true);return;
+  }
+  if(!data?.user){tShowAuth('login');return}
   if(!location.hash.includes('type=recovery')&&!location.search.includes('type=recovery'))tSetMode('login');
   await tLoadPlayer(data.user);
  }catch(e){tShowBoot('Account loading failed: '+e.message+'. Try again.',true)}
