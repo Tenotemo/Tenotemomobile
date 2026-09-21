@@ -2152,10 +2152,10 @@ header .header-info{min-width:0}
  <div class="t-auth-card">
   <h2 id="tenotemoAuthTitle">Create Tenotemo account</h2><p id="tenotemoAuthHint">New player? Register to save your progress across devices.</p>
   <form id="tenotemoAuthForm">
-   <div id="tenotemoNameWrap" hidden><label for="tenotemoAuthName">Player name</label><input id="tenotemoAuthName" maxlength="20" autocomplete="nickname" required><small id="tenotemoNameAvailability" role="status" aria-live="polite" style="display:block;margin-top:5px"></small></div>
+   <div id="tenotemoNameWrap" hidden><label for="tenotemoAuthName">Player name</label><input id="tenotemoAuthName" maxlength="20" autocomplete="nickname" required><small style="display:block;margin-top:5px;color:#52677b">3–20 letters, numbers or underscores only. Example: Valentine_Smith98 (not Valentine@Smith98).</small><small id="tenotemoNameAvailability" role="status" aria-live="polite" style="display:block;margin-top:5px"></small></div>
    <label for="tenotemoAuthEmail">Email address</label><input id="tenotemoAuthEmail" type="email" autocomplete="email" required>
    <div id="tenotemoPasswordWrap"><label for="tenotemoAuthPassword">Password</label><input id="tenotemoAuthPassword" type="password" autocomplete="current-password" required minlength="12">
-   <label style="font-weight:normal"><input id="tenotemoShowPassword" type="checkbox" style="width:auto"> Show password</label></div>
+   <button type="button" class="t-auth-secondary" id="tenotemoGeneratePassword" hidden>Generate valid password</button><small id="tenotemoPasswordFeedback" role="status" aria-live="polite" style="display:block;margin-top:5px"></small><label style="font-weight:normal"><input id="tenotemoShowPassword" type="checkbox" style="width:auto"> Show password</label></div>
    <div id="tenotemoConfirmWrap" hidden><label for="tenotemoAuthConfirm">Confirm password</label><input id="tenotemoAuthConfirm" type="password" autocomplete="new-password"></div>
    <p id="tenotemoPasswordRules" hidden style="font-size:12px">At least 12 characters, including uppercase, lowercase, a number and a symbol. Do not reuse passwords.</p>
    <button class="t-auth-primary" id="tenotemoAuthSubmit" type="submit">Sign in</button>
@@ -4704,6 +4704,17 @@ function startShapeChallenge() {
    SHAPE DRAG
 ============================================================ */
 
+function tenotemoSnapTarget(x,y,selector,root,margin=52){
+ let best=null, distance=Infinity;
+ root.querySelectorAll(selector).forEach(el=>{
+  const r=el.getBoundingClientRect();
+  if(!r.width||!r.height)return;
+  const dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom);
+  const d=Math.hypot(dx,dy);
+  if(d<distance){distance=d;best=el}
+ });
+ return distance<=margin?best:null;
+}
 let draggedShape = null;
 
 
@@ -4754,10 +4765,8 @@ shapeField.addEventListener(
         event.preventDefault();
 
 
-        const target =
-            event.target.closest(
-                ".shape-target"
-            );
+        const target = event.target.closest(".shape-target") ||
+            tenotemoSnapTarget(event.clientX,event.clientY,".shape-target",shapeField);
 
 
         if (
@@ -4870,14 +4879,8 @@ function handleShapeTouchEnd(
         );
 
 
-    const target =
-        element
-            ?
-            element.closest(
-                ".shape-target"
-            )
-            :
-            null;
+    const target = (element ? element.closest(".shape-target") : null) ||
+        tenotemoSnapTarget(touch.clientX,touch.clientY,".shape-target",shapeField);
 
 
     if (
@@ -5695,7 +5698,8 @@ function moveColourPointerGhost(event) {
 
 function endColourPointerDrag(event) {
     document.removeEventListener("pointermove", moveColourPointerGhost);
-    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".colour-cell");
+    const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(".colour-cell") ||
+        tenotemoSnapTarget(event.clientX,event.clientY,".colour-cell",colourField);
     if (target && colourPointerValue) processColourAnswer(colourPointerValue, target);
     if (colourPointerGhost) colourPointerGhost.remove();
     colourPointerGhost = null;
@@ -5734,10 +5738,8 @@ colourField.addEventListener(
         event.preventDefault();
 
 
-        const cell =
-            event.target.closest(
-                ".colour-cell"
-            );
+        const cell = event.target.closest(".colour-cell") ||
+            tenotemoSnapTarget(event.clientX,event.clientY,".colour-cell",colourField);
 
 
         if (
@@ -8293,7 +8295,7 @@ let oSpinPointerIcon=null,oSpinPointerGhost=null;
 function oSpinPointerStart(e,b){if(e.pointerType==="mouse"||b.classList.contains("used"))return;e.preventDefault();oSpinPointerIcon=b.dataset.icon;oSpinPointerGhost=b.cloneNode(true);Object.assign(oSpinPointerGhost.style,{position:"fixed",zIndex:"700",pointerEvents:"none",opacity:".9",width:"48px",height:"48px"});document.body.appendChild(oSpinPointerGhost);oSpinPointerMove(e);document.addEventListener("pointermove",oSpinPointerMove,{passive:false});document.addEventListener("pointerup",oSpinPointerEnd,{once:true});document.addEventListener("pointercancel",oSpinPointerEnd,{once:true})}
 function oSpinNearestTarget(x,y,limit=110){let nearest=null,best=Infinity;document.querySelectorAll("#oSpinTargets .spin-target:not(:disabled)").forEach(t=>{const r=t.getBoundingClientRect(),d=Math.hypot(x-(r.left+r.width/2),y-(r.top+r.height/2));if(d<best){best=d;nearest=t}});return best<=limit?nearest:null}
 function oSpinPointerMove(e){if(!oSpinPointerGhost)return;e.preventDefault();oSpinPointerGhost.style.left=(e.clientX-24)+"px";oSpinPointerGhost.style.top=(e.clientY-78)+"px";const near=oSpinNearestTarget(e.clientX,e.clientY);document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>t.classList.toggle("drag-near",t===near))}
-function oSpinPointerEnd(e){document.removeEventListener("pointermove",oSpinPointerMove);const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("#oSpinTargets .spin-target")||oSpinNearestTarget(e.clientX,e.clientY);document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>t.classList.remove("drag-near"));if(target&&oSpinPointerIcon){oSpinSelected=oSpinPointerIcon;oSpinPlace(+target.dataset.id)}if(oSpinPointerGhost)oSpinPointerGhost.remove();oSpinPointerGhost=null;oSpinPointerIcon=null}
+function oSpinPointerEnd(e){document.removeEventListener("pointermove",oSpinPointerMove);const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("#oSpinTargets .spin-target:not(:disabled)")||oSpinNearestTarget(e.clientX,e.clientY,60);document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>t.classList.remove("drag-near"));if(target&&oSpinPointerIcon){oSpinSelected=oSpinPointerIcon;oSpinPlace(+target.dataset.id)}if(oSpinPointerGhost)oSpinPointerGhost.remove();oSpinPointerGhost=null;oSpinPointerIcon=null}
 function oSpinPick(icon){if(Object.values(oSpinAnswers).includes(icon))return;oSpinSelected=icon;document.querySelectorAll(".spin-choice").forEach(b=>b.classList.toggle("selected",b.dataset.icon===icon))}
 function oSpinPlace(id){const o=oSpinSolution[id];if(!oSpinSelected||o.resolved)return;for(const k in oSpinAnswers)if(oSpinAnswers[k]===oSpinSelected){delete oSpinAnswers[k];const old=document.querySelector(`#oSpinTargets [data-id="${k}"]`);old.textContent="+"}oSpinAnswers[id]=oSpinSelected;const t=document.querySelector(`#oSpinTargets [data-id="${id}"]`);t.textContent=oSpinSelected;oSpinSelected=null;document.querySelectorAll(".spin-choice").forEach(b=>{b.classList.remove("selected");b.classList.toggle("used",Object.values(oSpinAnswers).includes(b.dataset.icon))});document.getElementById("oSpinCheck").disabled=Object.keys(oSpinAnswers).length===0}
 function oSpinGrade(autoContinue){let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinValue()-wrong*oSpinWrongPenalty();oSpinScore+=net;extraModeScores.spin+=net;saveProgress();recordLeaderboardScore(getTotalPlayerScore());oSpinHud();document.getElementById("oSpinCheck").disabled=true;setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
@@ -8333,7 +8335,7 @@ document.getElementById('tenotemoAuthName').addEventListener('input',async()=>{
  const output=document.getElementById('tenotemoNameAvailability');
  const check=++tNameCheckCounter;
  if(!name){output.textContent='';return}
- if(!/^[A-Za-z0-9_]{3,20}$/.test(name)){output.textContent='Use 3–20 letters, numbers or underscores.';return}
+ if(!/^[A-Za-z0-9_]{3,20}$/.test(name)){output.textContent='Use 3–20 letters (A–Z), numbers (0–9) or underscores (_). Spaces, @ and other symbols are not allowed.';return}
  output.textContent='Checking username…';
  await new Promise(resolve=>setTimeout(resolve,350));
  if(check!==tNameCheckCounter||!tClient)return;
@@ -8341,13 +8343,42 @@ document.getElementById('tenotemoAuthName').addEventListener('input',async()=>{
  catch(e){if(check===tNameCheckCounter)output.textContent=e.message}
 });
 function tPasswordValid(p){return p.length>=12 && /[a-z]/.test(p) && /[A-Z]/.test(p) && /\d/.test(p) && /[^A-Za-z0-9]/.test(p)}
+function tPasswordFeedback(){
+ const el=document.getElementById('tenotemoPasswordFeedback');
+ if(!['signup','change'].includes(tAuthMode)){el.textContent='';return}
+ const p=document.getElementById('tenotemoAuthPassword').value;
+ if(!p){el.textContent='';return}
+ const missing=[];
+ if(p.length<12)missing.push('at least 12 characters');
+ if(!/[A-Z]/.test(p))missing.push('an uppercase letter');
+ if(!/[a-z]/.test(p))missing.push('a lowercase letter');
+ if(!/[0-9]/.test(p))missing.push('a number');
+ if(!/[^A-Za-z0-9]/.test(p))missing.push('a symbol');
+ el.textContent=missing.length?'Still needed: '+missing.join(', ')+'.':'✓ Password meets Tenotemo requirements.';
+ el.style.color=missing.length?'#b42318':'#147a44';
+}
+document.getElementById('tenotemoAuthPassword').addEventListener('input',tPasswordFeedback);
+document.getElementById('tenotemoGeneratePassword').addEventListener('click',()=>{
+ // Browser/keyboard password suggestions cannot be controlled by this page.
+ // This explicit alternative uses cryptographically secure randomness and satisfies all controls.
+ const sets=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghijkmnopqrstuvwxyz','23456789','!@#$%&*?'];
+ const random=n=>{const x=new Uint32Array(1);crypto.getRandomValues(x);return x[0]%n};
+ const chars=sets.map(set=>set[random(set.length)]);
+ const all=sets.join('');while(chars.length<18)chars.push(all[random(all.length)]);
+ for(let i=chars.length-1;i>0;i--){const j=random(i+1);[chars[i],chars[j]]=[chars[j],chars[i]]}
+ const value=chars.join('');document.getElementById('tenotemoAuthPassword').value=value;
+ document.getElementById('tenotemoAuthConfirm').value=value;
+ document.getElementById('tenotemoShowPassword').checked=true;
+ document.getElementById('tenotemoAuthPassword').type='text';document.getElementById('tenotemoAuthConfirm').type='text';
+ tPasswordFeedback();
+});
 function tSetMode(mode){tAuthMode=mode;const signup=mode==='signup',reset=mode==='reset',change=mode==='change';
  document.getElementById('tenotemoAuthTitle').textContent=signup?'Create Tenotemo account':reset?'Reset your password':change?'Choose a new password':'Welcome to Tenotemo';
  document.getElementById('tenotemoAuthHint').textContent=signup?'Register to save your progress across devices.':reset?'We will email you a password reset link.':change?'Enter and confirm a strong new password.':'Sign in to access your profile and saved progress.';
  document.getElementById('tenotemoNameWrap').hidden=!signup;
  document.getElementById('tenotemoPasswordWrap').hidden=reset;
  document.getElementById('tenotemoConfirmWrap').hidden=!(signup||change);
- document.getElementById('tenotemoPasswordRules').hidden=!(signup||change);
+ document.getElementById('tenotemoPasswordRules').hidden=!(signup||change);document.getElementById('tenotemoGeneratePassword').hidden=!(signup||change);document.getElementById('tenotemoPasswordFeedback').textContent='';
  document.getElementById('tenotemoAuthEmail').parentElement.querySelector('label').hidden=change;
  document.getElementById('tenotemoAuthEmail').hidden=change;
  document.getElementById('tenotemoAuthEmail').required=!change;
@@ -8420,8 +8451,8 @@ async function tChangePlayerName(input, messageElement){
  if(desired===oldName){input.value=oldName;return}
  if(!/^[A-Za-z0-9_]{3,20}$/.test(desired)){
    input.value=oldName;
-   if(messageElement)messageElement.textContent='Use 3–20 letters, numbers or underscores.';
-   else alert('Username must have 3–20 letters, numbers or underscores.');
+   if(messageElement)messageElement.textContent='Use 3–20 letters (A–Z), numbers (0–9) or underscores (_). Spaces, @ and other symbols are not allowed.';
+   else alert('Username must be 3–20 characters: letters A–Z, numbers 0–9 or underscores (_). Do not use @, spaces or other symbols.');
    return;
  }
  if(tNameUpdateInFlight)return;
@@ -8485,7 +8516,7 @@ tForm.onsubmit=async e=>{e.preventDefault();if(!tClient){tMessage('Supabase conf
  const button=document.getElementById('tenotemoAuthSubmit');button.disabled=true;tMessage('Please wait…');try{
  if(tAuthMode==='reset'){const {error}=await tClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;tMessage('If the email is registered, a reset link will be sent.',true);return}
  if(tAuthMode==='signup'||tAuthMode==='change'){if(!tPasswordValid(pass))throw Error('Use at least 12 characters, uppercase, lowercase, number and symbol.');if(pass!==confirmPass)throw Error('Passwords do not match.')}
- if(tAuthMode==='signup'){const name=document.getElementById('tenotemoAuthName').value.trim().slice(0,20);if(!/^[A-Za-z0-9_]{3,20}$/.test(name))throw Error('Username must contain 3–20 letters, numbers or underscores.');if(!(await tCheckNameAvailable(name)))throw Error('That username is already taken. Please choose another.');const {data,error}=await tClient.auth.signUp({email,password:pass,options:{data:{player_name:name},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage(data.session?'Account created. Loading…':'Account request received. Check your Inbox and Spam for the confirmation email. If it does not arrive, use Resend confirmation email. After confirming, select Back to sign in.',true);if(data.session)await tLoadPlayer(data.user);return}
+ if(tAuthMode==='signup'){const name=document.getElementById('tenotemoAuthName').value.trim();if(!/^[A-Za-z0-9_]{3,20}$/.test(name))throw Error('Username must be 3–20 characters: letters A–Z, numbers 0–9 or underscores (_). Do not use @, spaces or other symbols.');if(!(await tCheckNameAvailable(name)))throw Error('That username is already taken. Please choose another.');const {data,error}=await tClient.auth.signUp({email,password:pass,options:{data:{player_name:name},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage(data.session?'Account created. Loading…':'Account request received. Check your Inbox and Spam for the confirmation email. If it does not arrive, use Resend confirmation email. After confirming, select Back to sign in.',true);if(data.session)await tLoadPlayer(data.user);return}
  if(tAuthMode==='change'){const {error}=await tClient.auth.updateUser({password:pass});if(error)throw error;tGate.classList.add('hidden');tSetMode('login');alert('Password updated.');return}
  const {data,error}=await tClient.auth.signInWithPassword({email,password:pass});if(error)throw error;await tLoadPlayer(data.user);
  }catch(err){const message=err.message||'Unknown error';tMessage(/invalid login credentials/i.test(message)?'Email or password not recognised. New player? Select Create account. Already registered? Confirm your email, or use Forgot password.':/email not confirmed/i.test(message)?'Your email is not confirmed yet. Enter your email and select Resend confirmation email.':/database error saving new user/i.test(message)?'Registration could not be completed. Your username may have just been taken; try another name.':message)}finally{button.disabled=false}};
