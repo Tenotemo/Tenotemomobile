@@ -34,11 +34,7 @@ async function finishRound(){phase='submitting';choices.replaceChildren();prompt
 function endMatch(){clean();phase='complete';let a=wins(myId()),b=wins(otherId());prompt.textContent=a>b?'🏆 You won!':a<b?'Match finished':'🤝 Match drawn';setStatus('Games won '+a+'–'+b+' · Your total '+total(myId())+' · Opponent '+total(otherId())+' · League points '+(a>b?3:a===b?1:0));scoreboard()}
 next.onclick=()=>{next.hidden=true;next.textContent='Continue';if(phase==='retry')finishRound();else if(phase==='between'){phase='ready';beginRound()}};
 $('vsExit').onclick=async()=>{if(match?.status==='waiting')try{await rpc('tenotemo_versus_cancel',{p_match_id:match.id})}catch(e){console.warn(e)}clean();overlay.classList.remove('open');phase='idle';match=null};
-$('versusEntryButton').onclick=()=>{$('premiumPanel').classList.add('open')};
-$('premiumPlay').onclick=()=>{$('premiumPanel').classList.remove('open');join()};
-$('premiumSpotlight').onclick=()=>{$('premiumPanel').classList.remove('open');$('spotlightStart').click()};
-$('premiumEft').onclick=()=>{$('premiumPanel').classList.remove('open');$('tEftPanel').classList.add('open');if(typeof tEftLoad==='function')tEftLoad()};
-$('premiumClose').onclick=()=>{$('premiumPanel').classList.remove('open')};
-
+$('versusEntryButton').onclick=join;
+$('versusPremiumButton').onclick=()=>{$('tEftPanel').classList.add('open');if(typeof tEftLoad==='function')tEftLoad()};
 $('versusLeaderboardButton').onclick=async()=>{const box=$('leaderboardTableContainer');box.textContent='Loading multiplayer standings…';try{const data=await rpc('tenotemo_versus_leaderboard',{p_limit:50});box.innerHTML='<h3>⚔️ Premium Multiplayer · Top 50</h3><p>3 points per match win · 1 per draw · Average game score breaks ties. No cash-prize points.</p><div style="overflow:auto"><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>D</th><th>L</th><th>League pts</th><th>Avg/game</th></tr></thead><tbody>'+data.map(r=>'<tr><td>'+r.position+'</td><td>'+html(r.player_name)+'</td><td>'+r.played+'</td><td>'+r.wins+'</td><td>'+r.draws+'</td><td>'+r.losses+'</td><td>'+r.league_points+'</td><td>'+r.average_game_points+'</td></tr>').join('')+'</tbody></table></div>'}catch(e){box.textContent='Could not load Versus leaderboard: '+e.message}};
 })();
