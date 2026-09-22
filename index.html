@@ -2559,6 +2559,7 @@ header .header-info{min-width:0}
       <button class="menu-btn climb-menu-btn" id="startClimbButton"><span class="tm-btn-icon">🚂</span><span class="tm-btn-text">Constant Climb<small>KEEP UP THE SEQUENCE</small></span><span class="tm-chevron">❯</span></button>
       <button class="menu-btn spin-menu-btn" id="startSpinButton"><span class="tm-btn-icon">🌊</span><span class="tm-btn-text">Ocean Spin<small>REMEMBER THE OCEAN ITEMS</small></span><span class="tm-chevron">❯</span></button>
       <div class="tm-shortcuts"><button class="menu-btn leaderboard-btn" id="leaderboardButton"><span class="tm-btn-icon">📊</span><span class="tm-btn-text">Leaderboard<small>SEE THE TOP PLAYERS</small></span><span class="tm-chevron">❯</span></button><button id="tenotemoMenuProfile" class="menu-btn" type="button"><span class="tm-btn-icon">👤</span><span class="tm-btn-text">My Profile<small>STATS, STATUS &amp; SETTINGS</small></span><span class="tm-chevron">❯</span></button></div>
+      <button id="earnOpen" class="menu-btn" type="button" style="background:linear-gradient(110deg,#064e3b,#047857);color:#fff;border:2px solid #34d399"><span class="tm-btn-icon">💰</span><span class="tm-btn-text">TENOTEMO EARN<small>DAILY CREDITS · COMPANY CAMPAIGNS · SHARE &amp; EARN</small></span><span class="tm-chevron">❯</span></button>
       <button id="versusEntryButton" class="menu-btn tm-premium" type="button"><span class="tm-btn-icon">👑</span><span class="tm-btn-text">TENOTEMO PREMIUM · R50/MONTH<small>ONLINE VERSUS · SPOTLIGHT REWARDS · EXCLUSIVE BENEFITS</small></span><span class="tm-chevron">❯</span></button>
     </div>
     <details class="tm-admin-tools"><summary>Account &amp; administration</summary><button id="spAdminOpen" class="action-btn secondary-btn" type="button" hidden>👑 Spotlight Admin · Review posts &amp; payments</button><button id="tAdminOpen" class="action-btn secondary-btn" type="button" hidden>🛡️ EFT Admin Dashboard</button><button class="action-btn danger-btn" id="restartProgressButton" type="button">Restart My Progress</button></details>
@@ -8565,16 +8566,16 @@ async function tRenderLeaderboard(){
  if(error){box.textContent='Unable to load leaderboard: '+error.message+(daily?' — Run the supplied normal-game leaderboard SQL first.':'');return}
  if(daily){
   const date=new Intl.DateTimeFormat('sv-SE',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  box.innerHTML='<div class="tenotemo-daily-note"><strong>🏆 Win R50 Daily · '+escapeHTML(date)+'</strong><br>Original five normal games · All registered players · Top player eligible for R50 subject to verification and regulatory clearance. Scores are provisional; no automatic prize payout.</div>'+
-  '<div class="tenotemo-top50-caption">Top 50 normal-game players</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Today’s points</th></tr></thead><tbody>'+
-  (data||[]).slice(0,50).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.daily_points+'</td></tr>').join('')+'</tbody></table>';
+  box.innerHTML='<div class="tenotemo-daily-note"><strong>🏆 Daily Top 50 · Memory Credits · '+escapeHTML(date)+'</strong><br>All registered players · Complete normal games to earn Memory Credits; the Top 50 earn bonus credits after the day ends. No daily cash prize. Claim yesterday’s credits in Tenotemo Earn.</div>'+
+  '<div class="tenotemo-top50-caption">Top 50 normal-game players · *ranking bonus credits, claim after midnight SAST</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Today’s points</th><th>Memory Credits*</th></tr></thead><tbody>'+
+  (data||[]).filter(e=>Number(e.daily_points)>0).slice(0,50).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.daily_points+'</td></tr>').join('')+'</tbody></table>';
  }else{
   box.innerHTML='<div class="tenotemo-top50-caption">Top 50 players · Your position is also available in My Profile.</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Total points</th></tr></thead><tbody>'+
   (data||[]).slice(0,50).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.total_points+'</td></tr>').join('')+'</tbody></table>';
  }
 }
 document.getElementById('dailyTab').style.display='';
-document.getElementById('dailyTab').textContent='Win R50 Daily';
+document.getElementById('dailyTab').textContent='Daily Top 50 · Memory Credits';
 document.getElementById('cumulativeTab').textContent='All-time';
 function tOpenProfile(){if(!tUser){tGate.classList.remove('hidden');return}document.getElementById('tenotemoProfilePanel').classList.add('open');tRefresh();tGetRank().then(tRefresh).catch(e=>console.warn('Profile ranks:',e.message))}
 document.getElementById('tenotemoProfileButton').onclick=tOpenProfile;
@@ -8707,7 +8708,7 @@ window.addEventListener('load',tBoot);
 #vsStatus{font-size:14px;min-height:40px;font-weight:700;color:#075985}
 </style>
 
-<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Play, compete and share with the Tenotemo community.</p><div class="sp-entry"><strong>⚔️ Online Versus</strong><p>Play five tougher games against a randomly matched Premium player. Multiplayer scores are separate from the normal-game R50 leaderboard.</p></div><div class="sp-entry"><strong>✨ Spotlight Top 50 rewards</strong><p>Premium players in the all-time Top 50 receive five free Spotlight credits daily, each worth up to 100 valid views. Promotional credits expire at midnight (South African time).</p></div><div class="sp-entry"><strong>🖼️ Share your picture or message</strong><p>All registered players can post an approved picture, message and optional link. Credits cost R20 each; no videos.</p></div><button type="button" id="premiumPlay">⚔️ Play Online Versus</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
+<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Play, compete and share with the Tenotemo community.</p><div class="sp-entry"><strong>⚔️ Online Versus</strong><p>Play five tougher games against a randomly matched Premium player. Multiplayer scores are separate from the normal-game Daily Top 50 leaderboard.</p></div><div class="sp-entry"><strong>✨ Spotlight Top 50 rewards</strong><p>Premium players in the all-time Top 50 receive five free Spotlight credits daily, each worth up to 100 valid views. Promotional credits expire at midnight (South African time).</p></div><div class="sp-entry"><strong>🖼️ Share your picture or message</strong><p>All registered players can post an approved picture, message and optional link. Credits cost R20 each; no videos.</p></div><button type="button" id="premiumPlay">⚔️ Play Online Versus</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
 <div id="spotlightPanel" role="dialog" aria-modal="true" aria-labelledby="spTitle"><section class="spotlight-card">
 <h2 id="spTitle">👑 Tenotemo Spotlight</h2><p>Post your picture or message here. All posts, pictures and links are reviewed before they appear. Videos are not supported.</p>
 <p id="spBalance">Loading credits…</p><p class="sp-muted">1 credit = up to 100 valid views. R20 per purchased credit. Premium Top 50 players receive 5 daily promotional credits (expire at midnight South African time).</p>
@@ -8727,4 +8728,48 @@ window.addEventListener('load',tBoot);
 </section></div>
 <script>document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('tmProfileQuick');const p=document.getElementById('tenotemoMenuProfile');if(b&&p)b.addEventListener('click',()=>p.click());const total=document.getElementById('menuTotalPoints'),rank=document.getElementById('menuPosition');function tidy(){if(total){const v=total.textContent.replace(/^Total points:\s*/i,'');if(v!==total.textContent)total.textContent=v}if(rank){const v=rank.textContent.replace(/^(?:All-time |Local )?leaderboard position:\s*/i,'').replace(/^Unranked$/i,'—');if(v!==rank.textContent)rank.textContent=v}}const summary=document.getElementById('menuPlayerSummary');if(summary){new MutationObserver(tidy).observe(summary,{childList:true,subtree:true,characterData:true});tidy()}});</script>
 <script src="tenotemo-spotlight.js" defer></script>
-<script src="tenotemo-versus.js" defer></script></body></html>
+<script src="tenotemo-versus.js" defer></script>
+<style>
+#earnPanel{position:fixed;inset:0;z-index:98500;display:none;align-items:center;justify-content:center;padding:12px;background:#06142de8}
+#earnPanel.open{display:flex}#earnPanel .earn-card{width:min(660px,100%);max-height:94dvh;overflow:auto;background:#f7fbff;color:#15233c;border-radius:19px;padding:18px;text-align:left}
+#earnPanel h2{margin:0 0 8px}#earnPanel .earn-balances{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}
+#earnPanel .earn-balances div{background:#0b315a;color:#fff;border-radius:12px;padding:10px 7px;text-align:center;font-size:12px}
+#earnPanel .earn-balances strong{display:block;font-size:clamp(17px,4vw,23px);margin-top:5px}
+#earnPanel button{padding:10px 12px;background:#075985;color:white;border:0;border-radius:10px;font-weight:800;margin:5px 5px 5px 0;cursor:pointer}
+#earnPanel button:disabled{opacity:.5}#earnPanel input,#earnPanel select{padding:10px;border:1px solid #a8bdcc;border-radius:9px;max-width:100%}
+#earnPanel label{display:block;margin:8px 0}#earnPanel label input{display:block;width:100%;box-sizing:border-box}#earnPanel .earn-campaign{padding:12px;border:1px solid #c8d9e8;border-radius:12px;margin:9px 0;overflow-wrap:anywhere}
+#earnPanel .earn-campaign h3{margin:0 0 6px}#earnPanel .earn-campaign small{display:block;color:#4c6177;line-height:1.5}
+#earnNotice{min-height:30px;color:#075985;font-weight:700;overflow-wrap:anywhere}
+</style>
+<div id="earnPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Earn"><section class="earn-card">
+<h2>💰 TENOTEMO EARN</h2><p>Play daily challenges → earn Memory Credits → unlock company campaigns → share approved posts → earn from verified promotional results.</p>
+<div class="earn-balances"><div>🧠 Memory Credits<strong id="earnMemory">0</strong></div><div>Approved earnings<strong id="earnApproved">R0.00</strong></div><div>Paid to date<strong id="earnPaid">R0.00</strong></div></div>
+<p><strong>Claim completed-day credits</strong><br><small>Up to 7 daily challenge credits, plus Top 50 ranking bonus. Yesterday's result is available after midnight South African time.</small></p>
+<input id="earnClaimDate" type="date"><button id="earnClaim">Claim Memory Credits</button>
+<h3>🏢 Available company campaigns</h3><div id="earnCampaigns"></div>
+<p id="earnNotice" role="status" aria-live="polite"></p>
+<details id="earnAdmin" hidden><summary>🛡️ Company campaign administration</summary>
+<p><small>Only grant packages after confirming the company's cleared EFT. Package grant adds exposure to the company’s existing Spotlight wallet.</small></p>
+<label>Company account UUID <input id="earnCompanyId" placeholder="Company registered user UUID"></label>
+<label>Package <select id="earnPackage"><option value="starter">Starter · R500 · 50 credits</option><option value="growth">Growth · R1,500 · 200 credits</option><option value="premium">Premium · R5,000 · 750 credits</option></select></label>
+<button id="earnGrantPackage">Confirm EFT &amp; grant company package</button>
+<h4>Create approved company campaign</h4>
+<label>Approved company Spotlight post UUID <input id="earnPostId" placeholder="Approved post UUID"></label>
+<label>Campaign title <input id="earnTitle" maxlength="90" placeholder="Company campaign title"></label>
+<label>Campaign description <input id="earnDescription" maxlength="350" placeholder="Approved promotion and reward rules"></label>
+<label>Reward budget (R) <input id="earnBudget" type="number" min="0" step="0.01" value="100"></label>
+<label>Memory Credits to unlock <input id="earnCost" type="number" min="0" max="50" value="2"></label>
+<label>Campaign end date <input id="earnEnd" type="date"></label>
+<button id="earnCreateCampaign">Create company campaign</button>
+<h4>Approve verified referral reward</h4>
+<label>Player enrolment UUID <input id="earnEnrolment" placeholder="Player campaign enrolment UUID"></label>
+<label>Verified reward amount (R) <input id="earnRewardAmount" type="number" min="0.01" step="0.01"></label>
+<label>Verification note <input id="earnReason" placeholder="Describe evidence checked (min 8 characters)"></label>
+<button id="earnApproveReward">Approve reward within campaign budget</button>
+<p><small>Mark paid rewards via the admin-only tenotemo_admin_reward_paid SQL RPC after confirming bank transfer. This pilot does not automate EFT payouts.</small></p>
+</details>
+<p><small>Sharing does not guarantee income. Unique-link visits are indicative, not verified sales. Campaign rewards are reviewed manually and capped by the company's published budget. Do not spam contacts or publish misleading promotions.</small></p>
+<button id="earnClose">Return to menu</button>
+</section></div>
+<script src="tenotemo-earn.js" defer></script>
+</body></html>

@@ -12,6 +12,10 @@ async function loadFeed(){if(!ready())return;try{feed=await rpc('tenotemo_spotli
 async function draw(){clearTimeout(seen);started=Date.now();const box=$('spotlightSlide');box.replaceChildren();const post=feed[at];$('spotlightCount').textContent=feed.length?`${at+1} / ${feed.length}`:'No active posts';if(!post){box.append(elt('p','Be the first to share your picture or message with the Tenotemo community.'));return}
 if(post.image_path){const img=elt('img');img.alt='Approved Spotlight picture';const key=post.id;imageURL(post.image_path).then(url=>{if(feed[at]?.id===key&&url)img.src=url}).catch(()=>{});img.onclick=()=>{if(img.src)window.open(img.src,'_blank','noopener,noreferrer')};box.append(img)}
 const copy=elt('div',undefined,'sp-copy');copy.append(elt('strong',`${post.rank?'#'+post.rank+' · ':''}${post.player_name}`));if(post.message)copy.append(elt('p',post.message));const url=safeLink(post.target_url);if(url){const a=elt('a','🔗 Open link →');a.href=url;a.target='_blank';a.rel='noopener noreferrer';copy.append(a)}box.append(copy);
+// Campaign link is displayed only for an active admin-approved company campaign.
+rpc('tenotemo_earn_campaign_for_post',{p_post_id:post.id}).then(active=>{
+ if(active&&feed[at]?.id===post.id){const b=elt('button','📤 Share & Earn');b.type='button';b.style.cssText='display:block;margin-top:8px;padding:8px 11px;border-radius:10px;background:#047857;color:#fff;border:1px solid #34d399;font-weight:800;cursor:pointer';b.onclick=()=>window.tenotemoEarnShareSpotlight?.(post.id);copy.append(b)}
+}).catch(()=>{});
 if(document.visibilityState==='visible'&&$('menuOverlay')&&!$('menuOverlay').classList.contains('hidden'))seen=setTimeout(()=>{if(feed[at]?.id===post.id&&document.visibilityState==='visible'&&!$('menuOverlay').classList.contains('hidden')&&Date.now()-started>=4900)rpc('tenotemo_spotlight_view',{p_post_id:post.id}).catch(()=>{})},5100)
 }
 async function advance(step){at=(at+step+feed.length)%Math.max(feed.length,1);await draw()}
