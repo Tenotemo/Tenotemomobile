@@ -2270,6 +2270,15 @@ header .header-info{min-width:0}
 @media(max-width:520px){#menuOverlay .tm-home{padding:9px!important}#menuOverlay .tm-brand{min-height:61px;gap:7px;padding-bottom:5px}#menuOverlay .tm-logo{letter-spacing:-1px}#menuOverlay .tm-identity{margin:5px 0 8px;min-height:40px}#menuOverlay .tm-avatar{width:38px;height:38px;font-size:21px}#menuOverlay .spotlight-banner{padding:9px!important;border-radius:16px!important}#menuOverlay .tm-spotlight-body{grid-template-columns:minmax(0,1fr) 29%;gap:6px;margin-top:7px}#menuOverlay .spotlight-slide{min-height:104px!important;padding:6px!important}#menuOverlay .spotlight-slide img{height:90px!important;max-height:90px!important}#menuOverlay .tm-post-cta{padding:5px!important}#menuOverlay .tm-stat{padding:7px;min-height:51px;gap:6px}#menuOverlay .menu-btn{min-height:48px!important;padding:6px 10px!important;gap:8px!important;border-radius:11px!important}#menuOverlay .tm-btn-icon{min-width:29px}#menuOverlay .tm-premium{min-height:54px!important}#menuOverlay .tm-footer{font-size:10px}}
 @media(max-width:370px){#menuOverlay .tm-motto{display:none}#menuOverlay .tm-post-cta{font-size:10px!important}#menuOverlay .tm-shortcuts .menu-btn{gap:4px!important;padding:6px!important}#menuOverlay .tm-shortcuts .tm-btn-icon{font-size:20px;min-width:23px}#menuOverlay .tm-shortcuts .tm-btn-text{font-size:12px}#menuOverlay .tm-shortcuts .tm-btn-text small{font-size:7px}}
 
+
+/* Dashboard stats: override the legacy .tenotemo-player-summary span light pills. */
+#menuOverlay #menuPlayerSummary .tm-stat{display:flex!important;align-items:center!important;min-width:0!important;background:linear-gradient(115deg,#0b294b,#0b3a6a)!important;border:1px solid #2786d7!important;color:#fff!important;}
+#menuOverlay #menuPlayerSummary .tm-stat > span{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important;color:#fff!important;min-width:0!important;flex:1 1 auto!important;}
+#menuOverlay #menuPlayerSummary .tm-stat > .tm-stat-icon{flex:0 0 auto!important;font-size:clamp(21px,4vw,32px)!important;line-height:1!important;}
+#menuOverlay #menuPlayerSummary .tm-stat small{display:block!important;background:transparent!important;color:#d1e6fc!important;font-size:clamp(11px,2.4vw,14px)!important;font-weight:600!important;line-height:1.2!important;margin:0 0 3px!important;}
+#menuOverlay #menuPlayerSummary .tm-stat strong{display:block!important;background:transparent!important;color:#fff!important;font-size:clamp(18px,4.4vw,26px)!important;font-weight:900!important;line-height:1.15!important;overflow-wrap:anywhere!important;text-shadow:0 1px 2px #0007!important;}
+@media(max-width:390px){#menuOverlay #menuPlayerSummary .tm-stat{gap:5px!important;padding:6px!important}#menuOverlay #menuPlayerSummary .tm-stat strong{font-size:18px!important}}
+
 </style>
 </head>
 
@@ -2621,7 +2630,7 @@ header .header-info{min-width:0}
         <h1>Leaderboard</h1>
 
         <p>
-            Play the original five games free. The highest verified normal-game daily score is eligible for the proposed R100 prize, subject to regulatory clearance.
+            Play the original five games free. The highest verified normal-game daily score is eligible for the proposed R50 prize, subject to regulatory clearance.
         </p>
 
         <div id="leaderboardContent">
@@ -8556,7 +8565,7 @@ async function tRenderLeaderboard(){
  if(error){box.textContent='Unable to load leaderboard: '+error.message+(daily?' — Run the supplied normal-game leaderboard SQL first.':'');return}
  if(daily){
   const date=new Intl.DateTimeFormat('sv-SE',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-  box.innerHTML='<div class="tenotemo-daily-note"><strong>🏆 Win R100 Daily · '+escapeHTML(date)+'</strong><br>Original five normal games · All registered players · Top player eligible for R100 subject to verification and regulatory clearance. Scores are provisional; no automatic prize payout.</div>'+
+  box.innerHTML='<div class="tenotemo-daily-note"><strong>🏆 Win R50 Daily · '+escapeHTML(date)+'</strong><br>Original five normal games · All registered players · Top player eligible for R50 subject to verification and regulatory clearance. Scores are provisional; no automatic prize payout.</div>'+
   '<div class="tenotemo-top50-caption">Top 50 normal-game players</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Today’s points</th></tr></thead><tbody>'+
   (data||[]).slice(0,50).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.daily_points+'</td></tr>').join('')+'</tbody></table>';
  }else{
@@ -8565,7 +8574,7 @@ async function tRenderLeaderboard(){
  }
 }
 document.getElementById('dailyTab').style.display='';
-document.getElementById('dailyTab').textContent='Win R100 Daily';
+document.getElementById('dailyTab').textContent='Win R50 Daily';
 document.getElementById('cumulativeTab').textContent='All-time';
 function tOpenProfile(){if(!tUser){tGate.classList.remove('hidden');return}document.getElementById('tenotemoProfilePanel').classList.add('open');tRefresh();tGetRank().then(tRefresh).catch(e=>console.warn('Profile ranks:',e.message))}
 document.getElementById('tenotemoProfileButton').onclick=tOpenProfile;
@@ -8698,7 +8707,7 @@ window.addEventListener('load',tBoot);
 #vsStatus{font-size:14px;min-height:40px;font-weight:700;color:#075985}
 </style>
 
-<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Play, compete and share with the Tenotemo community.</p><div class="sp-entry"><strong>⚔️ Online Versus</strong><p>Play five tougher games against a randomly matched Premium player. Multiplayer scores are separate from the normal-game R100 leaderboard.</p></div><div class="sp-entry"><strong>✨ Spotlight Top 50 rewards</strong><p>Premium players in the all-time Top 50 receive five free Spotlight credits daily, each worth up to 100 valid views. Promotional credits expire at midnight (South African time).</p></div><div class="sp-entry"><strong>🖼️ Share your picture or message</strong><p>All registered players can post an approved picture, message and optional link. Credits cost R20 each; no videos.</p></div><button type="button" id="premiumPlay">⚔️ Play Online Versus</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
+<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Play, compete and share with the Tenotemo community.</p><div class="sp-entry"><strong>⚔️ Online Versus</strong><p>Play five tougher games against a randomly matched Premium player. Multiplayer scores are separate from the normal-game R50 leaderboard.</p></div><div class="sp-entry"><strong>✨ Spotlight Top 50 rewards</strong><p>Premium players in the all-time Top 50 receive five free Spotlight credits daily, each worth up to 100 valid views. Promotional credits expire at midnight (South African time).</p></div><div class="sp-entry"><strong>🖼️ Share your picture or message</strong><p>All registered players can post an approved picture, message and optional link. Credits cost R20 each; no videos.</p></div><button type="button" id="premiumPlay">⚔️ Play Online Versus</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
 <div id="spotlightPanel" role="dialog" aria-modal="true" aria-labelledby="spTitle"><section class="spotlight-card">
 <h2 id="spTitle">👑 Tenotemo Spotlight</h2><p>Post your picture or message here. All posts, pictures and links are reviewed before they appear. Videos are not supported.</p>
 <p id="spBalance">Loading credits…</p><p class="sp-muted">1 credit = up to 100 valid views. R20 per purchased credit. Premium Top 50 players receive 5 daily promotional credits (expire at midnight South African time).</p>
