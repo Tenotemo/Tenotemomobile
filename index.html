@@ -2166,6 +2166,37 @@ header .header-info{min-width:0}
     height:calc(100% - clamp(127px,31vw + 6px,150px))!important;
   }
 }
+
+/* Spotlight: home screen only. Game boards and scoring are untouched. */
+#menuOverlay .overlay-card{width:min(780px,100%);max-width:780px}
+#menuOverlay .spotlight-greeting{margin:10px 0 12px;font-size:15px;color:#233654;font-weight:750}
+#spotlightGreetingPremium{margin-left:8px;background:#fff1b8;color:#6d4900;padding:5px 9px;border-radius:20px;font-size:12px}
+.spotlight-banner{background:linear-gradient(120deg,#142443,#24183f 76%,#442167);color:#fff;border:2px solid #e6b747;border-radius:20px;padding:14px;margin:12px 0 16px;box-shadow:0 8px 23px #111a3a24;text-align:left}
+.spotlight-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:clamp(16px,3.7vw,24px);font-weight:900}
+.spotlight-heading em{color:#f7c95b;font-style:normal}
+.spotlight-heading button{background:#fff3d4;color:#192642;border:1px solid #e7b447;border-radius:11px;padding:9px;font-size:clamp(10px,2.5vw,13px);font-weight:850;cursor:pointer}
+.spotlight-slide{min-height:122px;display:flex;gap:13px;align-items:center;margin-top:13px;border:1px solid #ad8c5559;border-radius:14px;padding:10px;background:#ffffff0d;overflow:hidden}
+.spotlight-slide img{width:36%;max-width:210px;max-height:145px;object-fit:cover;border-radius:12px;cursor:zoom-in}
+.spotlight-slide .sp-copy{min-width:0;flex:1;overflow-wrap:anywhere;line-height:1.4}
+.spotlight-slide .sp-copy strong{display:block;color:#ffd56e;font-size:16px}
+.spotlight-slide .sp-copy p{margin:5px 0;color:white;font-size:14px}
+.spotlight-slide a{color:#b5e7ff;font-size:13px;overflow-wrap:anywhere}
+.spotlight-navigation{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:9px;font-size:12px;color:#d4ddf2}
+.spotlight-navigation button{border:1px solid #8f9bb4;background:#ffffff1c;color:white;border-radius:9px;padding:6px 13px;cursor:pointer}
+#premiumPanel{position:fixed;inset:0;z-index:98000;background:#091c35db;display:none;align-items:center;justify-content:center;padding:12px}#premiumPanel.open{display:flex}
+#spotlightPanel{position:fixed;inset:0;z-index:98000;background:#091c35db;display:none;align-items:center;justify-content:center;padding:12px}
+#spotlightPanel.open{display:flex}
+.spotlight-card{width:min(620px,100%);max-height:94dvh;overflow:auto;background:white;color:#1e293b;border-radius:19px;padding:20px;text-align:left}
+.spotlight-card h2{margin:0 0 8px}.spotlight-card p{line-height:1.5}
+.spotlight-card label{display:block;margin:13px 0 5px;font-weight:800}
+.spotlight-card textarea,.spotlight-card input{width:100%;padding:11px;border:1px solid #a9bbcc;border-radius:10px;font:inherit}
+.spotlight-card button{padding:10px 13px;border:0;border-radius:10px;background:#153c6c;color:white;font-weight:800;cursor:pointer;margin:5px 5px 5px 0}
+.spotlight-card button:disabled{opacity:.5}
+.spotlight-card .sp-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.spotlight-card .sp-muted{font-size:12px;color:#536578}
+.spotlight-card .sp-entry{padding:11px;border:1px solid #dce4ef;border-radius:12px;margin:8px 0;overflow-wrap:anywhere}
+.spotlight-card .sp-entry img{max-width:150px;max-height:110px;object-fit:cover}
+@media(max-width:520px){.spotlight-banner{padding:10px}.spotlight-slide{min-height:105px;gap:8px;padding:7px}.spotlight-slide img{width:38%;max-height:110px}.spotlight-slide .sp-copy p{font-size:12px}.spotlight-heading{flex-wrap:wrap}.spotlight-heading button{width:100%}#menuOverlay .overlay-card{padding:15px 10px!important}}
 </style>
 </head>
 
@@ -2196,7 +2227,7 @@ header .header-info{min-width:0}
 
 <div id="tEftPanel" role="dialog" aria-modal="true" aria-labelledby="tEftTitle"><section class="t-eft-card">
 <h2 id="tEftTitle">Tenotemo · R50 monthly EFT</h2>
-<p>Pay by bank transfer. Premium Online Versus unlocks after the administrator verifies your R50 payment. Normal games and their leaderboards remain free.</p>
+<p>Pay by bank transfer. Premium includes Online Versus and Top 50 Spotlight rewards after the administrator verifies your R50 payment. Normal games and their leaderboards remain free.</p>
 <div class="t-eft-bank"><strong>Standard Bank</strong><br>Account holder: <strong>DMA ARENA (PTY) LTD</strong><br>Account type: MyMoBiz Current Account<br>Account number: <strong>10284645220</strong><br>Branch code: <strong>004952</strong><br>Amount: <strong>R50.00</strong><br>Payment reference: <strong id="tEftReference">Select Generate reference</strong><br><small>Your reference will look like PlayerName-0001. Use the exact reference shown after generating.</small></div>
 <p><button id="tEftGenerate" type="button">Generate / retrieve my reference</button></p>
 <p>Use the exact reference shown above in your EFT. After making payment, select <strong>I've paid — submit for verification</strong>. Do not submit before paying.</p>
@@ -2208,6 +2239,7 @@ header .header-info{min-width:0}
 <h2 id="tAdminTitle">Tenotemo · EFT administration</h2><p>Approve only after checking that the EFT has cleared into the Standard Bank account. A reference or payment notification alone is not proof of receipt.</p>
 <button id="tAdminReload" type="button">Refresh pending payments</button><div id="tAdminRequests"></div><p id="tAdminMessage" role="status" aria-live="polite"></p><button id="tAdminClose" class="t-close" type="button">Close</button>
 </section></div>
+<input type="hidden" id="playerNameInput"><div id="playerStatus" hidden></div>
 <div class="app">
 
 <header>
@@ -2438,36 +2470,21 @@ header .header-info{min-width:0}
             Choose the memory challenge you want to play.
         </p>
 
-        <div class="player-box">
-
-            <label for="playerNameInput">
-                Player Name
-            </label>
-
-            <input
-                type="text"
-                id="playerNameInput"
-                class="player-name-input"
-                maxlength="20"
-                placeholder="Enter your player name"
-            >
-
-            <div
-                class="player-status"
-                id="playerStatus">
-            </div>
-
-        </div>
-
-        <button class="action-btn secondary-btn" id="tenotemoMenuProfile" type="button">👤 My Profile</button>
+        <div id="spotlightGreeting" class="spotlight-greeting">👤 <strong id="spotlightGreetingName">Player</strong> <span id="spotlightGreetingPremium">Free player</span></div>
+        <section id="spotlightBanner" class="spotlight-banner" aria-label="Tenotemo Spotlight">
+          <div class="spotlight-heading"><span>👑 TENOTEMO <em>SPOTLIGHT</em></span><button type="button" id="spotlightStart">Post your picture or message here →</button></div>
+          <div id="spotlightSlide" class="spotlight-slide"><p>Share a picture, message or link with the Tenotemo community.</p></div>
+          <div class="spotlight-navigation"><button type="button" id="spotlightPrev" aria-label="Previous post">❮</button><span id="spotlightCount">Spotlight</span><button type="button" id="spotlightNext" aria-label="Next post">❯</button><button type="button" id="spotlightPause">Pause</button></div>
+        </section>
         <div class="tenotemo-player-summary" id="menuPlayerSummary" aria-live="polite">
             <span id="menuTotalPoints">Total points: 0</span>
             <span id="menuPosition">Leaderboard position: —</span>
         </div>
-
         <button id="tAdminOpen" class="action-btn secondary-btn" type="button" hidden style="width:100%;margin:4px 0 8px">🛡️ EFT Admin Dashboard</button>
         <div class="menu-buttons">
-<button id="versusEntryButton" class="menu-btn" type="button" style="background:linear-gradient(110deg,#172554,#2563eb);color:white">⚔️ Premium Online Versus · R50/month</button>
+<button id="tenotemoMenuProfile" class="menu-btn" type="button" style="background:#e6ebf7;color:#152443">👤 My Profile</button>
+<button id="versusEntryButton" class="menu-btn" type="button" style="background:linear-gradient(110deg,#172554,#2563eb);color:white">👑 TENOTEMO PREMIUM · R50/MONTH</button>
+
 
             <button
                 class="menu-btn shape-btn"
@@ -2585,29 +2602,8 @@ header .header-info{min-width:0}
             Play the original five games free. The highest verified normal-game daily score is eligible for the proposed R100 prize, subject to regulatory clearance.
         </p>
 
-        <div class="subscription-box">
-
-            <h3>Premium Online Versus · R50/month</h3>
-
-            <div
-                class="subscription-status"
-                id="subscriptionStatus">
-                Online Versus: Locked
-            </div>
-
-            <p id="subscriptionMessage">
-                The normal-game leaderboards are free. Subscribe only for Online Versus multiplayer.
-            </p>
-
-            <button
-                class="action-btn leaderboard-btn"
-                id="subscriptionButton">
-                Activate Monthly Subscription
-            </button>
-
-        </div>
-
         <div id="leaderboardContent">
+<button id="versusLeaderboardButton" class="leaderboard-tab" type="button" style="margin-top:12px">⚔️ Multiplayer standings</button>
 
             <div class="leaderboard-tabs">
 
@@ -3118,9 +3114,9 @@ function updatePlayerStatus() {
     playerStatus.textContent =
         hasSubscription
             ?
-            "Leaderboard subscription: Active"
+            "Tenotemo Premium: Active"
             :
-            "Leaderboard subscription: Not active";
+            "Normal games: Free · Spotlight open to everyone";
 }
 
 
@@ -3646,7 +3642,7 @@ function updateSubscriptionUI() {
    payment system is connected.
 */
 
-subscriptionButton.addEventListener("click",()=>{document.getElementById("tEftPanel").classList.add("open");if(typeof tEftLoad==="function")tEftLoad()});
+// Premium EFT button is in the main menu, not on the free leaderboard.
 
 /* ============================================================
    LEADERBOARD TABS
@@ -8461,7 +8457,7 @@ function tRefresh(){
  document.getElementById('tenotemoProfileRank').textContent='All-time position: '+position;
  document.getElementById('tenotemoProfileDailyRank').textContent='Daily position: '+(tDailyRank?'#'+tDailyRank:'# —');
  document.getElementById('tenotemoProfileWeekly').textContent='Verified winnings this week: R'+(tWeeklyEarnedCents/100).toFixed(2);
- document.getElementById('tenotemoProfileMembership').textContent=hasSubscription?'Online Versus subscription: active':'Online Versus subscription: inactive · Normal games remain free';
+ document.getElementById('tenotemoProfileMembership').textContent=hasSubscription?'Tenotemo Premium: active':'Tenotemo Premium: inactive · Normal games remain free';
 }
 async function tLoadPlayer(user){tRemoteLoading=true;tUser=user;try{
  const [p,g,m]=await Promise.all([tClient.from('tenotemo_profiles').select('player_name').eq('user_id',user.id).single(),tClient.from('tenotemo_progress').select('*').eq('user_id',user.id).single(),tMembership()]);
@@ -8520,7 +8516,7 @@ savePlayerName=function(){
 };
 const tOldRestart=restartAllProgress;restartAllProgress=function(){const prev=getTotalPlayerScore();tOldRestart();if(getTotalPlayerScore()===0&&prev!==0)tSaveNow().catch(e=>alert('Remote reset failed: '+e.message));};
 const tOldOpenLeaderboard=openLeaderboard;openLeaderboard=function(){tOldOpenLeaderboard();tRenderLeaderboard()};
-updateSubscriptionUI=function(){document.getElementById('subscriptionStatus').textContent=hasSubscription?'Online Versus: Active':'Online Versus: Locked';document.getElementById('subscriptionMessage').textContent=hasSubscription?'Premium membership verified. Normal games and leaderboards remain free.':'R50 monthly unlocks premium Online Versus. Normal games and both normal-game leaderboards remain free.';document.getElementById('subscriptionButton').textContent=hasSubscription?'Renew Premium · R50 EFT':'Unlock Versus · R50 EFT';};
+updateSubscriptionUI=function(){const b=document.getElementById("versusPremiumButton");if(b)b.textContent=hasSubscription?"💳 Renew Premium · R50 EFT":"💳 Unlock Premium · R50 EFT";};
 renderLeaderboard=function(){tRenderLeaderboard()};
 async function tRenderLeaderboard(){
  const box=document.getElementById('leaderboardTableContainer');
@@ -8659,11 +8655,37 @@ window.addEventListener('load',tBoot);
 
 
 <script>
-/* Premium multiplayer: the UI is gated, and intentionally does not simulate opponents
-   or award fabricated league points. Requires the companion server match engine. */
-document.getElementById('versusEntryButton').addEventListener('click',function(){
- if(!tUser){alert('Please sign in first.');return}
- if(!hasSubscription){alert('Online Versus is a R50/month premium feature. Open Leaderboard → Unlock Versus to request subscription approval.');return}
- alert('Online Versus is not live yet. The shared-challenge multiplayer server and verified league scoring must be deployed before matchmaking can be enabled. Your normal games and leaderboard are available now.');
-});
-</script></body></html>
+
+
+</script>
+<style>
+#vsOverlay{position:fixed;inset:0;z-index:97000;background:#071d38e8;display:none;align-items:center;justify-content:center;padding:10px}
+#vsOverlay.open{display:flex}#vsCard{width:min(740px,100%);max-height:96dvh;overflow:auto;background:linear-gradient(160deg,#e0f2fe,#fff);border:3px solid #38bdf8;border-radius:20px;padding:clamp(12px,3vw,24px);text-align:center;color:#0f172a}
+#vsScore{display:flex;justify-content:space-around;gap:6px;background:#082f49;color:white;padding:12px 4px;border-radius:12px;font-weight:900;flex-wrap:wrap}
+#vsChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:16px auto;max-width:530px}
+#vsChoices button{border:2px solid #0284c7;background:white;border-radius:12px;padding:12px 4px;font-size:clamp(18px,5vw,32px);min-height:64px;touch-action:manipulation}
+#vsChoices button:disabled{opacity:.35}#vsPrompt{font-size:clamp(20px,5vw,34px);font-weight:900;min-height:66px;display:grid;place-items:center}
+#vsCard button.vsAction{padding:12px 18px;border:0;border-radius:10px;background:#075985;color:white;font-weight:800;margin:6px}
+#vsStatus{font-size:14px;min-height:40px;font-weight:700;color:#075985}
+</style>
+
+<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Play, compete and share with the Tenotemo community.</p><div class="sp-entry"><strong>⚔️ Online Versus</strong><p>Play five tougher games against a randomly matched Premium player. Multiplayer scores are separate from the normal-game R100 leaderboard.</p></div><div class="sp-entry"><strong>✨ Spotlight Top 50 rewards</strong><p>Premium players in the all-time Top 50 receive five free Spotlight credits daily, each worth up to 100 valid views. Promotional credits expire at midnight (South African time).</p></div><div class="sp-entry"><strong>🖼️ Share your picture or message</strong><p>All registered players can post an approved picture, message and optional link. Credits cost R20 each; no videos.</p></div><button type="button" id="premiumPlay">⚔️ Play Online Versus</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
+<div id="spotlightPanel" role="dialog" aria-modal="true" aria-labelledby="spTitle"><section class="spotlight-card">
+<h2 id="spTitle">👑 Tenotemo Spotlight</h2><p>Post your picture or message here. All posts, pictures and links are reviewed before they appear. Videos are not supported.</p>
+<p id="spBalance">Loading credits…</p><p class="sp-muted">1 credit = up to 100 valid views. R20 per purchased credit. Premium Top 50 players receive 5 daily promotional credits (expire at midnight South African time).</p>
+<div class="sp-row"><button type="button" id="spPremium">👑 Premium · R50/month</button><button type="button" id="spBuy">Buy credits · R20 each</button><button type="button" id="spClose">Close</button></div>
+<div id="spBuyBox" hidden><label for="spQuantity">How many credits?</label><input id="spQuantity" type="number" min="1" max="100" value="1"><button type="button" id="spRequestBuy">Request EFT payment reference</button><p id="spPaymentInfo" class="sp-muted">Purchases require manual bank verification. Credits are not issued until approved.</p></div>
+<label for="spMessage">Your message (up to 180 characters)</label><textarea id="spMessage" maxlength="180" rows="3" placeholder="Share something with the community…"></textarea>
+<label for="spImage">Optional picture (JPG, PNG or WebP, max 2 MB)</label><input id="spImage" type="file" accept="image/jpeg,image/png,image/webp">
+<label for="spLink">Optional website or WhatsApp link</label><input id="spLink" type="url" maxlength="500" placeholder="https://…"><p class="sp-muted">No videos. Never share private details. Edits require a new approval.</p>
+<button type="button" id="spSubmit">Submit for review</button><p id="spNotice" role="status" aria-live="polite"></p>
+<h3>Your posts</h3><div id="spMine">Loading…</div>
+<div id="spAdmin" hidden><h3>🛡️ Spotlight review &amp; credit payments</h3><button type="button" id="spAdminRefresh">Refresh review queue</button><div id="spAdminPosts"></div><div id="spAdminPayments"></div></div>
+</section></div>
+<div id="vsOverlay" role="dialog" aria-modal="true" aria-label="Online Versus"><section id="vsCard">
+<h2>⚔️ TENOTEMO ONLINE VERSUS</h2><div id="vsScore">Matchmaking…</div>
+<p id="vsStatus" aria-live="polite">Connecting to multiplayer…</p><div id="vsPrompt"></div><div id="vsChoices"></div>
+<button class="vsAction" id="vsNext" hidden>Continue</button><button class="vsAction" id="vsExit">Exit Versus</button>
+</section></div>
+<script src="tenotemo-spotlight.js" defer></script>
+<script src="tenotemo-versus.js" defer></script></body></html>
