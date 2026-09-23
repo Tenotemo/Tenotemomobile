@@ -15,7 +15,7 @@ create table if not exists public.tenotemo_memory_claims(
  primary key(user_id,score_date));
 create table if not exists public.tenotemo_company_packages(
  user_id uuid primary key references auth.users(id) on delete cascade,
- package_key text not null check(package_key in ('starter','growth','premium')),
+ package_key text not null check(package_key in ('individual','starter','growth','premium')),
  expires_at timestamptz not null,
  granted_spotlight_credits integer not null check(granted_spotlight_credits>0),
  created_at timestamptz not null default now());
@@ -65,6 +65,41 @@ alter table public.tenotemo_earn_enrolments enable row level security;
 alter table public.tenotemo_earn_visits enable row level security;
 alter table public.tenotemo_earn_rewards enable row level security;
 revoke all on public.tenotemo_memory_wallet,public.tenotemo_memory_claims,public.tenotemo_company_packages,public.tenotemo_earn_campaigns,public.tenotemo_earn_enrolments,public.tenotemo_earn_visits,public.tenotemo_earn_rewards from public,anon,authenticated;
+create table if not exists public.tenotemo_advertiser_profiles (
+ user_id uuid primary key references auth.users(id) on delete cascade,
+ account_type text not null check(account_type in ('individual','company')),
+ display_name text not null check(length(display_name) between 2 and 90),
+ service_description text not null check(length(service_description) between 3 and 200),
+ service_area text not null check(length(service_area) between 2 and 100),
+ preferred_package text not null check(preferred_package in ('individual','starter','growth','premium')),
+ updated_at timestamptz not null default now()
+);
+alter table public.tenotemo_advertiser_profiles enable row level security;
+revoke all on public.tenotemo_advertiser_profiles from public,anon,authenticated;
+create or replace function public.tenotemo_advertiser_register(p_type text,p_name text,p_service text,p_area text,p_package text)
+returns void language plpgsql security definer set search_path='' as $$
+declare u uuid:=(select auth.uid());
+begin
+ if u is null then raise exception 'Sign in required'; end if;
+ if p_type not in ('individual','company') or p_package not in ('individual','starter','growth','premium')
+ or length(trim(coalesce(p_name,''))) not between 2 and 90
+ or length(trim(coalesce(p_service,''))) not between 3 and 200
+ or length(trim(coalesce(p_area,''))) not between 2 and 100 then raise exception 'Complete all advertiser fields'; end if;
+ insert into public.tenotemo_advertiser_profiles(user_id,account_type,display_name,service_description,service_area,preferred_package)
+ values(u,p_type,trim(p_name),trim(p_service),trim(p_area),p_package)
+ on conflict(user_id) do update set account_type=excluded.account_type,display_name=excluded.display_name,
+ service_description=excluded.service_description,service_area=excluded.service_area,
+ preferred_package=excluded.preferred_package,updated_at=now();
+end $$;
+create or replace function public.tenotemo_admin_advertisers()
+returns table(user_id uuid,account_type text,display_name text,service_description text,service_area text,preferred_package text)
+language plpgsql stable security definer set search_path='' as $$
+begin
+ if not (select public.tenotemo_is_admin()) then raise exception 'Admin only'; end if;
+ return query select a.user_id,a.account_type,a.display_name,a.service_description,a.service_area,a.preferred_package
+ from public.tenotemo_advertiser_profiles a order by a.updated_at desc limit 200;
+end $$;
+
 -- Ranking rewards: 1=50, 2=40, 3=30, 4-10=20, 11-20=10, 21-50=5.
 create or replace function public.tenotemo_rank_memory_credits(p_position bigint)
 returns integer language sql immutable set search_path='' as $$
@@ -108,6 +143,7 @@ declare u uuid:=(select auth.uid()); result jsonb;
 begin
  if u is null then raise exception 'Sign in required'; end if;
  select jsonb_build_object(
+ 'advertiser_profile',(select to_jsonb(a) from public.tenotemo_advertiser_profiles a where a.user_id=u),
  'memory_credits',coalesce((select balance from public.tenotemo_memory_wallet where user_id=u),0),
  'approved_cents',coalesce((select sum(r.amount_cents) from public.tenotemo_earn_rewards r join public.tenotemo_earn_enrolments e on e.id=r.enrolment_id where e.user_id=u and r.status='approved'),0),
  'paid_cents',coalesce((select sum(r.amount_cents) from public.tenotemo_earn_rewards r join public.tenotemo_earn_enrolments e on e.id=r.enrolment_id where e.user_id=u and r.status='paid'),0),
@@ -149,9 +185,9 @@ returns void language plpgsql security definer set search_path='' as $$
 declare credits integer;
 begin
  if not (select public.tenotemo_is_admin()) then raise exception 'Admin only'; end if;
- credits:=case p_package when 'starter' then 50 when 'growth' then 200 when 'premium' then 750 else null end;
+ credits:=case p_package when 'individual' then 10 when 'starter' then 50 when 'growth' then 200 when 'premium' then 750 else null end;
  if credits is null then raise exception 'Unknown package'; end if;
- if not exists(select 1 from auth.users where id=p_company_id) then raise exception 'Company account missing'; end if;
+ if not exists(select 1 from auth.users where id=p_company_id) then raise exception 'Advertiser account missing'; end if;
  insert into public.tenotemo_spotlight_wallet(user_id,purchased_views) values(p_company_id,credits*100)
  on conflict(user_id) do update set purchased_views=public.tenotemo_spotlight_wallet.purchased_views+excluded.purchased_views,updated_at=now();
  insert into public.tenotemo_company_packages(user_id,package_key,expires_at,granted_spotlight_credits)
@@ -163,7 +199,7 @@ returns uuid language plpgsql security definer set search_path='' as $$
 declare cid uuid;
 begin
  if not (select public.tenotemo_is_admin()) then raise exception 'Admin only'; end if;
- if not exists(select 1 from public.tenotemo_company_packages where user_id=p_company_id and expires_at>now()) then raise exception 'Company package inactive'; end if;
+ if not exists(select 1 from public.tenotemo_company_packages where user_id=p_company_id and expires_at>now()) then raise exception 'Advertiser package inactive'; end if;
  if not exists(select 1 from public.tenotemo_spotlight_posts where id=p_post_id and user_id=p_company_id and status='approved') then raise exception 'Post must belong to company and be approved'; end if;
  if length(trim(coalesce(p_title,''))) not between 3 and 90 or length(coalesce(p_description,''))>350
  or p_budget_cents<0 or p_credit_cost not between 0 and 50 or p_ends_at<=now() then raise exception 'Invalid campaign details'; end if;
@@ -192,6 +228,8 @@ begin
  update public.tenotemo_earn_rewards set status='paid',paid_at=now() where id=p_reward_id and status='approved';
  if not found then raise exception 'Reward missing or already paid'; end if;
 end $$;
+revoke all on function public.tenotemo_advertiser_register(text,text,text,text,text),public.tenotemo_admin_advertisers() from public,anon;
+grant execute on function public.tenotemo_advertiser_register(text,text,text,text,text),public.tenotemo_admin_advertisers() to authenticated;
 revoke all on function public.tenotemo_rank_memory_credits(bigint),public.tenotemo_claim_memory_day(date),public.tenotemo_earn_home(),public.tenotemo_earn_join(uuid),public.tenotemo_earn_campaign_for_post(uuid),public.tenotemo_admin_company_package(uuid,text),public.tenotemo_admin_campaign(uuid,uuid,text,text,integer,integer,timestamptz),public.tenotemo_admin_reward(uuid,integer,text),public.tenotemo_admin_reward_paid(bigint) from public,anon;
 grant execute on function public.tenotemo_rank_memory_credits(bigint),public.tenotemo_claim_memory_day(date),public.tenotemo_earn_home(),public.tenotemo_earn_join(uuid),public.tenotemo_earn_campaign_for_post(uuid),public.tenotemo_admin_company_package(uuid,text),public.tenotemo_admin_campaign(uuid,uuid,text,text,integer,integer,timestamptz),public.tenotemo_admin_reward(uuid,integer,text),public.tenotemo_admin_reward_paid(bigint) to authenticated;
 -- Retire old subscriber-only cash-prize settlement entry points; do not erase history.
