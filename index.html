@@ -2631,7 +2631,7 @@ header .header-info{min-width:0}
         <h1>Leaderboard</h1>
 
         <p>
-            Play the original five games free. The highest verified normal-game daily score is eligible for the proposed R50 prize, subject to regulatory clearance.
+            Play all five memory games free. Compete in the Daily Top 50 to earn Memory Credits based on your final daily ranking. Memory Credits unlock Tenotemo Earn advertising campaigns and cannot be exchanged directly for money.
         </p>
 
         <div id="leaderboardContent">
@@ -8568,7 +8568,7 @@ async function tRenderLeaderboard(){
  if(daily){
   const zaDay=(offset=0)=>{const d=new Date(Date.now()+offset*86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)};
   const yesterday=zaDay(-1),today=zaDay();
-  box.innerHTML='<div class="tenotemo-daily-note"><strong>🏆 Daily Top 50 · Memory Credits</strong><br>All registered players · Daily results and final previous-day credit awards. No daily cash prize.</div><div class="tenotemo-top50-caption"><button type="button" id="tmTodayScores">Today · '+escapeHTML(today)+'</button> <button type="button" id="tmYesterdayScores">Previous day · '+escapeHTML(yesterday)+'</button></div><div id="tmDailyScores"></div>';
+  box.innerHTML='<div class="tenotemo-daily-note"><strong>🏆 Daily Top 50 · Memory Credits</strong><br>All registered players · Today’s rankings and previous-day Memory Credits. Game rankings award credits, not money.</div><div class="tenotemo-top50-caption"><button type="button" id="tmTodayScores">Today · '+escapeHTML(today)+'</button> <button type="button" id="tmYesterdayScores">Previous day · '+escapeHTML(yesterday)+'</button></div><div id="tmDailyScores"></div>';
   const output=document.getElementById('tmDailyScores');
   async function showDay(previous){
    output.textContent='Loading '+(previous?'previous day’s final results':'today’s results')+'…';

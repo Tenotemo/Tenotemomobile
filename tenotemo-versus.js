@@ -1,5 +1,5 @@
 /* Tenotemo Online Versus beta: independent identical seeded challenges, server queue and scoreboards.
-   Multiplayer league scores are separate from normal games and all cash prizes.
+   Multiplayer league scores are separate from normal-game Daily Top 50 Memory Credits.
    Browser-reported scores are NOT anti-cheat verified: do not attach monetary prizes to Versus. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id), overlay=$('vsOverlay'),status=$('vsStatus'),prompt=$('vsPrompt'),choices=$('vsChoices'),score=$('vsScore'),next=$('vsNext');
