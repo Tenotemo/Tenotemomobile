@@ -6,10 +6,32 @@ const money=n=>'R'+(Number(n||0)/100).toFixed(2);
 const day=(offset=0)=>{const d=new Date(Date.now()+offset*86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)};
 async function rpc(name,args={}){if(!tUser||!tClient)throw Error('Sign in to use Tenotemo Earn.');const {data,error}=await tClient.rpc(name,args);if(error)throw error;return data}
 function note(s){$('earnNotice').textContent=s}
-function referral(code){return location.origin+'/api/r?code='+encodeURIComponent(code)}
-async function share(c){const link=referral(c.referral_code),message=`${c.title} — ${c.description}\n${link}\n#TenotemoEarn`;
- if(navigator.share){try{await navigator.share({title:c.title,text:message,url:link});note('Share sheet opened. Publication cannot be verified by Tenotemo.');return}catch(e){if(e.name==='AbortError')return}}
- try{await navigator.clipboard.writeText(message);note('Campaign message and your referral link copied. Paste it into WhatsApp Status, Facebook or another platform.')}catch{prompt('Copy this approved campaign message and referral link:',message)}
+function referral(code){return location.origin+'/api/c?code='+encodeURIComponent(code)}
+function directReferral(code){return location.origin+'/api/r?code='+encodeURIComponent(code)}
+function shareMessage(c){return `${c.title} — ${c.description||'Approved advertiser promotion'}\n${referral(c.referral_code)}\n#TenotemoEarn`}
+async function copyCampaignLink(c){const message=shareMessage(c);try{await navigator.clipboard.writeText(message);note('Campaign message and your unique referral link copied. Paste them alongside your picture or video.')}catch{prompt('Copy your campaign message and referral link:',message)}}
+async function share(c){const link=referral(c.referral_code),message=shareMessage(c);
+ if(navigator.share){try{await navigator.share({title:c.title,text:message});note('Share sheet opened. The campaign link has a picture or video thumbnail where the platform supports previews.');return}catch(e){if(e.name==='AbortError')return}}
+ await copyCampaignLink(c);
+}
+async function shareMedia(c){
+ if(!c.referral_code)return note('Unlock this campaign first.');
+ const {data:posts,error}=await tClient.from('tenotemo_spotlight_posts').select('image_path,status').eq('id',c.spotlight_post_id).limit(1);
+ if(error)throw error;const path=posts?.[0]?.image_path;
+ if(!path)return note('This campaign has no approved picture or video. Use Share Campaign Link instead.');
+ if(posts[0].status!=='approved')return note('This campaign is not currently available for sharing.');
+ const bucket=/\/campaigns\//.test(path)?'tenotemo-campaign-media':'tenotemo-spotlight';
+ const {data:signed,error:signError}=await tClient.storage.from(bucket).createSignedUrl(path,300);
+ if(signError||!signed?.signedUrl)throw signError||Error('Cannot access approved media.');
+ const response=await fetch(signed.signedUrl);if(!response.ok)throw Error('Media download failed.');
+ const blob=await response.blob();const ext=path.split('.').pop().toLowerCase();const type=blob.type||({'mov':'video/quicktime','mp4':'video/mp4','webm':'video/webm','jpg':'image/jpeg','jpeg':'image/jpeg','png':'image/png','webp':'image/webp'}[ext]);
+ const file=new File([blob],`tenotemo-campaign.${ext}`,{type});
+ const message=shareMessage(c);
+ if(navigator.share&&navigator.canShare?.({files:[file]})){
+  try{await navigator.share({files:[file],text:message,title:c.title});note('Media shared or share sheet opened. Some apps omit the link when sharing a file; use Copy Referral Link if needed.');return}catch(e){if(e.name==='AbortError')return}
+ }
+ const objectURL=URL.createObjectURL(file),a=document.createElement('a');a.href=objectURL;a.download=file.name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(objectURL),60000);
+ await copyCampaignLink(c);note('Approved media downloaded. Add it to your post or Status, and paste your copied unique referral link.');
 }
 async function refresh(){if(!tUser)return note('Sign in to use Tenotemo Earn.');note('Loading your private dashboard…');try{
  const d=await rpc('tenotemo_earn_home');$('earnMemory').textContent=d.memory_credits||0;$('earnApproved').textContent=money(d.approved_cents);$('earnPaid').textContent=money(d.paid_cents);
@@ -17,13 +39,13 @@ async function refresh(){if(!tUser)return note('Sign in to use Tenotemo Earn.');
  if(profile){$('earnAdvertiserType').value=profile.account_type;$('earnAdvertiserName').value=profile.display_name;$('earnAdvertiserService').value=profile.service_description;$('earnAdvertiserArea').value=profile.service_area;$('earnAdvertiserPackage').value=profile.preferred_package;$('earnAdvertiserStatus').textContent='Application saved · Your account UUID: '+tUser.id+' · Package activation requires payment verification and post approval.';}
  const box=$('earnCampaigns');box.replaceChildren();for(const c of d.campaigns||[]){const card=text('article','');card.className='earn-campaign';card.append(text('h3',c.title),text('p',c.description||'Approved advertiser campaign'));
  card.append(text('small',`Unlock: ${c.credit_cost} Memory Credits · Reward budget: ${money(c.reward_budget_cents)} · Available budget: ${money(c.reward_budget_cents-c.awarded_cents)} · Ends ${new Date(c.ends_at).toLocaleDateString('en-ZA')}`));
- if(c.referral_code){card.append(text('p',`Your indicative unique visits: ${c.indicative_visits||0} · Approved earnings: ${money(c.approved_cents)}`));const b=text('button','📤 Share & Earn');b.onclick=()=>share(c);card.append(b)}
+ if(c.referral_code){card.append(text('p',`Your indicative unique visits: ${c.indicative_visits||0} · Approved earnings: ${money(c.approved_cents)}`));const b=text('button','🔗 Share Campaign Link');b.onclick=()=>share(c);card.append(b);const m=text('button','🖼️ Share Picture / Video');m.style.marginLeft='6px';m.onclick=async()=>{m.disabled=true;try{await shareMedia(c)}catch(e){note('Cannot share media: '+e.message)}finally{m.disabled=false}};card.append(m);const cp=text('button','📋 Copy Referral Link');cp.style.marginLeft='6px';cp.onclick=()=>copyCampaignLink(c);card.append(cp)}
  else{const b=text('button','Unlock campaign');b.onclick=async()=>{b.disabled=true;try{await rpc('tenotemo_earn_join',{p_campaign_id:c.id});note('Campaign unlocked. Share its unique referral link.');await refresh()}catch(e){note(e.message)}finally{b.disabled=false}};card.append(b)}box.append(card)}
  if(!(d.campaigns||[]).length)box.append(text('p','No active campaigns yet. Check back as businesses and service providers join Tenotemo.'));
  note('Your earnings are private. Referral visits are indicative and reviewed before any reward is approved.');
  }catch(e){note('Tenotemo Earn database setup needed: '+e.message)}}
 async function loadAdvertisers(){const list=$('earnAdvertiserList');list.replaceChildren();try{const rows=await rpc('tenotemo_admin_advertisers');for(const a of rows||[]){const row=text('p',`${a.display_name} · ${a.account_type} · ${a.service_area} · ${a.preferred_package} · ${a.user_id}`);const b=text('button','Use account');b.onclick=()=>{$('earnCompanyId').value=a.user_id;$('earnPackage').value=a.preferred_package;syncBudget()};row.append(b);list.append(row)}if(!(rows||[]).length)list.append(text('p','No advertiser applications yet.'))}catch(e){list.append(text('p','Advertiser directory unavailable: '+e.message))}}
-$('earnOpen').onclick=async()=>{panel.classList.add('open');refresh();try{$('earnAdmin').hidden=!(await rpc('tenotemo_is_admin'));if(!$('earnAdmin').hidden){loadAdvertisers();loadLaunchSetup()}}catch{$('earnAdmin').hidden=true}};
+$('earnOpen').onclick=async()=>{panel.classList.add('open');refresh();try{$('earnAdmin').hidden=!(await rpc('tenotemo_is_admin'));if(!$('earnAdmin').hidden){loadAdvertisers();loadLaunchSetup();loadManagedCampaigns()}}catch{$('earnAdmin').hidden=true}};
 $('earnSaveAdvertiser').onclick=async()=>{const b=$('earnSaveAdvertiser');b.disabled=true;try{await rpc('tenotemo_advertiser_register',{p_type:val('earnAdvertiserType'),p_name:val('earnAdvertiserName'),p_service:val('earnAdvertiserService'),p_area:val('earnAdvertiserArea'),p_package:val('earnAdvertiserPackage')});$('earnAdvertiserStatus').textContent='Application saved. Your account UUID: '+tUser.id+'. No payment or credits have been granted.';note('Advertiser profile saved. Your Spotlight post and EFT require admin approval.');if(!$('earnAdmin').hidden)loadAdvertisers()}catch(e){$('earnAdvertiserStatus').textContent=e.message}finally{b.disabled=false}};
 const val=id=>$(id).value.trim();
 const budgets={individual:60,starter:300,growth:900,premium:3000};
@@ -110,13 +132,55 @@ $('earnLaunchButton').onclick=async()=>{
  p_description:val('earnLaunchDescription'),p_target_url:val('earnLaunchUrl'),
  p_budget_cents:cents,p_credit_cost:cost,p_media_path:uploadedPath,p_ends_at:new Date(val('earnLaunchEnd')+'T23:59:59+02:00').toISOString()});
  $('earnLaunchResult').textContent='✅ Published! Campaign '+id+' is now active in Tenotemo Earn and its approved post is on Spotlight.';
- await refresh();await loadLaunchSetup();
+ await refresh();await loadLaunchSetup();await loadManagedCampaigns();
  }catch(e){
  if(uploadedPath){const removed=await tClient.storage.from(MEDIA_BUCKET).remove([uploadedPath]);if(removed.error)console.warn('Orphan media cleanup:',removed.error.message)}
  $('earnLaunchResult').textContent='Not published: '+e.message
  }
  finally{b.disabled=false;updateLaunchSelection()}
 };
+
+let managedCampaigns=[],editingCampaign=null,editPreviewURL=null;
+const manageStatus=s=>$('earnManageNotice').textContent=s;
+function editDate(iso){return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso))}
+async function loadManagedCampaigns(){
+ const box=$('earnManagedCampaigns');box.replaceChildren();manageStatus('Loading campaigns…');
+ try{managedCampaigns=await rpc('tenotemo_admin_manage_campaigns');
+ if(!managedCampaigns.length)box.append(text('p','No linked Earn campaigns yet. Older standalone Spotlight posts are not Earn campaigns.'));
+ for(const c of managedCampaigns){const row=text('article','');row.className='earn-campaign';
+ row.append(text('h4',`${c.title} · ${c.status.toUpperCase()}`),text('p',`${c.advertiser_name} · ${c.message||'No message'}`),text('small',`Reward budget ${money(c.reward_budget_cents)} · Approved ${money(c.awarded_cents)} · ${c.enrolments} enrolled · Ends ${new Date(c.ends_at).toLocaleDateString('en-ZA')} · Spotlight ${c.post_status}`));
+ if(c.image_path){const p=text('p',c.image_path.match(/\.(mp4|webm|mov)$/i)?'🎬 Video attached':'🖼️ Picture attached');row.append(p)}
+ if(c.status!=='closed'){
+ const edit=text('button','✏️ Edit');edit.onclick=()=>openManagedEdit(c);row.append(edit);
+ const change=text('button',c.status==='active'?'⏸ Pause':'▶ Resume');change.onclick=()=>changeManagedStatus(c,c.status==='active'?'paused':'active');row.append(change);
+ const end=text('button','⛔ End campaign');end.onclick=()=>changeManagedStatus(c,'closed');row.append(end);
+ }box.append(row)}manageStatus(`Showing ${managedCampaigns.length} linked campaigns.`)
+ }catch(e){manageStatus('Unable to load campaigns: '+e.message)}
+}
+function openManagedEdit(c){editingCampaign=c;$('earnManageEditor').hidden=false;
+ $('earnManageEditorHeading').textContent='Edit: '+c.title;
+ for(const [id,v] of [['earnEditTitle',c.title],['earnEditMessage',c.message],['earnEditDescription',c.description],['earnEditUrl',c.target_url||''],['earnEditCost',c.credit_cost],['earnEditEnd',editDate(c.ends_at)]])$(id).value=v??'';
+ $('earnEditMedia').value='';$('earnEditMediaPreview').replaceChildren();
+ $('earnManageEditor').scrollIntoView({behavior:'smooth',block:'start'});
+ manageStatus('Editing existing campaign. Leave the media field empty to keep its current picture or video.');
+}
+$('earnManageRefresh').onclick=loadManagedCampaigns;
+$('earnEditCancel').onclick=()=>{editingCampaign=null;$('earnManageEditor').hidden=true};
+$('earnEditMedia').onchange=async()=>{const file=$('earnEditMedia').files[0],box=$('earnEditMediaPreview');box.replaceChildren();if(editPreviewURL)URL.revokeObjectURL(editPreviewURL);editPreviewURL=null;if(!file)return;
+ try{await checkCampaignMedia(file);editPreviewURL=URL.createObjectURL(file);const el=document.createElement(videoFile(file)?'video':'img');el.src=editPreviewURL;el.style.cssText='display:block;max-width:100%;max-height:220px';if(videoFile(file)){el.controls=true;el.playsInline=true}box.append(el)}catch(e){$('earnEditMedia').value='';manageStatus(e.message)}};
+$('earnEditSave').onclick=async()=>{const c=editingCampaign;if(!c)return;
+ const b=$('earnEditSave'),file=$('earnEditMedia').files[0],url=val('earnEditUrl'),cost=Number(val('earnEditCost'));
+ if(!/^https:\/\/[^\s]+$/i.test(url))return manageStatus('A complete HTTPS advertiser link is required.');
+ if(!Number.isInteger(cost)||cost<0||cost>50)return manageStatus('Memory Credit cost must be 0–50.');
+ if(!val('earnEditEnd'))return manageStatus('Choose an end date.');
+ if(!confirm('Save these changes to the existing Spotlight post and Earn campaign?'))return;
+ let uploadedPath=null;b.disabled=true;
+ try{if(file){await checkCampaignMedia(file);uploadedPath=`${tUser.id}/campaigns/${crypto.randomUUID()}.${MEDIA_TYPES[file.type]}`;manageStatus('Uploading replacement media…');const u=await tClient.storage.from(MEDIA_BUCKET).upload(uploadedPath,file,{contentType:file.type,upsert:false});if(u.error)throw u.error}
+ manageStatus('Saving linked campaign and Spotlight post…');await rpc('tenotemo_admin_edit_campaign',{p_campaign_id:c.id,p_title:val('earnEditTitle'),p_message:val('earnEditMessage'),p_description:val('earnEditDescription'),p_target_url:url,p_media_path:uploadedPath,p_credit_cost:cost,p_ends_at:new Date(val('earnEditEnd')+'T23:59:59+02:00').toISOString()});
+ editingCampaign=null;$('earnManageEditor').hidden=true;await loadManagedCampaigns();await refresh();manageStatus('✅ Campaign updated. Existing referral records and approved rewards are retained.');
+ }catch(e){if(uploadedPath){const r=await tClient.storage.from(MEDIA_BUCKET).remove([uploadedPath]);if(r.error)console.warn('Media cleanup:',r.error.message)}manageStatus('Not saved: '+e.message)}finally{b.disabled=false}};
+async function changeManagedStatus(c,status){const wording=status==='closed'?'Permanently end this campaign? It cannot be resumed. Player referral and reward records remain.':status==='paused'?'Pause this campaign and hide its Spotlight post?':'Resume this campaign and show its Spotlight post?';if(!confirm(wording))return;
+ try{await rpc('tenotemo_admin_campaign_status',{p_campaign_id:c.id,p_status:status});if(editingCampaign?.id===c.id){editingCampaign=null;$('earnManageEditor').hidden=true}await loadManagedCampaigns();await refresh();manageStatus(`Campaign ${status}. Spotlight visibility updated.`)}catch(e){manageStatus('Status not changed: '+e.message)}}
 
 $('earnGrantPackage').onclick=async()=>{if(!confirm('Have you verified cleared EFT funds? This will grant company exposure immediately.'))return;try{await rpc('tenotemo_admin_company_package',{p_company_id:val('earnCompanyId'),p_package:val('earnPackage')});note('Advertiser package granted. You can now publish a campaign below.');loadAdvertisers();await loadLaunchSetup()}catch(e){note(e.message)}};
 $('earnCreateCampaign').onclick=async()=>{try{const cents=Math.round(Number(val('earnBudget'))*100);const cost=Number(val('earnCost'));if(!Number.isSafeInteger(cents)||cents<0||cents>budgets[val('earnPackage')]*100||!Number.isInteger(cost))throw Error('Invalid budget or credit cost');const end=new Date(val('earnEnd')+'T23:59:59+02:00').toISOString();const id=await rpc('tenotemo_admin_campaign',{p_company_id:val('earnCompanyId'),p_post_id:val('earnPostId'),p_title:val('earnTitle'),p_description:val('earnDescription'),p_budget_cents:cents,p_credit_cost:cost,p_ends_at:end});note('Campaign created: '+id);await refresh()}catch(e){note(e.message)}};
