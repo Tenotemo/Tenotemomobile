@@ -2279,6 +2279,13 @@ header .header-info{min-width:0}
 #menuOverlay #menuPlayerSummary .tm-stat strong{display:block!important;background:transparent!important;color:#fff!important;font-size:clamp(18px,4.4vw,26px)!important;font-weight:900!important;line-height:1.15!important;overflow-wrap:anywhere!important;text-shadow:0 1px 2px #0007!important;}
 @media(max-width:390px){#menuOverlay #menuPlayerSummary .tm-stat{gap:5px!important;padding:6px!important}#menuOverlay #menuPlayerSummary .tm-stat strong{font-size:18px!important}}
 
+/* Tenotemo Earn-first release: keep old IDs for compatibility, hide retired public features. */
+#cumulativeTab,#versusLeaderboardButton,#totalPointsDisplay,#positionDisplay,#tenotemoProfileTotal,#tenotemoProfileRank,#tenotemoProfileWeekly,#premiumPlay{display:none!important}
+#menuOverlay #menuPlayerSummary .tm-stat{min-width:0!important}
+#tmDailyChallengePanel{margin:12px 0;padding:14px;border-radius:15px;background:#eaf7ff;border:1px solid #8bd0ff;color:#163653}
+#tmDailyChallengePanel h3{margin:0 0 5px}#tmDailyChallengePanel p{margin:4px 0 10px}
+.tm-challenge-item{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #d1e8f6}
+.tm-challenge-item:last-child{border-bottom:0}
 </style>
 </head>
 
@@ -2302,14 +2309,14 @@ header .header-info{min-width:0}
  </div>
 </div>
 <div id="tenotemoProfilePanel" role="dialog" aria-modal="true" aria-labelledby="tenotemoProfileTitle"><div class="t-auth-card">
-<h2 id="tenotemoProfileTitle">My Profile</h2><p id="tenotemoProfileEmail"></p><p id="tenotemoProfileMembership"></p><p id="tenotemoProfileTotal"></p><p id="tenotemoProfileRank"></p><p id="tenotemoProfileDailyRank">Daily position: —</p><p id="tenotemoProfileWeekly">Earned this week: R0.00</p>
+<h2 id="tenotemoProfileTitle">My Profile</h2><p id="tenotemoProfileEmail"></p><p id="tenotemoProfileMembership"></p><p id="tenotemoProfileTotal" hidden></p><p id="tenotemoProfileRank" hidden></p><p id="tenotemoProfileDailyRank">Daily position: —</p><p id="tenotemoProfileWeekly" hidden></p>
 <label for="tenotemoProfileName">Player name</label><input id="tenotemoProfileName" maxlength="20"><button class="t-auth-primary" id="tenotemoProfileSave">Save name</button>
 <div id="tenotemoProfileMessage" class="t-auth-message" role="status"></div>
 <div class="t-auth-actions"><button class="t-auth-secondary" id="tenotemoProfilePassword">Change password</button><button class="t-auth-secondary" id="tenotemoSignOut">Sign out</button><button class="t-auth-secondary" id="tenotemoProfileClose">Close</button></div></div></div>
 
 <div id="tEftPanel" role="dialog" aria-modal="true" aria-labelledby="tEftTitle"><section class="t-eft-card">
 <h2 id="tEftTitle">Tenotemo · R50 monthly EFT</h2>
-<p>Pay by bank transfer. Premium includes Online Versus and Top 50 Spotlight rewards after the administrator verifies your R50 payment. Normal games and their leaderboards remain free.</p>
+<p>Premium focuses on sharing your picture or message on Tenotemo Spotlight. After your R50 EFT is approved, eligible Premium players receive Spotlight posting credits under the published rules. Memory games and Tenotemo Earn participation remain free.</p>
 <div class="t-eft-bank"><strong>Standard Bank</strong><br>Account holder: <strong>DMA ARENA (PTY) LTD</strong><br>Account type: MyMoBiz Current Account<br>Account number: <strong>10284645220</strong><br>Branch code: <strong>004952</strong><br>Amount: <strong>R50.00</strong><br>Payment reference: <strong id="tEftReference">Select Generate reference</strong><br><small>Your reference will look like PlayerName-0001. Use the exact reference shown after generating.</small></div>
 <p><button id="tEftGenerate" type="button">Generate / retrieve my reference</button></p>
 <p>Use the exact reference shown above in your EFT. After making payment, select <strong>I've paid — submit for verification</strong>. Do not submit before paying.</p>
@@ -2341,8 +2348,8 @@ header .header-info{min-width:0}
             Round -
         </div>
 
-        <div class="info-box" id="totalPointsDisplay" aria-live="polite" aria-label="Total points: 0">0</div>
-        <div class="info-box" id="positionDisplay" aria-live="polite" aria-label="Leaderboard position locked"># 🔒</div>
+        <div class="info-box" id="totalPointsDisplay" hidden aria-live="polite" aria-label="Total points: 0">0</div>
+        <div class="info-box" id="positionDisplay" hidden aria-live="polite" aria-label="Leaderboard position locked"># 🔒</div>
 
         <div class="info-box" id="scoreDisplay">
             Score: 0
@@ -2551,18 +2558,18 @@ header .header-info{min-width:0}
       <div class="tm-spotlight-body"><div id="spotlightSlide" class="spotlight-slide"><p>Be the first to share your picture or message with the Tenotemo community.</p></div><button type="button" id="spotlightStart" class="tm-post-cta">📷 Post your picture or message here <span>→</span></button></div>
       <div class="spotlight-navigation"><button type="button" id="spotlightPrev" aria-label="Previous post">❮</button><span id="spotlightCount">Spotlight</span><button type="button" id="spotlightNext" aria-label="Next post">❯</button><button type="button" id="spotlightPause">Pause</button></div>
     </section>
-    <div class="tenotemo-player-summary" id="menuPlayerSummary" aria-live="polite"><div class="tm-stat"><span class="tm-stat-icon">🏆</span><span><small>Total Points</small><strong id="menuTotalPoints">Total points: 0</strong></span></div><div class="tm-stat"><span class="tm-stat-icon">📊</span><span><small>All-time Rank</small><strong id="menuPosition">Leaderboard position: —</strong></span></div></div>
+    <div class="tenotemo-player-summary" id="menuPlayerSummary" aria-live="polite"><div class="tm-stat"><span class="tm-stat-icon">🎯</span><span><small>Today’s Daily Challenges</small><strong id="tmChallengeCount">0 / 5 completed</strong></span></div><div class="tm-stat"><span class="tm-stat-icon">🪙</span><span><small>Memory Credits</small><strong id="tmMemoryBalance">0</strong></span></div></div>
     <div class="menu-buttons">
       <button class="menu-btn shape-btn" id="startShapeButton"><span class="tm-btn-icon">🧠</span><span class="tm-btn-text">Shape Memory<small>REMEMBER THE SHAPES</small></span><span class="tm-chevron">❯</span></button>
       <button class="menu-btn colour-btn" id="startColourButton"><span class="tm-btn-icon">🎨</span><span class="tm-btn-text">Colour Grid Memory<small>TRAIN YOUR COLOUR RECALL</small></span><span class="tm-chevron">❯</span></button>
       <button class="menu-btn pattern-btn" id="startPatternButton"><span class="tm-btn-icon">▦</span><span class="tm-btn-text">Pattern Memory<small>SPOT THE PATTERNS</small></span><span class="tm-chevron">❯</span></button>
       <button class="menu-btn climb-menu-btn" id="startClimbButton"><span class="tm-btn-icon">🚂</span><span class="tm-btn-text">Constant Climb<small>KEEP UP THE SEQUENCE</small></span><span class="tm-chevron">❯</span></button>
       <button class="menu-btn spin-menu-btn" id="startSpinButton"><span class="tm-btn-icon">🌊</span><span class="tm-btn-text">Ocean Spin<small>REMEMBER THE OCEAN ITEMS</small></span><span class="tm-chevron">❯</span></button>
-      <div class="tm-shortcuts"><button class="menu-btn leaderboard-btn" id="leaderboardButton"><span class="tm-btn-icon">📊</span><span class="tm-btn-text">Leaderboard<small>SEE THE TOP PLAYERS</small></span><span class="tm-chevron">❯</span></button><button id="tenotemoMenuProfile" class="menu-btn" type="button"><span class="tm-btn-icon">👤</span><span class="tm-btn-text">My Profile<small>STATS, STATUS &amp; SETTINGS</small></span><span class="tm-chevron">❯</span></button></div>
+      <div class="tm-shortcuts"><button class="menu-btn leaderboard-btn" id="leaderboardButton"><span class="tm-btn-icon">📊</span><span class="tm-btn-text">Leaderboard<small>SEE THE TOP PLAYERS</small></span><span class="tm-chevron">❯</span></button><button id="tenotemoMenuProfile" class="menu-btn" type="button"><span class="tm-btn-icon">👤</span><span class="tm-btn-text">My Profile<small>ACCOUNT &amp; SETTINGS</small></span><span class="tm-chevron">❯</span></button></div>
       <button id="earnOpen" class="menu-btn" type="button" style="background:linear-gradient(110deg,#064e3b,#047857);color:#fff;border:2px solid #34d399"><span class="tm-btn-icon">💰</span><span class="tm-btn-text">TENOTEMO EARN<small>DAILY CREDITS · LOCAL SERVICES · SHARE &amp; EARN</small></span><span class="tm-chevron">❯</span></button>
-      <button id="versusEntryButton" class="menu-btn tm-premium" type="button"><span class="tm-btn-icon">👑</span><span class="tm-btn-text">TENOTEMO PREMIUM · R50/MONTH<small>ONLINE VERSUS · SPOTLIGHT REWARDS · EXCLUSIVE BENEFITS</small></span><span class="tm-chevron">❯</span></button>
+      <button id="versusEntryButton" class="menu-btn tm-premium" type="button"><span class="tm-btn-icon">👑</span><span class="tm-btn-text">TENOTEMO PREMIUM · R50/MONTH<small>POST YOUR PICTURE OR MESSAGE ON SPOTLIGHT</small></span><span class="tm-chevron">❯</span></button>
     </div>
-    <details class="tm-admin-tools"><summary>Account &amp; administration</summary><button id="spAdminOpen" class="action-btn secondary-btn" type="button" hidden>👑 Spotlight Admin · Review posts &amp; payments</button><button id="tAdminOpen" class="action-btn secondary-btn" type="button" hidden>🛡️ EFT Admin Dashboard</button><button class="action-btn danger-btn" id="restartProgressButton" type="button">Restart My Progress</button></details>
+    <details class="tm-admin-tools"><summary>Account &amp; administration</summary><button id="spAdminOpen" class="action-btn secondary-btn" type="button" hidden>👑 Spotlight Admin · Review posts &amp; payments</button><button id="tAdminOpen" class="action-btn secondary-btn" type="button" hidden>🛡️ EFT Admin Dashboard</button><button class="action-btn danger-btn" id="restartProgressButton" type="button">Restart My Games</button></details>
     <footer class="tm-footer">© 2026 Tenotemo. Train Your Mind. Beat Your Best.</footer>
   </div>
 </div>
@@ -2635,7 +2642,7 @@ header .header-info{min-width:0}
         </p>
 
         <div id="leaderboardContent">
-<button id="versusLeaderboardButton" class="leaderboard-tab" type="button" style="margin-top:12px">⚔️ Multiplayer standings</button>
+<button id="versusLeaderboardButton" class="leaderboard-tab" type="button" hidden style="display:none!important">⚔️ Multiplayer standings</button>
 
             <div class="leaderboard-tabs">
 
@@ -2647,7 +2654,7 @@ header .header-info{min-width:0}
 
                 <button
                     class="leaderboard-tab"
-                    id="cumulativeTab">
+                    id="cumulativeTab" hidden style="display:none!important">
                     Cumulative
                 </button>
 
@@ -3643,7 +3650,7 @@ function updateSubscriptionUI() {
             "#dc2626";
 
         subscriptionMessage.textContent =
-            "The normal-game leaderboards are free. Subscribe only for Online Versus multiplayer.";
+            "The normal-game leaderboards are free. Premium focuses on Spotlight posting.";
 
         subscriptionButton.textContent =
             "Activate Monthly Subscription";
@@ -3755,7 +3762,7 @@ function restartAllProgress() {
 
     const confirmed =
         confirm(
-            "Restart all progress? Your scores and completed rounds will be reset to zero."
+            "Restart your five games from the beginning? This does not erase historical daily rankings, claimed Memory Credits or verified Tenotemo Earn rewards."
         );
 
     if (
@@ -3781,6 +3788,7 @@ function restartAllProgress() {
     };
 
     extraModeScores = {climb:0,spin:0};
+    if(typeof oSpinActive!=="undefined"){oSpinActive=false;cancelAnimationFrame(oSpinRaf);clearTimeout(oSpinGradeTimeout);localStorage.removeItem(oSpinStorageKey());oSpinRoundIndex=0;oSpinStopIndex=0;oSpinScore=0;oSpinSolution=[];oSpinAnswers={};oSpinPendingResult=null;oSpinPhaseState="watch";}
     if(typeof climbScore!=="undefined")climbScore=0;
     if(typeof oSpinScore!=="undefined")oSpinScore=0;
 
@@ -3818,7 +3826,7 @@ function restartAllProgress() {
     showMainMenu();
 
     alert(
-        "Your Tenotemo progress and points have been reset."
+        "Your five games have restarted. Historical leaderboard results and earned credits remain unchanged."
     );
 }
 
@@ -5340,7 +5348,7 @@ function finishShapeRound(
     recordLeaderboardScore(
         getTotalPlayerScore()
     );
-
+    if(finalRoundPoints>0)tmRecordDailyChallenge(currentMode);
 
     showResult(
         perfect
@@ -6184,7 +6192,7 @@ function finishColourRound(
     recordLeaderboardScore(
         getTotalPlayerScore()
     );
-
+    if(finalRoundPoints>0)tmRecordDailyChallenge(currentMode);
 
     showResult(
         perfect
@@ -7355,7 +7363,7 @@ function evaluateMovementAttempt() {
     recordLeaderboardScore(
         getTotalPlayerScore()
     );
-
+    if(finalRoundPoints>0)tmRecordDailyChallenge(currentMode);
 
     showResult(
         percentage === 100
@@ -8316,6 +8324,7 @@ function climbFinish(correct){
     extraModeScores.climb+=pts;
     saveProgress();
     recordLeaderboardScore(getTotalPlayerScore());
+    if(pts>0)tmRecordDailyChallenge('climb');
     climbSolved++;
     const toast=document.getElementById("climbToast");
     toast.textContent=`Solved! +${pts} points 🚂`;
@@ -8346,11 +8355,11 @@ function oSpinResume(){document.getElementById('oSpinTargets').innerHTML=oSpinSo
 function oSpinReset(){localStorage.removeItem(oSpinStorageKey());oSpinRoundIndex=0;oSpinStopIndex=0;oSpinScore=0;oSpinSolution=[];oSpinAnswers={};oSpinPendingResult=null;oSpinPhaseState='watch';oSpinNewRound()}
 
 function oSpinShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function startOceanSpin(){savePlayerName();clearTimer();stopAllAnimations();hideAllFields();document.getElementById("climbField").style.display="none";menuOverlay.classList.add("hidden");resultOverlay.classList.add("hidden");leaderboardOverlay.classList.add("hidden");document.getElementById("spinField").style.display="block";instruction.textContent="Watch the ocean items through the spinning opening.";modeDisplay.textContent="Ocean Spin";if(oSpinRestore())oSpinResume();else oSpinReset()}
+function startOceanSpin(){savePlayerName();clearTimer();stopAllAnimations();hideAllFields();document.getElementById("climbField").style.display="none";menuOverlay.classList.add("hidden");resultOverlay.classList.add("hidden");leaderboardOverlay.classList.add("hidden");document.getElementById("spinField").style.display="block";instruction.textContent="Watch the ocean items through the spinning opening.";modeDisplay.textContent="Ocean Spin";if(oSpinRestore()&&oSpinPhaseState!=="finished")oSpinResume();else oSpinReset()}
 function oSpinNewRound(){oSpinStopIndex=0;oSpinAnswers={};const n=oSpinCounts[oSpinRoundIndex],spots=oSpinShuffle([...oSpinPositions]).slice(0,n),pool=oSpinShuffle([...oSpinIcons]);oSpinSolution=spots.map((p,i)=>({p,icon:pool[i],id:i,resolved:false}));document.getElementById("oSpinTargets").innerHTML=oSpinSolution.map(o=>`<button class="spin-target" data-id="${o.id}" style="left:${o.p.x}%;top:${o.p.y}%">+</button>`).join("");document.getElementById("oSpinComplete").classList.add("hidden");oSpinPhaseState="watch";oSpinPendingResult=null;oSpinPersist();oSpinStart()}
 function oSpinHud(){const left=oSpinSolution.filter(o=>!o.resolved).length;document.getElementById("oSpinRound").textContent=`Round ${oSpinRoundIndex+1}/6`;document.getElementById("oSpinStop").textContent=`Stop ${oSpinStopIndex+1}/4`;document.getElementById("oSpinValue").textContent=`${oSpinValue()} pts each`;roundDisplay.textContent=`Round ${oSpinRoundIndex+1} · Stop ${oSpinStopIndex+1}`;scoreDisplay.textContent=`Score: ${oSpinScore}`;timerDisplay.textContent=`Items left: ${left}`;document.getElementById("spinStatus").textContent=["Maximum Speed","Fast Speed","Medium Speed","Slow Speed"][oSpinStopIndex]}
 function oSpinStart(){oSpinAnswers={};oSpinSelected=null;oSpinPhaseState="watch";oSpinPendingResult=null;oSpinPersist();oSpinHud();const board=document.getElementById("oSpinBoard"),wheel=document.getElementById("oSpinWheel");board.classList.remove("choosing");document.getElementById("oSpinContinue").style.display="none";document.getElementById("oSpinObjects").innerHTML=oSpinSolution.filter(o=>!o.resolved).map(o=>`<div class="spin-object" style="left:${o.p.x}%;top:${o.p.y}%">${o.icon}</div>`).join("");document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];t.className="spin-target"+(o.resolved?" good":"");t.textContent=o.resolved?o.icon:"+"});document.getElementById("oSpinHole").setAttribute("r","50");document.getElementById("oSpinHoleRim").style.display="block";document.getElementById("oSpinTray").innerHTML="";document.getElementById("oSpinCheck").disabled=true;document.getElementById("oSpinMessage").textContent="Watch through the opening.";oSpinActive=true;let angle=0,last=performance.now(),began=last;function tick(now){if(!oSpinActive)return;const dt=Math.min((now-last)/1000,.04),elapsed=(now-began)/1000;last=now;angle=(angle+oSpinSpeeds[oSpinStopIndex]*dt)%360;wheel.style.transform=`rotate(${angle}deg)`;document.getElementById("oSpinPhase").textContent=`WATCH · ${Math.max(0,5-elapsed).toFixed(1)}s`;if(elapsed>=5){oSpinStop();return}oSpinRaf=requestAnimationFrame(tick)}oSpinRaf=requestAnimationFrame(tick)}
-function oSpinStop(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);oSpinPhaseState="choosing";oSpinPersist();document.getElementById("oSpinWheel").style.transform="rotate(0deg)";document.getElementById("oSpinHole").setAttribute("r","0");document.getElementById("oSpinHoleRim").style.display="none";document.getElementById("oSpinBoard").classList.add("choosing");document.getElementById("oSpinPhase").textContent="PLACE THE OCEAN ITEMS";const left=oSpinSolution.filter(o=>!o.resolved),extra=oSpinShuffle(oSpinIcons.filter(x=>!oSpinSolution.some(o=>o.icon===x))).slice(0,3),choices=oSpinShuffle([...left.map(o=>o.icon),...extra]);document.getElementById("oSpinTray").innerHTML=choices.map(x=>`<button class="spin-choice" draggable="true" data-icon="${x}">${x}</button>`).join("");document.querySelectorAll(".spin-choice").forEach(b=>{b.onclick=()=>oSpinPick(b.dataset.icon);b.onpointerdown=e=>oSpinPointerStart(e,b);b.ondragstart=e=>{oSpinSelected=b.dataset.icon;e.dataTransfer.setData("text/plain",oSpinSelected)}});document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];if(o.resolved){t.disabled=true;return}t.disabled=false;t.onclick=()=>oSpinPlace(+t.dataset.id);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();oSpinSelected=e.dataTransfer.getData("text/plain");oSpinPlace(+t.dataset.id)}});const cont=document.getElementById("oSpinContinue");cont.style.display=oSpinStopIndex<3?"block":"none";if(oSpinStopIndex<3)cont.textContent=`Lock selected & continue · next ${oSpinNextValue()} pts each`;document.getElementById("oSpinMessage").textContent=`Place only items you are sure about for ${oSpinPoints[oSpinStopIndex]} points each. Then lock them and continue spinning for the empty positions. Wrong placements lose ${oSpinWrongPenalty()} points.`}
+function oSpinStop(){oSpinActive=false;cancelAnimationFrame(oSpinRaf);oSpinPhaseState="choosing";oSpinPersist();document.getElementById("oSpinWheel").style.transform="rotate(0deg)";document.getElementById("oSpinHole").setAttribute("r","0");document.getElementById("oSpinHoleRim").style.display="none";document.getElementById("oSpinBoard").classList.add("choosing");document.getElementById("oSpinPhase").textContent="PLACE THE OCEAN ITEMS";const left=oSpinSolution.filter(o=>!o.resolved),extra=oSpinShuffle(oSpinIcons.filter(x=>!oSpinSolution.some(o=>o.icon===x))).slice(0,3),choices=oSpinShuffle([...left.map(o=>o.icon),...extra]);document.getElementById("oSpinTray").innerHTML=choices.map(x=>`<button class="spin-choice" draggable="true" data-icon="${x}">${x}</button>`).join("");document.querySelectorAll(".spin-choice").forEach(b=>{b.onclick=()=>oSpinPick(b.dataset.icon);b.onpointerdown=e=>oSpinPointerStart(e,b);b.ondragstart=e=>{oSpinSelected=b.dataset.icon;e.dataTransfer.setData("text/plain",oSpinSelected)}});document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>{const o=oSpinSolution[+t.dataset.id];if(o.resolved){t.disabled=true;return}t.disabled=false;t.onclick=()=>oSpinPlace(+t.dataset.id);t.ondragover=e=>e.preventDefault();t.ondrop=e=>{e.preventDefault();oSpinSelected=e.dataTransfer.getData("text/plain");oSpinPlace(+t.dataset.id)}});const cont=document.getElementById("oSpinContinue");cont.style.display=oSpinStopIndex<3?"block":"none";if(oSpinStopIndex<3)cont.textContent=`Lock selected & continue · next ${oSpinNextValue()} pts each`;document.getElementById("oSpinMessage").textContent=`Place only items you are sure about for ${oSpinValue()} points each. Then lock them and continue spinning for the empty positions. Wrong placements lose ${oSpinWrongPenalty()} points.`}
 let oSpinPointerIcon=null,oSpinPointerGhost=null;
 function oSpinPointerStart(e,b){if(e.pointerType==="mouse"||b.classList.contains("used"))return;e.preventDefault();oSpinPointerIcon=b.dataset.icon;oSpinPointerGhost=b.cloneNode(true);Object.assign(oSpinPointerGhost.style,{position:"fixed",zIndex:"700",pointerEvents:"none",opacity:".9",width:"48px",height:"48px"});document.body.appendChild(oSpinPointerGhost);oSpinPointerMove(e);document.addEventListener("pointermove",oSpinPointerMove,{passive:false});document.addEventListener("pointerup",oSpinPointerEnd,{once:true});document.addEventListener("pointercancel",oSpinPointerEnd,{once:true})}
 function oSpinNearestTarget(x,y,limit=110){let nearest=null,best=Infinity;document.querySelectorAll("#oSpinTargets .spin-target:not(:disabled)").forEach(t=>{const r=t.getBoundingClientRect(),d=Math.hypot(x-(r.left+r.width/2),y-(r.top+r.height/2));if(d<best){best=d;nearest=t}});return best<=limit?nearest:null}
@@ -8358,7 +8367,7 @@ function oSpinPointerMove(e){if(!oSpinPointerGhost)return;e.preventDefault();oSp
 function oSpinPointerEnd(e){document.removeEventListener("pointermove",oSpinPointerMove);const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("#oSpinTargets .spin-target:not(:disabled)")||oSpinNearestTarget(e.clientX,e.clientY,60);document.querySelectorAll("#oSpinTargets .spin-target").forEach(t=>t.classList.remove("drag-near"));if(target&&oSpinPointerIcon){oSpinSelected=oSpinPointerIcon;oSpinPlace(+target.dataset.id)}if(oSpinPointerGhost)oSpinPointerGhost.remove();oSpinPointerGhost=null;oSpinPointerIcon=null}
 function oSpinPick(icon){if(Object.values(oSpinAnswers).includes(icon))return;oSpinSelected=icon;document.querySelectorAll(".spin-choice").forEach(b=>b.classList.toggle("selected",b.dataset.icon===icon))}
 function oSpinPlace(id){const o=oSpinSolution[id];if(!oSpinSelected||o.resolved)return;for(const k in oSpinAnswers)if(oSpinAnswers[k]===oSpinSelected){delete oSpinAnswers[k];const old=document.querySelector(`#oSpinTargets [data-id="${k}"]`);old.textContent="+"}oSpinAnswers[id]=oSpinSelected;const t=document.querySelector(`#oSpinTargets [data-id="${id}"]`);t.textContent=oSpinSelected;oSpinSelected=null;document.querySelectorAll(".spin-choice").forEach(b=>{b.classList.remove("selected");b.classList.toggle("used",Object.values(oSpinAnswers).includes(b.dataset.icon))});document.getElementById("oSpinCheck").disabled=Object.keys(oSpinAnswers).length===0;oSpinPersist()}
-function oSpinGrade(autoContinue){if(oSpinPhaseState!=="choosing")return; oSpinPhaseState="grading";let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinValue()-wrong*oSpinWrongPenalty();oSpinScore+=net;extraModeScores.spin+=net;saveProgress();recordLeaderboardScore(getTotalPlayerScore());oSpinHud();document.getElementById("oSpinCheck").disabled=true;oSpinPendingResult=[correct,wrong,net];oSpinPersist();clearTimeout(oSpinGradeTimeout);oSpinGradeTimeout=setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
+function oSpinGrade(autoContinue){if(oSpinPhaseState!=="choosing")return; oSpinPhaseState="grading";let correct=0,wrong=0;oSpinSolution.filter(o=>!o.resolved&&Object.prototype.hasOwnProperty.call(oSpinAnswers,o.id)).forEach(o=>{const t=document.querySelector(`#oSpinTargets [data-id="${o.id}"]`);if(oSpinAnswers[o.id]===o.icon){o.resolved=true;correct++;t.classList.add("good")}else{wrong++;t.classList.add("bad")}});const net=correct*oSpinValue()-wrong*oSpinWrongPenalty();oSpinScore+=net;extraModeScores.spin+=net;saveProgress();recordLeaderboardScore(getTotalPlayerScore());if(net>0)tmRecordDailyChallenge('spin');oSpinHud();document.getElementById("oSpinCheck").disabled=true;oSpinPendingResult=[correct,wrong,net];oSpinPersist();clearTimeout(oSpinGradeTimeout);oSpinGradeTimeout=setTimeout(()=>{const left=oSpinSolution.some(o=>!o.resolved);if(autoContinue&&left&&oSpinStopIndex<3){oSpinStopIndex++;oSpinStart()}else oSpinAfterCheck(correct,wrong,net)},700)}
 function oSpinCheck(){oSpinGrade(false)}
 function oSpinAfterCheck(correct,wrong,net){oSpinPhaseState="result";oSpinPendingResult=[correct,wrong,net];oSpinPersist();const left=oSpinSolution.filter(o=>!o.resolved).length,box=document.getElementById("oSpinComplete"),result=[];box.classList.remove("hidden");if(correct)result.push(`${correct} correct`);if(wrong)result.push(`${wrong} incorrect`);document.getElementById("oSpinCompleteTitle").textContent=`${result.join(" · ") || "No items checked"} · ${net>=0?"+":""}${net} points`;const next=document.getElementById("oSpinNext");if(!left){document.getElementById("oSpinCompleteText").textContent="Every ocean item is correct.";next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}else if(oSpinStopIndex<3){document.getElementById("oSpinCompleteText").textContent=`Correct items are locked. ${left} item${left===1?"":"s"} remain for the next, slower spin at ${oSpinPoints[oSpinStopIndex+1]} points each. Each wrong placement costs ${oSpinWrongPenalty()} points.`;next.textContent="Continue spinning";next.onclick=()=>{oSpinStopIndex++;box.classList.add("hidden");oSpinStart()}}else{document.getElementById("oSpinCompleteText").textContent=`Final stop complete. ${left} item${left===1?"":"s"} remained unresolved.`;next.textContent=oSpinRoundIndex===5?"View final score":"Next round";next.onclick=()=>oSpinRoundIndex===5?oSpinFinish():(oSpinRoundIndex++,oSpinNewRound())}}
 function oSpinFinish(){oSpinPhaseState="finished";oSpinPersist();document.getElementById("oSpinComplete").classList.remove("hidden");document.getElementById("oSpinCompleteTitle").textContent=`Ocean Spin complete · ${oSpinScore} points`;document.getElementById("oSpinCompleteText").textContent="Maximum score is earned by solving every item at maximum speed.";const next=document.getElementById("oSpinNext");next.textContent="Play Ocean Spin again";next.onclick=()=>{if(confirm("Start Ocean Spin again from Round 1? Your completed score remains on the leaderboard."))oSpinReset()}}
@@ -8473,6 +8482,28 @@ document.getElementById('tenotemoResendConfirmation').onclick=async()=>{
 document.getElementById('tenotemoShowPassword').onchange=e=>{document.getElementById('tenotemoAuthPassword').type=e.target.checked?'text':'password';document.getElementById('tenotemoAuthConfirm').type=e.target.checked?'text':'password'};
 function tConfigured(){return /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(window.TENOTEMO_SUPABASE_URL||'') && !String(window.TENOTEMO_SUPABASE_PUBLISHABLE_KEY||'').startsWith('PASTE_')}
 async function tMembership(){if(!tClient||!tUser)return false;const {data,error}=await tClient.from('tenotemo_memberships').select('active_until').eq('user_id',tUser.id).maybeSingle();if(error)throw error;return Boolean(data?.active_until && new Date(data.active_until)>new Date())}
+const tmChallengeNames={shape:'Shape Memory',colour:'Colour Grid Memory',movement:'Pattern Memory',climb:'Constant Climb',spin:'Ocean Spin'};
+const tmChallengeSent=new Set();
+async function tmRefreshDailyChallenges(){
+ if(!tClient||!tUser)return;
+ const {data,error}=await tClient.rpc('tenotemo_daily_challenges_today');
+ if(error)throw error;
+ const completed=new Set((data||[]).map(x=>x.game_key));
+ const count=completed.size;
+ const label=document.getElementById('tmChallengeCount');if(label)label.textContent=count+' / 5 completed';
+ const box=document.getElementById('tmDailyChallengeList');
+ if(box)box.innerHTML=Object.entries(tmChallengeNames).map(([key,name])=>'<div class="tm-challenge-item"><span>'+name+'</span><strong>'+(completed.has(key)?'✓ Completed':'Not yet')+'</strong></div>').join('')+'<p><strong>'+count+'/5 complete · '+(count===5?'7':'Up to 7')+' credits available after midnight SAST.</strong></p>';
+ try{const {data:home}=await tClient.rpc('tenotemo_earn_home');const wallet=document.getElementById('tmMemoryBalance');if(wallet&&home)wallet.textContent=Number(home.memory_credits||0)}catch(e){console.warn('Memory balance:',e.message)}
+}
+async function tmRecordDailyChallenge(key){
+ if(!tClient||!tUser||!tSessionReady||!tmChallengeNames[key])return;
+ const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const marker=tUser.id+':'+date+':'+key;
+ if(tmChallengeSent.has(marker))return;
+ const {error}=await tClient.rpc('tenotemo_record_daily_challenge',{p_game:key});
+ if(error){console.warn('Challenge completion:',error.message);return}
+ tmChallengeSent.add(marker);tmRefreshDailyChallenges().catch(console.warn);
+}
 let tDailyRank=null,tWeeklyEarnedCents=0;
 async function tGetRank(){
  tRank=null;tDailyRank=null;tWeeklyEarnedCents=0;
@@ -8490,13 +8521,14 @@ function tRefresh(){
  document.getElementById('totalPointsDisplay').setAttribute('aria-label','Total points: '+total);
  document.getElementById('positionDisplay').textContent=position;
  document.getElementById('positionDisplay').setAttribute('aria-label','Leaderboard position '+position);
- document.getElementById('menuTotalPoints').textContent='Total points: '+total;
- document.getElementById('menuPosition').textContent='All-time leaderboard position: '+position;
+ const oldTotal=document.getElementById('menuTotalPoints'),oldRank=document.getElementById('menuPosition');
+ if(oldTotal)oldTotal.textContent='Total points: '+total;
+ if(oldRank)oldRank.textContent='All-time leaderboard position: '+position;
  document.getElementById('tenotemoProfileTotal').textContent='Total points: '+total;
  document.getElementById('tenotemoProfileRank').textContent='All-time position: '+position;
  document.getElementById('tenotemoProfileDailyRank').textContent='Daily position: '+(tDailyRank?'#'+tDailyRank:'# —');
- document.getElementById('tenotemoProfileWeekly').textContent='Verified winnings this week: R'+(tWeeklyEarnedCents/100).toFixed(2);
- document.getElementById('tenotemoProfileMembership').textContent=hasSubscription?'Tenotemo Premium: active':'Tenotemo Premium: inactive · Normal games remain free';
+ document.getElementById('tenotemoProfileWeekly').textContent='Earn campaign earnings in Tenotemo Earn: R'+(tWeeklyEarnedCents/100).toFixed(2);
+ document.getElementById('tenotemoProfileMembership').textContent=hasSubscription?'Tenotemo Premium: active':'Tenotemo Premium: inactive · Spotlight posting credits available separately';
 }
 async function tLoadPlayer(user){tRemoteLoading=true;tUser=user;try{
  const [p,g,m]=await Promise.all([tClient.from('tenotemo_profiles').select('player_name').eq('user_id',user.id).single(),tClient.from('tenotemo_progress').select('*').eq('user_id',user.id).single(),tMembership()]);
@@ -8507,14 +8539,14 @@ async function tLoadPlayer(user){tRemoteLoading=true;tUser=user;try{
  modeRounds={shape:g.data.shape_round,colour:g.data.colour_round,movement:g.data.pattern_round};
  localStorage.setItem(PLAYER_NAME_KEY,playerName);localStorage.setItem(PROGRESS_STORAGE_KEY,JSON.stringify({modeScores,modeRounds,extraModeScores}));
  document.getElementById('playerNameInput').value=playerName;document.getElementById('tenotemoProfileName').value=playerName;document.getElementById('tenotemoProfileEmail').textContent=user.email||'';
- tSessionReady=true;await tAdminCheck();try{await tGetRank()}catch(e){console.warn('Rank:',e.message)}
+ tSessionReady=true;await tAdminCheck();try{await tmRefreshDailyChallenges()}catch(e){console.warn('Daily challenges:',e.message)}
  tRefresh();updatePlayerStatus();showMainMenu();if(tAuthMode!=='change')tGate.classList.add('hidden');
  }catch(e){tShowBoot('Unable to restore your account: '+e.message+'. Check your connection and try again.',true)}finally{tRemoteLoading=false}}
 function tSaveSoon(){if(!tSessionReady||!tUser||tRemoteLoading)return;clearTimeout(tSyncTimer);tSyncTimer=setTimeout(()=>tSaveNow().catch(e=>console.error('Progress sync failed:',e)),450)}
 async function tSaveNow(){if(!tClient||!tUser||tRemoteLoading)return;
  const payload={shape_points:Math.max(0,Math.floor(modeScores.shape)),colour_points:Math.max(0,Math.floor(modeScores.colour)),pattern_points:Math.max(0,Math.floor(modeScores.movement)),climb_points:Math.max(0,Math.floor(extraModeScores.climb)),spin_points:Math.floor(extraModeScores.spin),shape_round:Math.max(0,Math.floor(modeRounds.shape)),colour_round:Math.max(0,Math.floor(modeRounds.colour)),pattern_round:Math.max(0,Math.floor(modeRounds.movement)),updated_at:new Date().toISOString()};
  const {error}=await tClient.from('tenotemo_progress').update(payload).eq('user_id',tUser.id);if(error)throw error;
- try{await tGetRank()}catch(e){console.warn(e.message)}tRefresh();}
+ tRefresh();}
 const tOldSaveProgress=saveProgress;saveProgress=function(){tOldSaveProgress();tSaveSoon();tRefresh()};
 recordLeaderboardScore=function(){tSaveSoon();tRefresh()};
 refreshPlayerSummary=function(){tRefresh()};
@@ -8553,8 +8585,15 @@ savePlayerName=function(){
  const input=document.getElementById('playerNameInput');
  if(input.value.trim()!==playerName)tChangePlayerName(input,null);
 };
-const tOldRestart=restartAllProgress;restartAllProgress=function(){const prev=getTotalPlayerScore();tOldRestart();if(getTotalPlayerScore()===0&&prev!==0)tSaveNow().catch(e=>alert('Remote reset failed: '+e.message));};
-const tOldOpenLeaderboard=openLeaderboard;openLeaderboard=function(){tOldOpenLeaderboard();tRenderLeaderboard()};
+const tOldRestart=restartAllProgress;
+restartAllProgress=function(){
+ clearTimeout(tSyncTimer);
+ tOldRestart();
+ // Local reset can be cancelled; only sync if the game really is at zero.
+ if(getTotalPlayerScore()===0){clearTimeout(tSyncTimer);tSaveNow().catch(e=>alert('Unable to sync game restart: '+e.message));}
+ if(typeof tmRefreshDailyChallenges==='function')tmRefreshDailyChallenges();
+};
+const tOldOpenLeaderboard=openLeaderboard;openLeaderboard=function(){leaderboardType='daily';tOldOpenLeaderboard();leaderboardType='daily';tRenderLeaderboard()};
 updateSubscriptionUI=function(){const b=document.getElementById("versusPremiumButton");if(b)b.textContent=hasSubscription?"💳 Renew Premium · R50 EFT":"💳 Unlock Premium · R50 EFT";};
 renderLeaderboard=function(){tRenderLeaderboard()};
 function tRankMemoryCredits(p){return p===1?50:p===2?40:p===3?30:p<=10?20:p<=20?10:p<=50?5:0}
@@ -8568,18 +8607,18 @@ async function tRenderLeaderboard(){
  if(daily){
   const zaDay=(offset=0)=>{const d=new Date(Date.now()+offset*86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Johannesburg',year:'numeric',month:'2-digit',day:'2-digit'}).format(d)};
   const yesterday=zaDay(-1),today=zaDay();
-  box.innerHTML='<div class="tenotemo-daily-note"><strong>🏆 Daily Top 50 · Memory Credits</strong><br>All registered players · Today’s rankings and previous-day Memory Credits. Game rankings award credits, not money.</div><div class="tenotemo-top50-caption"><button type="button" id="tmTodayScores">Today · '+escapeHTML(today)+'</button> <button type="button" id="tmYesterdayScores">Previous day · '+escapeHTML(yesterday)+'</button></div><div id="tmDailyScores"></div>';
+  box.innerHTML='<div class="tenotemo-daily-note"><strong>🏆 Daily Top 50 · Memory Credits</strong><br>All registered players · Today’s rankings and previous-day Memory Credits. Game rankings award Memory Credits, not money. Daily challenges require playing each game today.</div><div class="tenotemo-top50-caption"><button type="button" id="tmTodayScores">Today · '+escapeHTML(today)+'</button> <button type="button" id="tmYesterdayScores">Previous day · '+escapeHTML(yesterday)+'</button></div><div id="tmDailyScores"></div>';
   const output=document.getElementById('tmDailyScores');
   async function showDay(previous){
    output.textContent='Loading '+(previous?'previous day’s final results':'today’s results')+'…';
    const response=previous?await tClient.rpc('tenotemo_memory_day_leaderboard',{p_date:yesterday,p_limit:50}):{data,error};
    if(response.error){output.textContent='Could not load '+(previous?'previous day':'today')+': '+response.error.message+(previous?' · Run tenotemo_earn_6040_previous_day_update.sql in Supabase.':'');return}
    const rows=(response.data||[]).filter(e=>Number(e.daily_points)>0).slice(0,50);
-   output.innerHTML='<div class="tenotemo-top50-caption">'+(previous?'Final '+escapeHTML(yesterday)+' results · Credits earned = daily challenge credits + Top 50 bonus. Claim in Tenotemo Earn to add to wallet.':'Provisional '+escapeHTML(today)+' ranking · Bonus credits become final after midnight SAST.')+'</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Game points</th><th>Memory Credits'+(previous?' earned':' bonus*')+'</th></tr></thead><tbody>'+rows.map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name||'Player')+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+Number(e.daily_points)+'</td><td>'+(previous?Number(e.total_credits):tRankMemoryCredits(Number(e.position)))+(previous&&e.user_id===tUser.id?(e.claimed?' ✓ Claimed':' · Claim in Earn'):'')+'</td></tr>').join('')+'</tbody></table>'+(rows.length?'':'<p>No recorded scores for this date.</p>');
+   output.innerHTML='<div class="tenotemo-top50-caption">'+(previous?'Final '+escapeHTML(yesterday)+' results · Credits = completed daily challenges + Top 50 bonus. Claim in Tenotemo Earn to add to wallet.':'Provisional '+escapeHTML(today)+' ranking · Top 50 bonus credits become final after midnight SAST; daily challenge credits are recorded separately.')+'</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Game points</th><th>Memory Credits'+(previous?' earned':' bonus*')+'</th></tr></thead><tbody>'+rows.map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name||'Player')+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+Number(e.daily_points)+'</td><td>'+(previous?Number(e.total_credits):tRankMemoryCredits(Number(e.position)))+(previous&&e.user_id===tUser.id?(e.claimed?' ✓ Claimed':' · Claim in Earn'):'')+'</td></tr>').join('')+'</tbody></table>'+(rows.length?'':'<p>No recorded scores for this date.</p>');
   }
   document.getElementById('tmTodayScores').onclick=()=>showDay(false);
   document.getElementById('tmYesterdayScores').onclick=()=>showDay(true);
-  await showDay(true);
+  await showDay(false);
  }else{
   box.innerHTML='<div class="tenotemo-top50-caption">Top 50 players · Your position is also available in My Profile.</div><table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Total points</th></tr></thead><tbody>'+
   (data||[]).slice(0,50).map(e=>'<tr'+(e.user_id===tUser.id?' class="current-player-row"':'')+'><td>'+e.position+'</td><td>'+escapeHTML(e.player_name)+(e.user_id===tUser.id?' ⭐':'')+'</td><td>'+e.total_points+'</td></tr>').join('')+'</tbody></table>';
@@ -8588,7 +8627,7 @@ async function tRenderLeaderboard(){
 document.getElementById('dailyTab').style.display='';
 document.getElementById('dailyTab').textContent='Daily Top 50 · Memory Credits';
 document.getElementById('cumulativeTab').textContent='All-time';
-function tOpenProfile(){if(!tUser){tGate.classList.remove('hidden');return}document.getElementById('tenotemoProfilePanel').classList.add('open');tRefresh();tGetRank().then(tRefresh).catch(e=>console.warn('Profile ranks:',e.message))}
+function tOpenProfile(){if(!tUser){tGate.classList.remove('hidden');return}document.getElementById('tenotemoProfilePanel').classList.add('open');tRefresh();tmRefreshDailyChallenges().catch(e=>console.warn('Daily challenges:',e.message))}
 document.getElementById('tenotemoProfileButton').onclick=tOpenProfile;
 document.getElementById('tenotemoMenuProfile').onclick=tOpenProfile;
 document.getElementById('tenotemoProfileClose').onclick=()=>document.getElementById('tenotemoProfilePanel').classList.remove('open');
@@ -8596,7 +8635,7 @@ document.getElementById('tenotemoProfileSave').onclick=async()=>{
  await tChangePlayerName(document.getElementById('tenotemoProfileName'),document.getElementById('tenotemoProfileMessage'));
 };
 document.getElementById('tenotemoProfilePassword').onclick=()=>{document.getElementById('tenotemoProfilePanel').classList.remove('open');tGate.classList.remove('hidden');tSetMode('change')};
-document.getElementById('tenotemoSignOut').onclick=async()=>{clearTimeout(tSyncTimer);await tSaveNow().catch(console.warn);await tClient.auth.signOut();tUser=null;tSessionReady=false;hasSubscription=false;tRank=null;modeScores={shape:0,colour:0,movement:0};extraModeScores={climb:0,spin:0};modeRounds={shape:0,colour:0,movement:0};localStorage.removeItem(PROGRESS_STORAGE_KEY);localStorage.removeItem(PLAYER_NAME_KEY);document.getElementById('tenotemoProfilePanel').classList.remove('open');document.getElementById('tAdminOpen').hidden=true;document.getElementById('tAdminPanel').classList.remove('open');document.getElementById('tEftPanel').classList.remove('open');showMainMenu();tShowAuth('login')};
+document.getElementById('tenotemoSignOut').onclick=async()=>{clearTimeout(tSyncTimer);await tSaveNow().catch(console.warn);await tClient.auth.signOut();tmChallengeSent.clear();tUser=null;tSessionReady=false;hasSubscription=false;tRank=null;modeScores={shape:0,colour:0,movement:0};extraModeScores={climb:0,spin:0};modeRounds={shape:0,colour:0,movement:0};localStorage.removeItem(PROGRESS_STORAGE_KEY);localStorage.removeItem(PLAYER_NAME_KEY);document.getElementById('tenotemoProfilePanel').classList.remove('open');document.getElementById('tAdminOpen').hidden=true;document.getElementById('tAdminPanel').classList.remove('open');document.getElementById('tEftPanel').classList.remove('open');showMainMenu();tShowAuth('login')};
 tForm.onsubmit=async e=>{e.preventDefault();if(!tClient){tMessage('Supabase configuration is missing. Ask the administrator to connect this game.');return}
  const email=document.getElementById('tenotemoAuthEmail').value.trim(),pass=document.getElementById('tenotemoAuthPassword').value,confirmPass=document.getElementById('tenotemoAuthConfirm').value;
  const button=document.getElementById('tenotemoAuthSubmit');button.disabled=true;tMessage('Please wait…');try{
@@ -8719,7 +8758,7 @@ window.addEventListener('load',tBoot);
 #vsStatus{font-size:14px;min-height:40px;font-weight:700;color:#075985}
 </style>
 
-<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Play, compete and share with the Tenotemo community.</p><div class="sp-entry"><strong>⚔️ Online Versus</strong><p>Play five tougher games against a randomly matched Premium player. Multiplayer scores are separate from the normal-game Daily Top 50 leaderboard.</p></div><div class="sp-entry"><strong>✨ Spotlight Top 50 rewards</strong><p>Premium players in the all-time Top 50 receive five free Spotlight credits daily, each worth up to 100 valid views. Promotional credits expire at midnight (South African time).</p></div><div class="sp-entry"><strong>🖼️ Share your picture or message</strong><p>All registered players can post an approved picture, message and optional link. Credits cost R20 each; no videos.</p></div><button type="button" id="premiumPlay">⚔️ Play Online Versus</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
+<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Showcase your picture or message on Tenotemo Spotlight.</p><div class="sp-entry"><strong>🖼️ Spotlight posting</strong><p>Use Spotlight Credits to publish approved pictures, messages and optional links to the Tenotemo community. No videos.</p></div><div class="sp-entry"><strong>✨ Premium Spotlight credits</strong><p>Premium members who qualify for promotional credits receive them under the current Spotlight rules. All registered users can also buy Spotlight Credits for R20 each.</p></div><button type="button" id="premiumPlay" hidden style="display:none!important">Multiplayer (coming later)</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
 <div id="spotlightPanel" role="dialog" aria-modal="true" aria-labelledby="spTitle"><section class="spotlight-card">
 <h2 id="spTitle">👑 Tenotemo Spotlight</h2><p>Post your picture or message here. All posts, pictures and links are reviewed before they appear. Videos are not supported.</p>
 <p id="spBalance">Loading credits…</p><p class="sp-muted">1 credit = up to 100 valid views. R20 per purchased credit. Premium Top 50 players receive 5 daily promotional credits (expire at midnight South African time).</p>
@@ -8755,7 +8794,7 @@ window.addEventListener('load',tBoot);
 <div id="earnPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Earn"><section class="earn-card">
 <h2>💰 TENOTEMO EARN</h2><p>Play daily challenges → earn Memory Credits → unlock advertiser campaigns → share approved posts → earn from verified promotional results.</p>
 <div class="earn-balances"><div>🧠 Memory Credits<strong id="earnMemory">0</strong></div><div>Approved earnings<strong id="earnApproved">R0.00</strong></div><div>Paid to date<strong id="earnPaid">R0.00</strong></div></div>
-<p><strong>Claim completed-day credits</strong><br><small>Up to 7 daily challenge credits, plus Top 50 ranking bonus. Yesterday's final leaderboard appears under Daily Top 50 → Previous day after midnight South African time. Credits are added to your wallet when you claim the completed day.</small></p>
+<section id="tmDailyChallengePanel"><h3>🎯 Today’s Daily Challenges</h3><p>Score points in each of the five games today. Each completed challenge earns 1 Memory Credit after the day closes; completing all five earns 2 bonus credits.</p><div id="tmDailyChallengeList">Sign in to see today’s challenges.</div></section><p><strong>Claim completed-day credits</strong><br><small>Up to 7 credits for today’s five actual challenges, plus Top 50 ranking bonus. Yesterday's final leaderboard appears under Daily Top 50 → Previous day after midnight South African time. Credits are added to your wallet when you claim the completed day.</small></p>
 <input id="earnClaimDate" type="date"><button id="earnClaim">Claim Memory Credits</button>
 <details id="earnAdvertiser"><summary>📣 Become an advertiser — businesses &amp; individuals</summary>
 <p><small>Companies, tutors, freelancers, home businesses and other legitimate service providers may apply. Submitting this profile does not activate a package or charge you. An administrator confirms payment and approves your Spotlight post before your campaign goes live.</small></p>
