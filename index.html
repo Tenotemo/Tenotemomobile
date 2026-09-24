@@ -8812,6 +8812,22 @@ window.addEventListener('load',tBoot);
 <p><small>Approved advertiser applications (admin only):</small></p><div id="earnAdvertiserList"></div><label>Advertiser account UUID <input id="earnCompanyId" placeholder="Registered advertiser user UUID"></label>
 <label>Package <select id="earnPackage"><option value="individual">Individual · R100 · 10 credits</option><option value="starter">Starter · R500 · 50 credits</option><option value="growth">Growth · R1,500 · 200 credits</option><option value="premium">Premium · R5,000 · 750 credits</option></select></label>
 <button id="earnGrantPackage">Confirm EFT &amp; grant advertiser package</button>
+<section id="earnLaunchWizard" class="earn-campaign" style="background:#eaf6ff;border:2px solid #60a5fa">
+<h4>🚀 Publish a campaign in one step</h4>
+<p><small>Choose an advertiser with an active paid package. Add the approved promotional message supplied by the advertiser. Tenotemo creates the approved Spotlight post and live Earn campaign together—no UUID copying.</small></p>
+<label>Advertiser <select id="earnLaunchAdvertiser"><option value="">Select advertiser</option></select></label>
+<p id="earnLaunchPackageStatus" role="status">Select an advertiser to see its available reward budget.</p>
+<label>Campaign title <input id="earnLaunchTitle" maxlength="90" placeholder="e.g. Mbombela Maths Tutoring"></label>
+<label>Approved Spotlight message <textarea id="earnLaunchMessage" maxlength="180" rows="3" style="width:100%;box-sizing:border-box" placeholder="Advertiser-approved message for players to share"></textarea></label>
+<label>Campaign and reward rules <textarea id="earnLaunchDescription" maxlength="350" rows="3" style="width:100%;box-sizing:border-box" placeholder="Specify which verified results qualify for rewards"></textarea></label>
+<label>Advertiser link (optional HTTPS) <input id="earnLaunchUrl" type="url" placeholder="https://example.com"></label>
+<label>Player reward budget (R) <input id="earnLaunchBudget" type="number" min="0" step="0.01" value="60"></label>
+<label>Memory Credits to unlock <input id="earnLaunchCost" type="number" min="0" max="50" value="2"></label>
+<label>Campaign end date <input id="earnLaunchEnd" type="date"></label>
+<button id="earnLaunchButton">Approve Spotlight &amp; publish Earn campaign</button>
+<p id="earnLaunchResult" role="status"></p>
+</section>
+<details><summary>Advanced: Link an already-approved Spotlight post manually</summary>
 <h4>Create approved advertiser campaign</h4>
 <label>Approved advertiser Spotlight post UUID <input id="earnPostId" placeholder="Approved post UUID"></label>
 <label>Campaign title <input id="earnTitle" maxlength="90" placeholder="Advertiser campaign title"></label>
@@ -8821,6 +8837,7 @@ window.addEventListener('load',tBoot);
 <label>Memory Credits to unlock <input id="earnCost" type="number" min="0" max="50" value="2"></label>
 <label>Campaign end date <input id="earnEnd" type="date"></label>
 <button id="earnCreateCampaign">Create company campaign</button>
+</details>
 <h4>Approve verified referral reward</h4>
 <label>Player enrolment UUID <input id="earnEnrolment" placeholder="Player campaign enrolment UUID"></label>
 <label>Verified reward amount (R) <input id="earnRewardAmount" type="number" min="0.01" step="0.01"></label>

@@ -23,13 +23,58 @@ async function refresh(){if(!tUser)return note('Sign in to use Tenotemo Earn.');
  note('Your earnings are private. Referral visits are indicative and reviewed before any reward is approved.');
  }catch(e){note('Tenotemo Earn database setup needed: '+e.message)}}
 async function loadAdvertisers(){const list=$('earnAdvertiserList');list.replaceChildren();try{const rows=await rpc('tenotemo_admin_advertisers');for(const a of rows||[]){const row=text('p',`${a.display_name} · ${a.account_type} · ${a.service_area} · ${a.preferred_package} · ${a.user_id}`);const b=text('button','Use account');b.onclick=()=>{$('earnCompanyId').value=a.user_id;$('earnPackage').value=a.preferred_package;syncBudget()};row.append(b);list.append(row)}if(!(rows||[]).length)list.append(text('p','No advertiser applications yet.'))}catch(e){list.append(text('p','Advertiser directory unavailable: '+e.message))}}
-$('earnOpen').onclick=async()=>{panel.classList.add('open');refresh();try{$('earnAdmin').hidden=!(await rpc('tenotemo_is_admin'));if(!$('earnAdmin').hidden)loadAdvertisers()}catch{$('earnAdmin').hidden=true}};
+$('earnOpen').onclick=async()=>{panel.classList.add('open');refresh();try{$('earnAdmin').hidden=!(await rpc('tenotemo_is_admin'));if(!$('earnAdmin').hidden){loadAdvertisers();loadLaunchSetup()}}catch{$('earnAdmin').hidden=true}};
 $('earnSaveAdvertiser').onclick=async()=>{const b=$('earnSaveAdvertiser');b.disabled=true;try{await rpc('tenotemo_advertiser_register',{p_type:val('earnAdvertiserType'),p_name:val('earnAdvertiserName'),p_service:val('earnAdvertiserService'),p_area:val('earnAdvertiserArea'),p_package:val('earnAdvertiserPackage')});$('earnAdvertiserStatus').textContent='Application saved. Your account UUID: '+tUser.id+'. No payment or credits have been granted.';note('Advertiser profile saved. Your Spotlight post and EFT require admin approval.');if(!$('earnAdmin').hidden)loadAdvertisers()}catch(e){$('earnAdvertiserStatus').textContent=e.message}finally{b.disabled=false}};
 const val=id=>$(id).value.trim();
 const budgets={individual:60,starter:300,growth:900,premium:3000};
 function syncBudget(){const n=budgets[val('earnPackage')];$('earnBudget').value=String(n);$('earnBudget').max=String(n);$('earnPackageBudgetInfo').textContent=`Maximum player reward budget for this package: R${n}. Multiple active campaigns share this allowance; verified rewards cannot exceed funded campaign budgets.`}
 $('earnPackage').addEventListener('change',syncBudget);syncBudget();
-$('earnGrantPackage').onclick=async()=>{if(!confirm('Have you verified cleared EFT funds? This will grant company exposure immediately.'))return;try{await rpc('tenotemo_admin_company_package',{p_company_id:val('earnCompanyId'),p_package:val('earnPackage')});note('Advertiser package granted. Verify Spotlight post approval before creating its campaign.');loadAdvertisers()}catch(e){note(e.message)}};
+
+let launchAdvertisers=[];
+async function loadLaunchSetup(){
+ const sel=$('earnLaunchAdvertiser'),previous=sel.value;
+ try{const data=await rpc('tenotemo_admin_campaign_setup');launchAdvertisers=data.advertisers||[];
+ sel.replaceChildren(new Option('Select advertiser',''));
+ for(const a of launchAdvertisers){const active=a.package_key&&new Date(a.expires_at)>new Date();
+ const label=`${a.display_name} · ${active?a.package_key+' active':'PACKAGE REQUIRED'} · ${a.user_id.slice(0,8)}`;
+ sel.add(new Option(label,a.user_id))}
+ if(launchAdvertisers.some(a=>a.user_id===previous))sel.value=previous;
+ updateLaunchSelection();
+ }catch(e){$('earnLaunchPackageStatus').textContent='Cannot load advertiser packages: '+e.message}
+}
+function updateLaunchSelection(){
+ const a=launchAdvertisers.find(x=>x.user_id===$('earnLaunchAdvertiser').value);
+ if(!a){$('earnLaunchPackageStatus').textContent='Select an advertiser with an active package.';return}
+ $('earnCompanyId').value=a.user_id;
+ if(a.preferred_package&&[...$('earnPackage').options].some(o=>o.value===a.preferred_package)){$('earnPackage').value=a.preferred_package;syncBudget()}
+ const active=a.package_key&&new Date(a.expires_at)>new Date();
+ const remaining=Math.max(0,(a.reward_allowance_cents||0)-(a.reserved_cents||0));
+ $('earnLaunchPackageStatus').textContent=active?`Active ${a.package_key} package · Reward budget available: ${money(remaining)} · ${a.granted_spotlight_credits} package Spotlight Credits`:'No active package. Confirm cleared EFT and grant a package first.';
+ $('earnLaunchBudget').max=(remaining/100).toFixed(2);
+ $('earnLaunchBudget').value=(remaining/100).toFixed(2);
+ $('earnLaunchButton').disabled=!active||remaining<=0;
+}
+$('earnLaunchAdvertiser').addEventListener('change',updateLaunchSelection);
+$('earnLaunchEnd').value=(()=>{const d=new Date(Date.now()+14*86400000);return d.toISOString().slice(0,10)})();
+$('earnLaunchButton').onclick=async()=>{
+ const b=$('earnLaunchButton'),a=launchAdvertisers.find(x=>x.user_id===$('earnLaunchAdvertiser').value);
+ if(!a)return $('earnLaunchResult').textContent='Select an advertiser first.';
+ const cents=Math.round(Number(val('earnLaunchBudget'))*100),cost=Number(val('earnLaunchCost'));
+ if(!Number.isSafeInteger(cents)||cents<0||cents>(a.reward_allowance_cents-a.reserved_cents)||!Number.isInteger(cost)||cost<0||cost>50)return $('earnLaunchResult').textContent='Check the budget and Memory Credit cost.';
+ if(!val('earnLaunchEnd'))return $('earnLaunchResult').textContent='Choose an end date.';
+ if(!confirm('Has the advertiser approved this message and have you confirmed its paid package? Publish this Spotlight post and campaign now?'))return;
+ b.disabled=true;$('earnLaunchResult').textContent='Publishing…';
+ try{const id=await rpc('tenotemo_admin_launch_campaign',{
+ p_company_id:a.user_id,p_message:val('earnLaunchMessage'),p_title:val('earnLaunchTitle'),
+ p_description:val('earnLaunchDescription'),p_target_url:val('earnLaunchUrl'),
+ p_budget_cents:cents,p_credit_cost:cost,p_ends_at:new Date(val('earnLaunchEnd')+'T23:59:59+02:00').toISOString()});
+ $('earnLaunchResult').textContent='✅ Published! Campaign '+id+' is now active in Tenotemo Earn and its approved post is on Spotlight.';
+ await refresh();await loadLaunchSetup();
+ }catch(e){$('earnLaunchResult').textContent='Not published: '+e.message}
+ finally{b.disabled=false;updateLaunchSelection()}
+};
+
+$('earnGrantPackage').onclick=async()=>{if(!confirm('Have you verified cleared EFT funds? This will grant company exposure immediately.'))return;try{await rpc('tenotemo_admin_company_package',{p_company_id:val('earnCompanyId'),p_package:val('earnPackage')});note('Advertiser package granted. You can now publish a campaign below.');loadAdvertisers();await loadLaunchSetup()}catch(e){note(e.message)}};
 $('earnCreateCampaign').onclick=async()=>{try{const cents=Math.round(Number(val('earnBudget'))*100);const cost=Number(val('earnCost'));if(!Number.isSafeInteger(cents)||cents<0||cents>budgets[val('earnPackage')]*100||!Number.isInteger(cost))throw Error('Invalid budget or credit cost');const end=new Date(val('earnEnd')+'T23:59:59+02:00').toISOString();const id=await rpc('tenotemo_admin_campaign',{p_company_id:val('earnCompanyId'),p_post_id:val('earnPostId'),p_title:val('earnTitle'),p_description:val('earnDescription'),p_budget_cents:cents,p_credit_cost:cost,p_ends_at:end});note('Campaign created: '+id);await refresh()}catch(e){note(e.message)}};
 $('earnApproveReward').onclick=async()=>{if(!confirm('Confirm referral/customer evidence was independently reviewed and the company reward budget is funded?'))return;try{const cents=Math.round(Number(val('earnRewardAmount'))*100);if(!Number.isSafeInteger(cents)||cents<=0)throw Error('Invalid amount');await rpc('tenotemo_admin_reward',{p_enrolment_id:val('earnEnrolment'),p_amount_cents:cents,p_reason:val('earnReason')});note('Reward approved; pay by verified manual EFT.');await refresh()}catch(e){note(e.message)}};$('earnClose').onclick=()=>panel.classList.remove('open');
 $('earnClaim').onclick=async()=>{const b=$('earnClaim');b.disabled=true;try{const d=$('earnClaimDate').value;const rows=await rpc('tenotemo_claim_memory_day',{p_date:d});const r=rows[0];note(`Claimed ${r.completion_credits} daily-challenge credits + ${r.top50_credits} Top 50 credits!`);await refresh();note(`Claimed ${r.completion_credits} challenge + ${r.top50_credits} ranking credits.`)}catch(e){note(e.message)}finally{b.disabled=false}};
