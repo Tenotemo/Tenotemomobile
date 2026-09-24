@@ -54,6 +54,35 @@ function updateLaunchSelection(){
  $('earnLaunchBudget').value=(remaining/100).toFixed(2);
  $('earnLaunchButton').disabled=!active||remaining<=0;
 }
+const MEDIA_BUCKET='tenotemo-campaign-media';
+const MEDIA_TYPES={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','video/mp4':'mp4','video/webm':'webm','video/quicktime':'mov'};
+function videoFile(f){return f&&f.type.startsWith('video/')}
+async function checkCampaignMedia(file){
+ if(!file)return;
+ if(!MEDIA_TYPES[file.type])throw Error('Choose a JPG, PNG, WebP, MP4, WebM or MOV file.');
+ if(file.size>(videoFile(file)?30:5)*1024*1024)throw Error(videoFile(file)?'Video must be 30 MB or smaller.':'Picture must be 5 MB or smaller.');
+ if(videoFile(file)){
+  const duration=await new Promise((resolve,reject)=>{
+   const el=document.createElement('video'),url=URL.createObjectURL(file);
+   const done=(value,err)=>{URL.revokeObjectURL(url);el.removeAttribute('src');el.load();err?reject(err):resolve(value)};
+   el.preload='metadata';el.onloadedmetadata=()=>done(el.duration);el.onerror=()=>done(null,Error('Cannot read video. Try MP4 or WebM.'));
+   el.src=url;
+  });
+  if(!Number.isFinite(duration)||duration<=0||duration>30)throw Error('Video must be 30 seconds or shorter.');
+ }
+}
+let mediaPreviewURL=null;
+$('earnLaunchMedia').addEventListener('change',async()=>{
+ const box=$('earnLaunchMediaPreview'),file=$('earnLaunchMedia').files[0];box.replaceChildren();
+ if(mediaPreviewURL){URL.revokeObjectURL(mediaPreviewURL);mediaPreviewURL=null}
+ if(!file)return;
+ try{await checkCampaignMedia(file);mediaPreviewURL=URL.createObjectURL(file);
+ const el=document.createElement(videoFile(file)?'video':'img');el.src=mediaPreviewURL;
+ el.style.cssText='display:block;max-width:100%;max-height:240px;border-radius:12px';
+ if(videoFile(file)){el.controls=true;el.playsInline=true;el.preload='metadata'}
+ box.append(el);
+ }catch(e){$('earnLaunchMedia').value='';box.textContent=e.message}
+});
 $('earnLaunchAdvertiser').addEventListener('change',updateLaunchSelection);
 $('earnLaunchEnd').value=(()=>{const d=new Date(Date.now()+14*86400000);return d.toISOString().slice(0,10)})();
 $('earnLaunchButton').onclick=async()=>{
@@ -62,15 +91,30 @@ $('earnLaunchButton').onclick=async()=>{
  const cents=Math.round(Number(val('earnLaunchBudget'))*100),cost=Number(val('earnLaunchCost'));
  if(!Number.isSafeInteger(cents)||cents<0||cents>(a.reward_allowance_cents-a.reserved_cents)||!Number.isInteger(cost)||cost<0||cost>50)return $('earnLaunchResult').textContent='Check the budget and Memory Credit cost.';
  if(!val('earnLaunchEnd'))return $('earnLaunchResult').textContent='Choose an end date.';
+ if(!val('earnLaunchUrl')||!/^https:\/\/[^\s]+$/i.test(val('earnLaunchUrl')))return $('earnLaunchResult').textContent='Add a complete HTTPS advertiser link so referral links can open the campaign.';
  if(!confirm('Has the advertiser approved this message and have you confirmed its paid package? Publish this Spotlight post and campaign now?'))return;
  b.disabled=true;$('earnLaunchResult').textContent='Publishing…';
- try{const id=await rpc('tenotemo_admin_launch_campaign',{
+ let uploadedPath=null;
+ try{
+ const file=$('earnLaunchMedia').files[0];
+ if(file){
+ await checkCampaignMedia(file);
+ uploadedPath=`${tUser.id}/campaigns/${crypto.randomUUID()}.${MEDIA_TYPES[file.type]}`;
+ $('earnLaunchResult').textContent='Uploading approved campaign media…';
+ const result=await tClient.storage.from(MEDIA_BUCKET).upload(uploadedPath,file,{contentType:file.type,upsert:false});
+ if(result.error)throw result.error;
+ }
+ $('earnLaunchResult').textContent='Publishing approved Spotlight and Earn campaign…';
+ const id=await rpc('tenotemo_admin_launch_campaign_media',{
  p_company_id:a.user_id,p_message:val('earnLaunchMessage'),p_title:val('earnLaunchTitle'),
  p_description:val('earnLaunchDescription'),p_target_url:val('earnLaunchUrl'),
- p_budget_cents:cents,p_credit_cost:cost,p_ends_at:new Date(val('earnLaunchEnd')+'T23:59:59+02:00').toISOString()});
+ p_budget_cents:cents,p_credit_cost:cost,p_media_path:uploadedPath,p_ends_at:new Date(val('earnLaunchEnd')+'T23:59:59+02:00').toISOString()});
  $('earnLaunchResult').textContent='✅ Published! Campaign '+id+' is now active in Tenotemo Earn and its approved post is on Spotlight.';
  await refresh();await loadLaunchSetup();
- }catch(e){$('earnLaunchResult').textContent='Not published: '+e.message}
+ }catch(e){
+ if(uploadedPath){const removed=await tClient.storage.from(MEDIA_BUCKET).remove([uploadedPath]);if(removed.error)console.warn('Orphan media cleanup:',removed.error.message)}
+ $('earnLaunchResult').textContent='Not published: '+e.message
+ }
  finally{b.disabled=false;updateLaunchSelection()}
 };
 

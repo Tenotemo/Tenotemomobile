@@ -8818,6 +8818,9 @@ window.addEventListener('load',tBoot);
 <label>Advertiser <select id="earnLaunchAdvertiser"><option value="">Select advertiser</option></select></label>
 <p id="earnLaunchPackageStatus" role="status">Select an advertiser to see its available reward budget.</p>
 <label>Campaign title <input id="earnLaunchTitle" maxlength="90" placeholder="e.g. Mbombela Maths Tutoring"></label>
+<label>Advertiser picture or short video (optional)<input id="earnLaunchMedia" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"></label>
+<p style="font-size:13px;color:#36516b">Pictures: JPG/PNG/WebP, up to 5 MB. Videos: MP4/WebM/MOV, up to 30 MB and 30 seconds. Check the preview and obtain the advertiser’s permission before publishing. Video length is checked in this browser; administrators must also review it.</p>
+<div id="earnLaunchMediaPreview" style="max-width:100%;margin:8px 0"></div>
 <label>Approved Spotlight message <textarea id="earnLaunchMessage" maxlength="180" rows="3" style="width:100%;box-sizing:border-box" placeholder="Advertiser-approved message for players to share"></textarea></label>
 <label>Campaign and reward rules <textarea id="earnLaunchDescription" maxlength="350" rows="3" style="width:100%;box-sizing:border-box" placeholder="Specify which verified results qualify for rewards"></textarea></label>
 <label>Advertiser link (optional HTTPS) <input id="earnLaunchUrl" type="url" placeholder="https://example.com"></label>
