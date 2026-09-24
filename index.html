@@ -2555,7 +2555,7 @@ header .header-info{min-width:0}
     <div class="tm-identity"><div class="tm-avatar" aria-hidden="true">👤</div><div class="tm-identitytext"><div id="spotlightGreeting" class="spotlight-greeting"><strong id="spotlightGreetingName">Player</strong><span id="spotlightGreetingPremium">Free player</span></div><div class="tm-identity-sub">Welcome back to Tenotemo</div></div><button class="tm-iconbtn" type="button" id="tmProfileQuick" aria-label="Open profile">⚙</button></div>
     <section id="spotlightBanner" class="spotlight-banner" aria-label="Tenotemo Spotlight">
       <div class="spotlight-heading"><span>👑 TENOTEMO <em>SPOTLIGHT</em><small class="sp-tagline">PLAYERS · BUSINESSES · COMMUNITY</small></span></div>
-      <div class="tm-spotlight-body"><div id="spotlightSlide" class="spotlight-slide"><p>Be the first to share your picture or message with the Tenotemo community.</p></div><button type="button" id="spotlightStart" class="tm-post-cta">📷 Post your picture or message here <span>→</span></button></div>
+      <div class="tm-spotlight-body"><div id="spotlightSlide" class="spotlight-slide"><p>Be the first to share your picture or message with the Tenotemo community.</p></div><button type="button" id="spotlightStart" class="tm-post-cta">＋ Post <span>→</span></button></div>
       <div class="spotlight-navigation"><button type="button" id="spotlightPrev" aria-label="Previous post">❮</button><span id="spotlightCount">Spotlight</span><button type="button" id="spotlightNext" aria-label="Next post">❯</button><button type="button" id="spotlightPause">Pause</button></div>
     </section>
     <div class="tenotemo-player-summary" id="menuPlayerSummary" aria-live="polite"><div class="tm-stat"><span class="tm-stat-icon">🎯</span><span><small>Today’s Daily Challenges</small><strong id="tmChallengeCount">0 / 5 completed</strong></span></div><div class="tm-stat"><span class="tm-stat-icon">🪙</span><span><small>Memory Credits</small><strong id="tmMemoryBalance">0</strong></span></div></div>
@@ -8756,18 +8756,32 @@ window.addEventListener('load',tBoot);
 #vsChoices button:disabled{opacity:.35}#vsPrompt{font-size:clamp(20px,5vw,34px);font-weight:900;min-height:66px;display:grid;place-items:center}
 #vsCard button.vsAction{padding:12px 18px;border:0;border-radius:10px;background:#075985;color:white;font-weight:800;margin:6px}
 #vsStatus{font-size:14px;min-height:40px;font-weight:700;color:#075985}
+
+/* Spotlight: media-first layout, separate advertiser and personal post treatment. */
+#menuOverlay .tm-spotlight-body{display:block!important;margin-top:8px!important}
+#menuOverlay .spotlight-slide{width:100%!important;box-sizing:border-box;min-height:220px!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;padding:8px!important;gap:5px!important}
+#menuOverlay .spotlight-slide img,#menuOverlay .spotlight-slide video{width:100%!important;max-width:100%!important;height:clamp(200px,48vw,390px)!important;max-height:390px!important;object-fit:contain!important;border-radius:11px!important;flex-shrink:0;background:#07152c}
+#menuOverlay .spotlight-slide .sp-copy{width:100%;min-width:0;text-align:center}
+#menuOverlay .spotlight-slide .sp-copy p{font-size:clamp(13px,2.7vw,17px)!important;margin:5px 0!important}
+#menuOverlay .spotlight-slide.sp-media .sp-copy p{font-size:11px!important;line-height:1.2!important;max-height:32px;overflow:hidden}
+#menuOverlay .spotlight-slide.sp-business .sp-copy p{display:none!important}
+#menuOverlay .spotlight-slide.sp-business .sp-copy a,#menuOverlay .spotlight-slide.sp-business .sp-copy button{display:inline-block!important;font-size:11px!important;padding:5px 9px!important;margin:3px!important}
+#menuOverlay .spotlight-slide:not(.sp-media) .sp-copy p{font-size:clamp(19px,4vw,29px)!important;line-height:1.3!important;padding:15px 5px}
+#menuOverlay .tm-post-cta{display:flex!important;flex-direction:row!important;gap:5px!important;min-height:29px!important;margin:6px auto 0!important;padding:3px 12px!important;font-size:11px!important;border-radius:999px!important;width:max-content!important;max-width:100%!important}
+#menuOverlay .tm-post-cta span{font-size:11px!important;padding:1px 5px!important}
+#spMine .sp-entry button{margin:5px 5px 3px 0}
 </style>
 
-<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Showcase your picture or message on Tenotemo Spotlight.</p><div class="sp-entry"><strong>🖼️ Spotlight posting</strong><p>Use Spotlight Credits to publish approved pictures, messages and optional links to the Tenotemo community. No videos.</p></div><div class="sp-entry"><strong>✨ Premium Spotlight credits</strong><p>Premium members who qualify for promotional credits receive them under the current Spotlight rules. All registered users can also buy Spotlight Credits for R20 each.</p></div><button type="button" id="premiumPlay" hidden style="display:none!important">Multiplayer (coming later)</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
+<div id="premiumPanel" role="dialog" aria-modal="true" aria-label="Tenotemo Premium"><section class="spotlight-card"><h2>👑 Tenotemo Premium · R50/month</h2><p>Showcase your picture or message on Tenotemo Spotlight.</p><div class="sp-entry"><strong>🖼️ Spotlight posting</strong><p>Use Spotlight Credits to publish approved pictures, short videos, messages and optional links to the Tenotemo community.</p></div><div class="sp-entry"><strong>✨ Premium Spotlight credits</strong><p>Premium members who qualify for promotional credits receive them under the current Spotlight rules. All registered users can also buy Spotlight Credits for R20 each.</p></div><button type="button" id="premiumPlay" hidden style="display:none!important">Multiplayer (coming later)</button><button type="button" id="premiumSpotlight">Post your picture or message here</button><button type="button" id="premiumEft">Unlock / Renew · R50 EFT</button><button type="button" id="premiumClose">Close</button></section></div>
 <div id="spotlightPanel" role="dialog" aria-modal="true" aria-labelledby="spTitle"><section class="spotlight-card">
-<h2 id="spTitle">👑 Tenotemo Spotlight</h2><p>Post your picture or message here. All posts, pictures and links are reviewed before they appear. Videos are not supported.</p>
+<h2 id="spTitle">👑 Tenotemo Spotlight</h2><p>Post your picture or message here. All posts, pictures and links are reviewed before they appear. Videos up to 30 seconds are supported.</p>
 <p id="spBalance">Loading credits…</p><p class="sp-muted">1 credit = up to 100 valid views. R20 per purchased credit. Premium Top 50 players receive 5 daily promotional credits (expire at midnight South African time).</p>
 <div class="sp-row"><button type="button" id="spPremium">👑 Premium · R50/month</button><button type="button" id="spBuy">Buy credits · R20 each</button><button type="button" id="spClose">Close</button></div>
 <div id="spBuyBox" hidden><label for="spQuantity">How many credits?</label><input id="spQuantity" type="number" min="1" max="100" value="1"><button type="button" id="spRequestBuy">Request EFT payment reference</button><p id="spPaymentInfo" class="sp-muted">Purchases require manual bank verification. Credits are not issued until approved.</p></div>
 <label for="spMessage">Your message (up to 180 characters)</label><textarea id="spMessage" maxlength="180" rows="3" placeholder="Share something with the community…"></textarea>
-<label for="spImage">Optional picture (JPG, PNG or WebP, max 2 MB)</label><input id="spImage" type="file" accept="image/jpeg,image/png,image/webp">
-<label for="spLink">Optional website or WhatsApp link</label><input id="spLink" type="url" maxlength="500" placeholder="https://…"><p class="sp-muted">No videos. Never share private details. Edits require a new approval.</p>
-<button type="button" id="spSubmit">Submit for review</button><p id="spNotice" role="status" aria-live="polite"></p>
+<label for="spImage">Optional picture (max 2 MB) or video (max 30 MB, 30 seconds)</label><input id="spImage" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime">
+<label for="spLink">Optional website or WhatsApp link</label><input id="spLink" type="url" maxlength="500" placeholder="https://…"><p class="sp-muted">Personal posts expire 24 hours after approval. Never share private details. Edits require approval again.</p>
+<button type="button" id="spSubmit">Submit for review</button> <button type="button" id="spCancelEdit">Cancel edit</button><p id="spNotice" role="status" aria-live="polite"></p>
 <h3>Your posts</h3><div id="spMine">Loading…</div>
 <div id="spAdmin" hidden><h3>🛡️ Spotlight review &amp; credit payments</h3><button type="button" id="spAdminRefresh">Refresh review queue</button><div id="spAdminPosts"></div><div id="spAdminPayments"></div></div>
 </section></div>
