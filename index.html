@@ -2302,6 +2302,7 @@ header .header-info{min-width:0}
    <button type="button" class="t-auth-secondary" id="tenotemoGeneratePassword" hidden>Generate valid password</button><small id="tenotemoPasswordFeedback" role="status" aria-live="polite" style="display:block;margin-top:5px"></small><label style="font-weight:normal"><input id="tenotemoShowPassword" type="checkbox" style="width:auto"> Show password</label></div>
    <div id="tenotemoConfirmWrap" hidden><label for="tenotemoAuthConfirm">Confirm password</label><input id="tenotemoAuthConfirm" type="password" autocomplete="new-password"></div>
    <p id="tenotemoPasswordRules" hidden style="font-size:12px">At least 12 characters, including uppercase, lowercase, a number and a symbol. Do not reuse passwords.</p>
+   <div id="tenotemoLegalConsentWrap" hidden style="margin:12px 0;padding:10px;border:1px solid #b9c9d8;border-radius:10px;background:#f7fbff"><label style="font-weight:normal;display:flex;gap:8px;align-items:flex-start"><input id="tenotemoLegalConsent" type="checkbox" style="width:auto;margin-top:3px"> <span>I agree to the <button type="button" class="t-auth-secondary tenotemoLegalOpen" data-legal="terms" style="padding:0;border:0;background:none;text-decoration:underline">Terms &amp; Conditions</button> and acknowledge the <button type="button" class="t-auth-secondary tenotemoLegalOpen" data-legal="privacy" style="padding:0;border:0;background:none;text-decoration:underline">POPIA Privacy Notice</button>.</span></label><small>We collect account and game information to operate Tenotemo. Tenotemo Earn additionally processes campaign proof and EFT details when you choose to use those features.</small></div>
    <button class="t-auth-primary" id="tenotemoAuthSubmit" type="submit">Sign in</button>
   </form>
   <div id="tenotemoAuthMessage" class="t-auth-message" role="status" aria-live="polite"></div>
@@ -2312,7 +2313,7 @@ header .header-info{min-width:0}
 <h2 id="tenotemoProfileTitle">My Profile</h2><p id="tenotemoProfileEmail"></p><p id="tenotemoProfileMembership"></p><p id="tenotemoProfileTotal" hidden></p><p id="tenotemoProfileRank" hidden></p><p id="tenotemoProfileDailyRank">Daily position: —</p><p id="tenotemoProfileWeekly" hidden></p>
 <label for="tenotemoProfileName">Player name</label><input id="tenotemoProfileName" maxlength="20"><button class="t-auth-primary" id="tenotemoProfileSave">Save name</button>
 <div id="tenotemoProfileMessage" class="t-auth-message" role="status"></div>
-<div class="t-auth-actions"><button class="t-auth-secondary" id="tenotemoProfilePassword">Change password</button><button class="t-auth-secondary" id="tenotemoSignOut">Sign out</button><button class="t-auth-secondary" id="tenotemoProfileClose">Close</button></div></div></div>
+<div class="t-auth-actions"><button class="t-auth-secondary tenotemoLegalOpen" data-legal="terms" type="button">Terms &amp; Conditions</button><button class="t-auth-secondary tenotemoLegalOpen" data-legal="privacy" type="button">POPIA Privacy Notice</button><button class="t-auth-secondary" id="tenotemoProfilePassword">Change password</button><button class="t-auth-secondary" id="tenotemoSignOut">Sign out</button><button class="t-auth-secondary" id="tenotemoProfileClose">Close</button></div></div></div>
 
 <div id="tEftPanel" role="dialog" aria-modal="true" aria-labelledby="tEftTitle"><section class="t-eft-card">
 <h2 id="tEftTitle">Tenotemo · R50 monthly EFT</h2>
@@ -2472,6 +2473,10 @@ header .header-info{min-width:0}
             class="pattern-board"
             id="patternBoard">
         </div>
+
+        <button type="button" id="patternSubmitButton" class="climb-submit" style="display:none;margin:14px auto 0;">
+            Submit Pattern
+        </button>
 
     </div>
 
@@ -6554,6 +6559,8 @@ function generateMovementPattern(
 function startMovementRound() {
 
     clearTimer();
+    const submitButton = document.getElementById("patternSubmitButton");
+    if (submitButton) submitButton.style.display = "none";
 
     stopPatternAnimation();
 
@@ -6992,6 +6999,13 @@ function startMovementChallenge() {
 
     updateHeader();
 
+    const submitButton = document.getElementById("patternSubmitButton");
+    if (submitButton) {
+        submitButton.style.display = "block";
+        submitButton.disabled = true;
+        submitButton.textContent = "Complete the pattern to submit";
+        submitButton.onclick = submitMovementPatternEarly;
+    }
 
     startTimer(
         PATTERN_CHALLENGE_TIME,
@@ -7137,47 +7151,41 @@ function handlePatternCellClick(
 
         } else {
 
-            // Only end early if every required position is correct.
-            // Otherwise the player keeps playing until the 60-second
-            // challenge timer expires.
-            const totalPositions =
-                settings.rows * settings.picksPerRow;
-
-            const selectedPositions =
-                patternPlayerSelections.reduce(
-                    (total, rowSelections) =>
-                        total + rowSelections.length,
-                    0
-                );
-
-            let correctPositions = 0;
-
-            for (
-                let r = 0;
-                r < settings.rows;
-                r++
-            ) {
-                movementPattern[r].forEach(
-                    expectedCol => {
-                        if (
-                            patternPlayerSelections[r].includes(expectedCol)
-                        ) {
-                            correctPositions++;
-                        }
-                    }
-                );
-            }
-
-            if (
-                selectedPositions === totalPositions &&
-                correctPositions === totalPositions
-            ) {
-                evaluateMovementAttempt();
-            }
+            // The full pattern is filled. Let the player submit immediately
+            // instead of forcing them to wait for the challenge timer.
+            updateMovementSubmitButton();
         }
     }
 }
 
+
+function updateMovementSubmitButton() {
+    const button = document.getElementById("patternSubmitButton");
+    if (!button || phase !== "challenge" || roundIndex === 2) return;
+
+    const settings = movementRounds[roundIndex];
+    const totalRequired = settings.rows * settings.picksPerRow;
+    const selected = patternPlayerSelections.reduce(
+        (total, rowSelections) => total + rowSelections.length,
+        0
+    );
+
+    const complete = selected === totalRequired;
+    button.disabled = !complete;
+    button.textContent = complete ? "Submit Pattern" : "Complete the pattern to submit";
+}
+
+function submitMovementPatternEarly() {
+    if (phase !== "challenge" || roundIndex === 2) return;
+    const settings = movementRounds[roundIndex];
+    const totalRequired = settings.rows * settings.picksPerRow;
+    const selected = patternPlayerSelections.reduce(
+        (total, rowSelections) => total + rowSelections.length,
+        0
+    );
+    if (selected !== totalRequired) return;
+    evaluateMovementAttempt();
+}
 
 /* ============================================================
    EVALUATE PATTERN
@@ -7197,6 +7205,8 @@ function evaluateMovementAttempt() {
     phase =
         "result";
 
+    const submitButton = document.getElementById("patternSubmitButton");
+    if (submitButton) submitButton.style.display = "none";
 
     clearTimer();
 
@@ -8448,7 +8458,7 @@ document.getElementById('tenotemoGeneratePassword').addEventListener('click',()=
 function tSetMode(mode){tAuthMode=mode;const signup=mode==='signup',reset=mode==='reset',change=mode==='change';
  document.getElementById('tenotemoAuthTitle').textContent=signup?'Create Tenotemo account':reset?'Reset your password':change?'Choose a new password':'Welcome to Tenotemo';
  document.getElementById('tenotemoAuthHint').textContent=signup?'Register to save your progress across devices.':reset?'We will email you a password reset link.':change?'Enter and confirm a strong new password.':'Sign in to access your profile and saved progress.';
- document.getElementById('tenotemoNameWrap').hidden=!signup;
+ document.getElementById('tenotemoNameWrap').hidden=!signup;document.getElementById('tenotemoLegalConsentWrap').hidden=!signup;document.getElementById('tenotemoLegalConsent').required=signup;
  // Hidden required fields block HTML form submission without firing submit.
  document.getElementById('tenotemoAuthName').required=signup;
  document.getElementById('tenotemoPasswordWrap').hidden=reset;
@@ -8641,7 +8651,7 @@ tForm.onsubmit=async e=>{e.preventDefault();if(!tClient){tMessage('Supabase conf
  const button=document.getElementById('tenotemoAuthSubmit');button.disabled=true;tMessage('Please wait…');try{
  if(tAuthMode==='reset'){const {error}=await tClient.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;tMessage('If the email is registered, a reset link will be sent.',true);return}
  if(tAuthMode==='signup'||tAuthMode==='change'){if(!tPasswordValid(pass))throw Error('Use at least 12 characters, uppercase, lowercase, number and symbol.');if(pass!==confirmPass)throw Error('Passwords do not match.')}
- if(tAuthMode==='signup'){const name=document.getElementById('tenotemoAuthName').value.trim();if(!/^[A-Za-z0-9_]{3,20}$/.test(name))throw Error('Username must be 3–20 characters: letters A–Z, numbers 0–9 or underscores (_). Do not use @, spaces or other symbols.');if(!(await tCheckNameAvailable(name)))throw Error('That username is already taken. Please choose another.');const {data,error}=await tClient.auth.signUp({email,password:pass,options:{data:{player_name:name},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage(data.session?'Account created. Loading…':'Account request received. Check your Inbox and Spam for the confirmation email. If it does not arrive, use Resend confirmation email. After confirming, select Back to sign in.',true);if(data.session)await tLoadPlayer(data.user);return}
+ if(tAuthMode==='signup'){const name=document.getElementById('tenotemoAuthName').value.trim();if(!document.getElementById('tenotemoLegalConsent').checked)throw Error('Please agree to the Terms & Conditions and acknowledge the POPIA Privacy Notice to create an account.');if(!/^[A-Za-z0-9_]{3,20}$/.test(name))throw Error('Username must be 3–20 characters: letters A–Z, numbers 0–9 or underscores (_). Do not use @, spaces or other symbols.');if(!(await tCheckNameAvailable(name)))throw Error('That username is already taken. Please choose another.');const {data,error}=await tClient.auth.signUp({email,password:pass,options:{data:{player_name:name,legal_version:'2026-09-28-v2.2',terms_accepted:true,popia_notice_acknowledged:true},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;tMessage(data.session?'Account created. Loading…':'Account request received. Check your Inbox and Spam for the confirmation email. If it does not arrive, use Resend confirmation email. After confirming, select Back to sign in.',true);if(data.session)await tLoadPlayer(data.user);return}
  if(tAuthMode==='change'){const {error}=await tClient.auth.updateUser({password:pass});if(error)throw error;tGate.classList.add('hidden');tSetMode('login');alert('Password updated.');return}
  const {data,error}=await tClient.auth.signInWithPassword({email,password:pass});if(error)throw error;await tLoadPlayer(data.user);
  }catch(err){const message=err.message||'Unknown error';tMessage(/invalid login credentials/i.test(message)?'Email or password not recognised. New player? Select Create account. Already registered? Confirm your email, or use Forgot password.':/email not confirmed/i.test(message)?'Your email is not confirmed yet. Enter your email and select Resend confirmation email.':/database error saving new user/i.test(message)?'Registration could not be completed. Your username may have just been taken; try another name.':message)}finally{button.disabled=false}};
@@ -8820,6 +8830,7 @@ window.addEventListener('load',tBoot);
 <section id="tmDailyChallengePanel"><h3>🎯 Today’s Daily Challenges</h3><p>Score points in each of the five games today. Each completed challenge earns 1 Memory Credit and completing all five earns 2 bonus credits. <strong>These Daily Challenge credits must be claimed today before midnight South African time.</strong></p><div id="tmDailyChallengeList">Sign in to see today’s challenges.</div></section>
 <p><strong>Claim today’s Daily Challenge credits</strong><br><small>Claim up to 7 credits on the same day you complete the challenges. Unclaimed Daily Challenge credits do not carry over to tomorrow.</small></p><button id="earnClaim">Claim Today’s Challenge Credits</button>
 <p><strong>Claim finalized Top 50 credits</strong><br><small>Top 50 Memory Credits become claimable after the ranking has finalized on the next day.</small></p><input id="earnClaimDate" type="date"><button id="earnClaimTop50">Claim Top 50 Credits</button>
+<section class="earn-campaign" style="background:#f0fdf4;border:2px solid #22c55e"><h3>💳 Request payment</h3><p>You can request payment once your <strong>Earned · awaiting payment</strong> balance is at least <strong>R20.00</strong>. There is no withdrawal fee.</p><p id="earnPayoutStatus">Loading payment eligibility…</p><details><summary><strong>My EFT payment details</strong></summary><p><small>Your bank details are private and are used only to process approved Tenotemo payouts. Please enter an account that can receive EFT payments.</small></p><label>Account holder name <input id="earnPayoutHolder" maxlength="100" autocomplete="name"></label><label>Bank name <input id="earnPayoutBank" maxlength="80" placeholder="e.g. Standard Bank"></label><label>Account number <input id="earnPayoutAccount" inputmode="numeric" maxlength="20" autocomplete="off"></label><label>Account type <select id="earnPayoutType"><option value="Savings">Savings</option><option value="Cheque / Current">Cheque / Current</option><option value="Transmission">Transmission</option><option value="Other">Other</option></select></label><label>Branch code (optional) <input id="earnPayoutBranch" inputmode="numeric" maxlength="10"></label><button id="earnSavePayoutDetails" type="button">Save EFT details</button></details><button id="earnRequestPayout" type="button">Request payment</button><p><small>When you request payment, all currently eligible Earned earnings are included in that request. New earnings approved afterwards remain available for a later request.</small></p></section>
 <section class="earn-campaign" style="background:#ecfdf5;border:2px solid #34d399"><h3>📣 Available businesses to share</h3><p><strong>Sharing one advertiser campaign costs 5 Memory Credits.</strong> Unlock a campaign, share its approved content, then submit proof. The share reward follows the campaign's displayed reward rules.</p><div id="earnCampaigns"></div></section>
 </section>
 
@@ -8839,6 +8850,7 @@ window.addEventListener('load',tBoot);
 
 <section id="earnAdminSection" class="earn-main-section" hidden>
 <details id="earnAdmin" open><summary>🛡️ Tenotemo Earn administration</summary>
+<section class="earn-campaign" style="border:2px solid #22c55e;background:#f0fdf4"><h4>💸 Player payment requests</h4><p><small>Players can request EFT payment once eligible Earned earnings reach R20. Confirm the bank details and make the EFT before marking a request Paid.</small></p><button id="earnPayoutRefresh" type="button">Refresh player payment requests</button><div id="earnPayoutReviews"></div></section>
 <section class="earn-campaign" style="border:2px solid #f59e0b;background:#fffbeb"><h4>💳 Advertiser payment proofs</h4><p><small>Review submitted EFT screenshots/PDFs. Approving a proof records it as verified; then grant the advertiser package below after confirming the funds have cleared in the bank account.</small></p><button id="earnPaymentProofRefresh" type="button">Refresh payment proofs</button><div id="earnPaymentProofReviews"></div></section>
 <p><small>Search advertiser by Tenotemo username or trading name. Advertisers use their Tenotemo username-based reference for EFT payments.</small></p><label>Search advertiser <input id="earnAdvertiserSearch" placeholder="Username or trading name"><button id="earnAdvertiserSearchBtn" type="button">Search</button></label><div id="earnAdvertiserList"></div><input id="earnCompanyId" type="hidden"><p id="earnSelectedAdvertiser"><small>No advertiser selected.</small></p>
 <label>Package <select id="earnPackage"><option value="individual">Individual · R100 · 10 credits</option><option value="starter">Starter · R500 · 50 credits</option><option value="growth">Growth · R1,500 · 200 credits</option><option value="premium">Premium · R5,000 · 750 credits</option></select></label>
@@ -8848,7 +8860,10 @@ window.addEventListener('load',tBoot);
 <div hidden><input id="earnPostId"><input id="earnTitle"><input id="earnDescription"><input id="earnBudget" value="60"><span id="earnPackageBudgetInfo"></span><input id="earnCost" value="5"><input id="earnEnd"><button id="earnCreateCampaign" type="button"></button></div><h4>Approve player reward</h4><label>Search player <input id="earnPlayerSearch" placeholder="Username or campaign"><button id="earnPlayerSearchBtn" type="button">Search</button></label><div id="earnPlayerResults"></div><input id="earnEnrolment" type="hidden"><p id="earnSelectedPlayer"><small>No player selected.</small></p><label>Verified reward amount (R) <input id="earnRewardAmount" type="number" min="0.01" step="0.01"></label><label>Verification note <input id="earnReason" placeholder="Describe evidence checked (min 8 characters)"></label><button id="earnApproveReward">Approve verified reward</button>
 <h4>Pending share proofs</h4><button id="earnProofRefresh" type="button">Refresh share proofs</button><div id="earnProofReviews"></div>
 </details></section>
-<p id="earnNotice" role="status" aria-live="polite"></p><button id="earnClose">Return to menu</button>
+<p id="earnNotice" role="status" aria-live="polite"></p><button type="button" class="tenotemoLegalOpen" data-legal="terms">Terms &amp; Conditions</button><button type="button" class="tenotemoLegalOpen" data-legal="privacy">POPIA Privacy Notice</button><button id="earnClose">Return to menu</button>
 </section></div>
+<style>#tenotemoLegalPanel{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;padding:12px;background:#06142ded}#tenotemoLegalPanel.open{display:flex}#tenotemoLegalPanel .legal-card{width:min(760px,100%);max-height:94dvh;overflow:auto;background:#fff;color:#17233a;border-radius:18px;padding:20px;text-align:left}#tenotemoLegalPanel h2,#tenotemoLegalPanel h3{color:#0b315a}#tenotemoLegalPanel button{padding:10px 14px;border:0;border-radius:10px;background:#075985;color:#fff;font-weight:800}</style>
+<div id="tenotemoLegalPanel" role="dialog" aria-modal="true" aria-label="Tenotemo legal information"><section class="legal-card"><div id="tenotemoTermsText"><h2>Tenotemo Terms &amp; Conditions</h2><p><strong>Operator:</strong> DMA ARENA (PTY) LTD · Registration 2026/641586/07 · Zwelisha Trust, Siwela Street 70032, Mbombela, Mpumalanga, 1200 · Contact: surprisesibiya858@gmail.com.</p><h3>Using Tenotemo</h3><p>You must provide accurate account information, keep your login secure and use Tenotemo lawfully. Do not use bots, duplicate accounts, manipulated scores, false sharing proof, impersonation, unlawful advertising or fraudulent referrals. Tenotemo may suspend affected features while investigating abuse.</p><h3>Games and Memory Credits</h3><p>Memory Credits are an in-platform participation unit, not cash. New accounts may receive a once-off welcome allocation. Daily Challenge and Top 50 credits follow the rules shown in the game. Every complete 50 eligible recorded game points may be converted once into 1 Memory Credit. Campaign participation may cost the Memory Credits displayed for that campaign.</p><h3>Tenotemo Earn</h3><p>Tenotemo Earn is optional and intended for adults aged 18+ for cash earning/payouts. Sharing rewards are subject to campaign funding, proof and verification. Provisional earnings are not payable until approved. Players do not need to deposit money, recruit people or pay a withdrawal fee to receive valid approved earnings. A payment request is available when eligible Earned earnings reach R20.00. Tenotemo may verify payment details and fraud indicators before paying.</p><h3>Advertisers, Premium and Spotlight</h3><p>Advertisers are responsible for lawful, accurate content and necessary permissions. Tenotemo may moderate, reject, pause or remove unsuitable content. Spotlight exposure, clicks, shares, enquiries and sales are not guaranteed. Premium features and prices are those displayed at purchase.</p><h3>Third parties, availability and liability</h3><p>Tenotemo uses third-party technology and may link to advertiser or social-media services. Availability cannot be guaranteed. Any limitation of liability applies only to the extent allowed by South African law and does not remove non-excludable consumer rights.</p><h3>Electronic transactions, complaints and changes</h3><p>Prices, payment methods and material conditions are displayed before relevant purchases or participation. Statutory consumer rights prevail. Complaints may be sent to surprisesibiya858@gmail.com. Material changes will be published with an updated effective date and will not retrospectively remove already verified earnings.</p><p><strong>Governing law:</strong> South Africa. Version 2.2 · 28 September 2026.</p></div><div id="tenotemoPrivacyText" hidden><h2>Tenotemo POPIA Privacy Notice</h2><p><strong>Responsible party:</strong> DMA ARENA (PTY) LTD · Registration 2026/641586/07 · Zwelisha Trust, Siwela Street 70032, Mbombela, Mpumalanga, 1200 · Privacy contact: surprisesibiya858@gmail.com.</p><h3>Information we collect</h3><p>We process account details (such as username, email and authentication identifiers), game scores and timestamps, rankings, Memory Credits, game-point conversions, Premium/Spotlight records, technical/security logs and support communications. If you use Tenotemo Earn we may also process campaign participation, sharing proof, provisional/earned/paid amounts and EFT payout details. Advertisers may provide trading details, campaign content and payment-proof images or PDFs.</p><h3>Why we use it</h3><p>We use personal information to create and secure accounts; operate games, rankings and credits; run Tenotemo Earn; verify sharing and payments; process payouts; administer advertiser packages; moderate content; prevent fraud; provide support; maintain records; and comply with law. Supply of basic account information is necessary to create an account. EFT details are voluntary unless you request a payout.</p><h3>Who receives it</h3><p>Authorised Tenotemo administrators and service providers may process information where necessary. Tenotemo currently uses services including Supabase and Vercel. We do not sell player contact lists to advertisers. Bank details, cash earnings, payment proof and sharing proof are not intended for public display.</p><h3>Sharing and social platforms</h3><p>Tenotemo does not claim access to your private WhatsApp messages, WhatsApp Status viewer lists, Facebook friend lists or address book merely because you use a Share feature. External social platforms and advertiser sites have their own privacy practices.</p><h3>Retention, security and cross-border processing</h3><p>Information is kept only as long as reasonably necessary for service operation, lawful records, disputes, fraud prevention or legal obligations. Tenotemo applies access controls and security safeguards appropriate to the service. Some technology providers may process information outside South Africa; Tenotemo must apply the safeguards required by POPIA for applicable cross-border processing.</p><h3>Your rights</h3><p>Subject to POPIA, you may request access or correction, request deletion where applicable, object to certain processing, withdraw consent where consent is the basis, and complain to the Information Regulator. Privacy requests may be sent to surprisesibiya858@gmail.com. The Information Regulator can be contacted through its official channels at inforegulator.org.za.</p><p><strong>Version 2.2 · 28 September 2026.</strong></p></div><button id="tenotemoLegalClose" type="button">Close</button></section></div>
+<script>(()=>{const p=document.getElementById('tenotemoLegalPanel'),t=document.getElementById('tenotemoTermsText'),v=document.getElementById('tenotemoPrivacyText');function openLegal(kind){t.hidden=kind==='privacy';v.hidden=kind!=='privacy';p.classList.add('open')}document.addEventListener('click',e=>{const b=e.target.closest('.tenotemoLegalOpen');if(b){e.preventDefault();openLegal(b.dataset.legal||'terms')}});document.getElementById('tenotemoLegalClose').onclick=()=>p.classList.remove('open');window.tenotemoOpenLegal=openLegal})();</script>
 <script src="tenotemo-earn.js" defer></script>
 </body></html>
