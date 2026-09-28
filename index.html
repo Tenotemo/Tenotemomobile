@@ -8867,3 +8867,45 @@ window.addEventListener('load',tBoot);
 <script>(()=>{const p=document.getElementById('tenotemoLegalPanel'),t=document.getElementById('tenotemoTermsText'),v=document.getElementById('tenotemoPrivacyText');function openLegal(kind){t.hidden=kind==='privacy';v.hidden=kind!=='privacy';p.classList.add('open')}document.addEventListener('click',e=>{const b=e.target.closest('.tenotemoLegalOpen');if(b){e.preventDefault();openLegal(b.dataset.legal||'terms')}});document.getElementById('tenotemoLegalClose').onclick=()=>p.classList.remove('open');window.tenotemoOpenLegal=openLegal})();</script>
 <script src="tenotemo-earn.js" defer></script>
 </body></html>
+<style id="tenotemo-spotlight-full-media-fix">
+/* Spotlight full-media fix: use the available card width/height for posters and pictures. */
+#menuOverlay .tm-spotlight-body{display:block!important;margin-top:8px!important}
+#menuOverlay .spotlight-slide.sp-media{
+  width:100%!important;
+  min-height:0!important;
+  padding:0!important;
+  gap:0!important;
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:flex-start!important;
+  background:#07152c!important;
+}
+#menuOverlay .spotlight-slide.sp-media>img,
+#menuOverlay .spotlight-slide.sp-media>video{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  height:auto!important;
+  max-height:min(64dvh,620px)!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  margin:0!important;
+  border-radius:12px 12px 0 0!important;
+  background:#07152c!important;
+}
+#menuOverlay .spotlight-slide.sp-media .sp-copy{
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:7px 10px 9px!important;
+  text-align:center!important;
+  background:linear-gradient(180deg,#0a193a,#17163a)!important;
+}
+#menuOverlay .spotlight-slide.sp-media .sp-copy:empty{display:none!important}
+@media(max-width:520px){
+ #menuOverlay .spotlight-slide.sp-media>img,
+ #menuOverlay .spotlight-slide.sp-media>video{max-height:58dvh!important}
+}
+/* Premium is intentionally removed from the current single-model home experience. */
+#menuOverlay .tm-premium,#versusEntryButton,#premiumPanel,#spotlightGreetingPremium{display:none!important}
+</style>
