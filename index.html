@@ -8555,7 +8555,8 @@ async function tLoadPlayer(user){tRemoteLoading=true;tUser=user;try{
 function tSaveSoon(){if(!tSessionReady||!tUser||tRemoteLoading)return;clearTimeout(tSyncTimer);tSyncTimer=setTimeout(()=>tSaveNow().catch(e=>console.error('Progress sync failed:',e)),450)}
 async function tSaveNow(){if(!tClient||!tUser||tRemoteLoading)return;
  const payload={shape_points:Math.max(0,Math.floor(modeScores.shape)),colour_points:Math.max(0,Math.floor(modeScores.colour)),pattern_points:Math.max(0,Math.floor(modeScores.movement)),climb_points:Math.max(0,Math.floor(extraModeScores.climb)),spin_points:Math.floor(extraModeScores.spin),shape_round:Math.max(0,Math.floor(modeRounds.shape)),colour_round:Math.max(0,Math.floor(modeRounds.colour)),pattern_round:Math.max(0,Math.floor(modeRounds.movement)),updated_at:new Date().toISOString()};
- const {error}=await tClient.from('tenotemo_progress').update(payload).eq('user_id',tUser.id);if(error)throw error;
+ const {data,error}=await tClient.rpc('tenotemo_save_progress_secure',{p_shape_points:payload.shape_points,p_colour_points:payload.colour_points,p_pattern_points:payload.pattern_points,p_climb_points:payload.climb_points,p_spin_points:payload.spin_points,p_shape_round:payload.shape_round,p_colour_round:payload.colour_round,p_pattern_round:payload.pattern_round});if(error)throw error;
+ if(data&&data.length){const r=data[0];modeScores={shape:Number(r.shape_points),colour:Number(r.colour_points),movement:Number(r.pattern_points)};extraModeScores={climb:Number(r.climb_points),spin:Number(r.spin_points)};modeRounds={shape:Number(r.shape_round),colour:Number(r.colour_round),movement:Number(r.pattern_round)};}
  tRefresh();}
 const tOldSaveProgress=saveProgress;saveProgress=function(){tOldSaveProgress();tSaveSoon();tRefresh()};
 recordLeaderboardScore=function(){tSaveSoon();tRefresh()};
