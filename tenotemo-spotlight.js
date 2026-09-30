@@ -2,17 +2,24 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id), panel=$('spotlightPanel');
 let feed=[],at=0,rotation=null,seen=null,started=0,paused=false,admin=false,active=false,editingId=null;
+const mediaUrlCache=new Map();
 const say=(s)=>{$('spNotice').textContent=s};
 function elt(tag,txt,cls){const e=document.createElement(tag);if(txt!==undefined)e.textContent=txt;if(cls)e.className=cls;return e}
 function safeLink(url){try{const u=new URL(url);return u.protocol==='https:'?u.href:null}catch{return null}}
 function isCampaignMedia(path){return /\.(?:mp4|webm|mov)$/i.test(path||'')}
 async function imageURL(path){if(!path)return null;
+ const cached=mediaUrlCache.get(path);if(cached&&cached.expires>Date.now())return cached.url;
  const bucket=isCampaignMedia(path)||/\/campaigns\//.test(path)?'tenotemo-campaign-media':'tenotemo-spotlight';
- const {data,error}=await tClient.storage.from(bucket).createSignedUrl(path,1800);return error?null:data.signedUrl}
+ const {data,error}=await tClient.storage.from(bucket).createSignedUrl(path,1800);
+ if(error||!data?.signedUrl)return null;
+ mediaUrlCache.set(path,{url:data.signedUrl,expires:Date.now()+25*60*1000});
+ return data.signedUrl}
 
 function ready(){return Boolean(tClient&&tUser&&tSessionReady)}
 async function rpc(name,args){const {data,error}=await tClient.rpc(name,args||{});if(error)throw error;return data}
-async function loadFeed(){if(!ready())return;try{feed=await rpc('tenotemo_spotlight_feed');if(at>=feed.length)at=0;await draw()}catch(e){$('spotlightSlide').textContent='Spotlight will appear after its Supabase setup is installed.';console.warn('Spotlight:',e.message)}}
+async function loadFeed(){if(!ready())return;try{feed=await rpc('tenotemo_spotlight_feed');if(at>=feed.length)at=0;await draw();
+ // Warm the next Spotlight media URL/image without changing layout.
+ const next=feed.length>1?feed[(at+1)%feed.length]:null;if(next?.image_path){imageURL(next.image_path).then(url=>{if(url&&!isCampaignMedia(next.image_path)){const im=new Image();im.src=url}}).catch(()=>{})}}catch(e){$('spotlightSlide').textContent='Spotlight will appear after its Supabase setup is installed.';console.warn('Spotlight:',e.message)}}
 async function draw(){clearTimeout(seen);started=Date.now();const box=$('spotlightSlide');box.replaceChildren();box.classList.remove('sp-business','sp-personal','sp-media');const post=feed[at];$('spotlightCount').textContent=feed.length?`${at+1} / ${feed.length}`:'No active posts';if(!post){box.append(elt('p','Be the first to share your picture or message with the Tenotemo community.'));return}
 if(post.image_path){box.classList.add('sp-media');
  const video=isCampaignMedia(post.image_path),media=elt(video?'video':'img');

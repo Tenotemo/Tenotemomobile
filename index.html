@@ -8552,14 +8552,17 @@ async function tLoadPlayer(user){tRemoteLoading=true;tUser=user;try{
  tSessionReady=true;await tAdminCheck();try{await tmRefreshDailyChallenges()}catch(e){console.warn('Daily challenges:',e.message)}
  tRefresh();updatePlayerStatus();showMainMenu();if(tAuthMode!=='change')tGate.classList.add('hidden');
  }catch(e){tShowBoot('Unable to restore your account: '+e.message+'. Check your connection and try again.',true)}finally{tRemoteLoading=false}}
-function tSaveSoon(){if(!tSessionReady||!tUser||tRemoteLoading)return;clearTimeout(tSyncTimer);tSyncTimer=setTimeout(()=>tSaveNow().catch(e=>console.error('Progress sync failed:',e)),450)}
+function tSaveSoon(){if(!tSessionReady||!tUser||tRemoteLoading)return;clearTimeout(tSyncTimer);tSyncTimer=setTimeout(()=>tSaveNow().catch(e=>console.error('Progress sync failed:',e)),900)}
 async function tSaveNow(){if(!tClient||!tUser||tRemoteLoading)return;
  const payload={shape_points:Math.max(0,Math.floor(modeScores.shape)),colour_points:Math.max(0,Math.floor(modeScores.colour)),pattern_points:Math.max(0,Math.floor(modeScores.movement)),climb_points:Math.max(0,Math.floor(extraModeScores.climb)),spin_points:Math.floor(extraModeScores.spin),shape_round:Math.max(0,Math.floor(modeRounds.shape)),colour_round:Math.max(0,Math.floor(modeRounds.colour)),pattern_round:Math.max(0,Math.floor(modeRounds.movement)),updated_at:new Date().toISOString()};
  const {data,error}=await tClient.rpc('tenotemo_save_progress_secure',{p_shape_points:payload.shape_points,p_colour_points:payload.colour_points,p_pattern_points:payload.pattern_points,p_climb_points:payload.climb_points,p_spin_points:payload.spin_points,p_shape_round:payload.shape_round,p_colour_round:payload.colour_round,p_pattern_round:payload.pattern_round});if(error)throw error;
  if(data&&data.length){const r=data[0];modeScores={shape:Number(r.shape_points),colour:Number(r.colour_points),movement:Number(r.pattern_points)};extraModeScores={climb:Number(r.climb_points),spin:Number(r.spin_points)};modeRounds={shape:Number(r.shape_round),colour:Number(r.colour_round),movement:Number(r.pattern_round)};}
  tRefresh();}
-const tOldSaveProgress=saveProgress;saveProgress=function(){tOldSaveProgress();tSaveSoon();tRefresh()};
-recordLeaderboardScore=function(){tSaveSoon();tRefresh()};
+const tOldSaveProgress=saveProgress;
+// Keep game interaction immediate: update local state/UI first, then sync to Supabase in the background.
+// Do not force a second full menu refresh on every tap/drop.
+saveProgress=function(){tOldSaveProgress();tSaveSoon()};
+recordLeaderboardScore=function(){tSaveSoon()};
 refreshPlayerSummary=function(){tRefresh()};
 // The server enforces unique player names. Do not overwrite the local name until it accepts the change.
 let tNameUpdateInFlight=false;
@@ -8870,6 +8873,37 @@ window.addEventListener('load',tBoot);
 <div id="tenotemoLegalPanel" role="dialog" aria-modal="true" aria-label="Tenotemo legal information"><section class="legal-card"><div id="tenotemoTermsText"><h2>Tenotemo Terms &amp; Conditions</h2><p><strong>Operator:</strong> DMA ARENA (PTY) LTD · Registration 2026/641586/07 · Contact: 072 605 5858.</p><h3>Using Tenotemo</h3><p>You must provide accurate account information, keep your login secure and use Tenotemo lawfully. Do not use bots, duplicate accounts, manipulated scores, false sharing proof, impersonation, unlawful advertising or fraudulent referrals. Tenotemo may suspend affected features while investigating abuse.</p><h3>Games and Memory Credits</h3><p>Memory Credits are an in-platform participation unit, not cash. New accounts may receive a once-off welcome allocation. Daily Challenge and Top 50 credits follow the rules shown in the game. Every complete 50 eligible recorded game points may be converted once into 1 Memory Credit. Campaign participation may cost the Memory Credits displayed for that campaign.</p><h3>Tenotemo Earn</h3><p>Tenotemo Earn is optional and intended for adults aged 18+ for cash earning/payouts. Sharing rewards are subject to campaign funding, proof and verification. Provisional earnings are not payable until approved. Players do not need to deposit money, recruit people or pay a withdrawal fee to receive valid approved earnings. A payment request is available when eligible Earned earnings reach R20.00. Tenotemo may verify payment details and fraud indicators before paying.</p><h3>Advertisers and Spotlight</h3><p>Advertisers are responsible for lawful, accurate content and necessary permissions. Advertiser packages provide Advertising Credits. One Advertising Credit covers up to two approved qualifying posts by the same participant. Tenotemo may moderate, reject, pause or remove unsuitable content. Spotlight exposure, clicks, shares, enquiries and sales are not guaranteed.</p><h3>Third parties, availability and liability</h3><p>Tenotemo uses third-party technology and may link to advertiser or social-media services. Availability cannot be guaranteed. Any limitation of liability applies only to the extent allowed by South African law and does not remove non-excludable consumer rights.</p><h3>Electronic transactions, complaints and changes</h3><p>Prices, payment methods and material conditions are displayed before relevant purchases or participation. Statutory consumer rights prevail. Complaints may be submitted by contacting DMA ARENA (PTY) LTD on 072 605 5858. Material changes will be published with an updated effective date and will not retrospectively remove already verified earnings.</p><p><strong>Governing law:</strong> South Africa. Version 2.3 · 28 September 2026.</p></div><div id="tenotemoPrivacyText" hidden><h2>Tenotemo POPIA Privacy Notice</h2><p><strong>Responsible party:</strong> DMA ARENA (PTY) LTD · Registration 2026/641586/07 · Privacy contact: 072 605 5858.</p><h3>Information we collect</h3><p>We process account details (such as username, email and authentication identifiers), game scores and timestamps, rankings, Memory Credits, game-point conversions, Spotlight and advertiser-campaign records, technical/security logs and support communications. If you use Tenotemo Earn we may also process campaign participation, sharing proof, provisional/earned/paid amounts and EFT payout details. Advertisers may provide trading details, campaign content and payment-proof images or PDFs.</p><h3>Why we use it</h3><p>We use personal information to create and secure accounts; operate games, rankings and credits; run Tenotemo Earn; verify sharing and payments; process payouts; administer advertiser packages; moderate content; prevent fraud; provide support; maintain records; and comply with law. Supply of basic account information is necessary to create an account. EFT details are voluntary unless you request a payout.</p><h3>Who receives it</h3><p>Authorised Tenotemo administrators and service providers may process information where necessary. Tenotemo currently uses services including Supabase and Vercel. We do not sell player contact lists to advertisers. Bank details, cash earnings, payment proof and sharing proof are not intended for public display.</p><h3>Sharing and social platforms</h3><p>Tenotemo does not claim access to your private WhatsApp messages, WhatsApp Status viewer lists, Facebook friend lists or address book merely because you use a Share feature. External social platforms and advertiser sites have their own privacy practices.</p><h3>Retention, security and cross-border processing</h3><p>Information is kept only as long as reasonably necessary for service operation, lawful records, disputes, fraud prevention or legal obligations. Tenotemo applies access controls and security safeguards appropriate to the service. Some technology providers may process information outside South Africa; Tenotemo must apply the safeguards required by POPIA for applicable cross-border processing.</p><h3>Your rights</h3><p>Subject to POPIA, you may request access or correction, request deletion where applicable, object to certain processing, withdraw consent where consent is the basis, and complain to the Information Regulator. Privacy requests may be made by contacting DMA ARENA (PTY) LTD on 072 605 5858. The Information Regulator can be contacted through its official channels at inforegulator.org.za.</p><p><strong>Version 2.3 · 28 September 2026.</strong></p></div><button id="tenotemoLegalClose" type="button">Close</button></section></div>
 <script>(()=>{const p=document.getElementById('tenotemoLegalPanel'),t=document.getElementById('tenotemoTermsText'),v=document.getElementById('tenotemoPrivacyText');function openLegal(kind){t.hidden=kind==='privacy';v.hidden=kind!=='privacy';p.classList.add('open')}document.addEventListener('click',e=>{const b=e.target.closest('.tenotemoLegalOpen');if(b){e.preventDefault();openLegal(b.dataset.legal||'terms')}});document.getElementById('tenotemoLegalClose').onclick=()=>p.classList.remove('open');window.tenotemoOpenLegal=openLegal})();</script>
 <script src="tenotemo-earn.js" defer></script>
+
+<style id="tenotemo-spotlight-stable-loading-fix">
+/* Keep Spotlight's media viewport stable while signed media URLs load.
+   This prevents the whole home screen collapsing and expanding between posts. */
+#menuOverlay .spotlight-slide.sp-media{
+  min-height:clamp(330px,105vw,620px)!important;
+  height:clamp(330px,105vw,620px)!important;
+  position:relative!important;
+}
+#menuOverlay .spotlight-slide.sp-media>img,
+#menuOverlay .spotlight-slide.sp-media>video{
+  width:100%!important;
+  height:calc(100% - 58px)!important;
+  min-height:0!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  flex:1 1 auto!important;
+}
+#menuOverlay .spotlight-slide.sp-media .sp-copy{
+  flex:0 0 auto!important;
+  min-height:58px!important;
+}
+@media(max-width:520px){
+ #menuOverlay .spotlight-slide.sp-media{
+   min-height:min(112vw,58dvh)!important;
+   height:min(112vw,58dvh)!important;
+ }
+ #menuOverlay .spotlight-slide.sp-media>img,
+ #menuOverlay .spotlight-slide.sp-media>video{max-height:none!important}
+}
+</style>
 </body></html>
 <style id="tenotemo-spotlight-full-media-fix">
 /* Spotlight full-media fix: use the available card width/height for posters and pictures. */
