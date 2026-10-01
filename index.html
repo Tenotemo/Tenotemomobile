@@ -1736,7 +1736,12 @@ main {
 .climb-board{display:flex;justify-content:center;align-items:center;min-height:135px}
 .climb-sequence{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .climb-token,.climb-choice{min-width:52px;padding:11px;border-radius:13px;background:#eaf9ff;border:2px solid #a7d9e9;font-size:25px;text-align:center;font-weight:900}
-button.climb-choice{cursor:pointer}
+button.climb-choice{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:2;pointer-events:auto;user-select:none;-webkit-user-select:none}
+@media(max-width:700px){
+  button.climb-choice{min-width:56px;min-height:52px;padding:12px;touch-action:manipulation}
+  .climb-sequence{position:relative;z-index:6;pointer-events:auto}
+  .climb-board{position:relative;z-index:6;pointer-events:auto}
+}
 .climb-grid{display:grid;gap:7px;width:min(420px,100%)}
 .climb-cell{aspect-ratio:1;border-radius:10px;background:#eefaff;border:2px solid #abd6e5;cursor:pointer}
 .climb-cell.memory{background:#58d1ef}
@@ -8226,10 +8231,35 @@ function climbRender(){
     }else if(p.type==="odd"){
       document.getElementById("climbHelp").textContent="Quick! Pick the different symbol.";
       const row=document.createElement("div");row.className="climb-sequence";
-      for(let i=0;i<p.total;i++){const b=document.createElement("button");b.className="climb-choice";b.textContent=i===p.answer?p.odd:p.base;b.onclick=()=>{
+      for(let i=0;i<p.total;i++){
+        const b=document.createElement("button");
+        b.type="button";
+        b.className="climb-choice";
+        b.textContent=i===p.answer?p.odd:p.base;
+        let touchHandled=false;
+        const chooseOdd=()=>{
+          if(!climbRunning || climbPuzzle!==p)return;
           if(i===p.answer) climbFinish(true);
           else climbWrong("Not that one — keep looking.");
-        };row.appendChild(b)}board.appendChild(row);
+        };
+        /* Mobile Safari/Chrome can leave these dynamically rendered buttons with a
+           stale hit-test region until an orientation/resize pass. Handling touchend
+           directly makes the visible choice respond immediately; click remains the
+           mouse/keyboard fallback. */
+        b.addEventListener("touchend",e=>{
+          e.preventDefault();
+          e.stopPropagation();
+          touchHandled=true;
+          chooseOdd();
+          setTimeout(()=>{touchHandled=false},450);
+        },{passive:false});
+        b.addEventListener("click",e=>{
+          if(touchHandled){e.preventDefault();return;}
+          chooseOdd();
+        });
+        row.appendChild(b);
+      }
+      board.appendChild(row);
     }else{
       document.getElementById("climbHelp").textContent="How many "+p.target+" symbols are shown?";
       const row=document.createElement("div");row.className="climb-sequence";
