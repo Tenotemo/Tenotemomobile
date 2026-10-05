@@ -1,7 +1,7 @@
 /* Tenotemo Advertising V2 UI — business-owned application -> payment verification -> release */
 (()=>{'use strict';
 const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-async function rpc(name,args={}){if(!window.tClient||!window.tUser)throw Error('Sign in first.');const {data,error}=await tClient.rpc(name,args);if(error)throw error;return data}
+async function rpc(name,args={}){if(typeof tClient==='undefined'||typeof tUser==='undefined'||!tClient||!tUser)throw Error('Sign in first.');const {data,error}=await tClient.rpc(name,args);if(error)throw error;return data}
 let businesses=[],selected=null,pendingApplicationId=null;
 const n=v=>Number(v||0);
 function status(id,msg){const e=$(id);if(e)e.textContent=msg||''}
