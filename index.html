@@ -8838,8 +8838,11 @@ window.addEventListener('load',tBoot);
 <script src="tenotemo-spotlight.js" defer></script>
 <script src="tenotemo-versus.js" defer></script>
 <style>
-#earnPanel{position:fixed;inset:0;z-index:98500;display:none;align-items:center;justify-content:center;padding:12px;background:#06142de8}
-#earnPanel.open{display:flex}#earnPanel .earn-card{width:min(660px,100%);max-height:94dvh;overflow:auto;background:#f7fbff;color:#15233c;border-radius:19px;padding:18px;text-align:left}
+#earnPanel{position:fixed;inset:0;z-index:98500;display:none;padding:12px;background:#06142de8;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-sizing:border-box}
+#earnPanel.open{display:block}#earnPanel .earn-card{width:min(660px,100%);min-height:0;margin:0 auto;background:#f7fbff;color:#15233c;border-radius:19px;padding:18px;text-align:left;box-sizing:border-box;overflow:visible}
+#earnPanel .earn-main-section[hidden]{display:none!important}#earnPanel .earn-main-section:not([hidden]){display:block!important}
+#earnPanel *{box-sizing:border-box}
+@supports(height:100dvh){#earnPanel{height:100dvh}}
 #earnPanel h2{margin:0 0 8px}#earnPanel .earn-balances{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}
 #earnPanel .earn-balances div{background:#0b315a;color:#fff;border-radius:12px;padding:10px 7px;text-align:center;font-size:12px}
 #earnPanel .earn-balances strong{display:block;font-size:clamp(17px,4vw,23px);margin-top:5px}
@@ -8847,7 +8850,7 @@ window.addEventListener('load',tBoot);
 #earnPanel button:disabled{opacity:.5}#earnPanel input,#earnPanel select{padding:10px;border:1px solid #a8bdcc;border-radius:9px;max-width:100%}
 #earnPanel label{display:block;margin:8px 0}#earnPanel label input{display:block;width:100%;box-sizing:border-box}#earnPanel .earn-campaign{padding:12px;border:1px solid #c8d9e8;border-radius:12px;margin:9px 0;overflow-wrap:anywhere}
 #earnPanel .earn-campaign h3{margin:0 0 6px}#earnPanel .earn-campaign small{display:block;color:#4c6177;line-height:1.5}
-#earnNotice{min-height:30px;color:#075985;font-weight:700;overflow-wrap:anywhere}
+#earnNotice{min-height:30px;color:#075985;font-weight:700;overflow-wrap:anywhere}#earnClose{margin-bottom:max(8px,env(safe-area-inset-bottom))}
 
 #earnPanel .earn-section-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}#earnPanel .earn-section-tabs button{margin:0;min-height:58px}#earnPanel .earn-main-section{border-top:1px solid #cbd5e1;padding-top:12px}#earnPanel textarea{width:100%;box-sizing:border-box;padding:10px;border:1px solid #a8bdcc;border-radius:9px}#earnPanel .earn-section-tabs #earnAdminTab{grid-column:1/-1;background:#7c2d12}@media(max-width:520px){#earnPanel .earn-section-tabs{grid-template-columns:1fr}#earnPanel .earn-section-tabs #earnAdminTab{grid-column:auto}}
 </style>
