@@ -29,7 +29,7 @@ async function shareMedia(c){
  const file=new File([blob],`tenotemo-campaign.${ext}`,{type});
  const message=shareMessage(c);
  if(navigator.share&&navigator.canShare?.({files:[file]})){
-  try{await navigator.share({files:[file],text:message,title:c.title});await registerShare(c);return}catch(e){if(e.name==='AbortError')return;throw e}
+  try{await navigator.share({files:[file]});await registerShare(c);note('Media shared. For Facebook/Instagram Story, add any referral link separately only if the platform supports it.');return}catch(e){if(e.name==='AbortError')return;throw e}
  }
  const objectURL=URL.createObjectURL(file),a=document.createElement('a');a.href=objectURL;a.download=file.name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(objectURL),60000);
  await copyCampaignLink(c);note('Approved media downloaded. Add it to your post or Status, and paste your copied unique referral link.');
