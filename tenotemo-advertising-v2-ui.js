@@ -29,7 +29,11 @@ function applyComplianceCopy(){
    [...sel.options].forEach(o=>{if(o.value==='whatsapp')o.text='WhatsApp Status';if(o.value==='facebook')o.text='Facebook Story';if(o.value==='instagram')o.text='Instagram Story';if(['tiktok','x','other'].includes(o.value))o.disabled=true});
  });
 }
-const obs=new MutationObserver(applyComplianceCopy);const campaigns=$('earnCampaigns');if(campaigns)obs.observe(campaigns,{childList:true,subtree:true});
+const campaigns=$('earnCampaigns');
+// Do not observe this subtree: rewriting option labels inside a MutationObserver can retrigger
+// the observer indefinitely and freeze the Earn page. The Earn renderer already emits the
+// compliant Status/Story labels; this one-shot pass is only a compatibility safeguard.
+if(campaigns) applyComplianceCopy();
 if($('earnCreditSummaryRefresh'))$('earnCreditSummaryRefresh').onclick=loadBusinesses;
 if($('earnV2ApplyAdjustment'))$('earnV2ApplyAdjustment').onclick=adjust;
 // Admin tab can load after auth; refresh V2 list when opened.
