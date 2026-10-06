@@ -3785,11 +3785,9 @@ function restartAllProgress() {
     clearTimer();
     stopAllAnimations();
 
-    modeScores = {
-        shape: 0,
-        colour: 0,
-        movement: 0
-    };
+    /* Restart rounds without erasing accumulated game points.
+       Game points are historical earning progress and must continue to be
+       convertible to Memory Credits after a restart. */
 
     modeRounds = {
         shape: 0,
@@ -3797,13 +3795,11 @@ function restartAllProgress() {
         movement: 0
     };
 
-    extraModeScores = {climb:0,spin:0};
-    if(typeof oSpinActive!=="undefined"){oSpinActive=false;cancelAnimationFrame(oSpinRaf);clearTimeout(oSpinGradeTimeout);localStorage.removeItem(oSpinStorageKey());oSpinRoundIndex=0;oSpinStopIndex=0;oSpinScore=0;oSpinSolution=[];oSpinAnswers={};oSpinPendingResult=null;oSpinPhaseState="watch";}
-    if(typeof climbScore!=="undefined")climbScore=0;
-    if(typeof oSpinScore!=="undefined")oSpinScore=0;
+    if(typeof oSpinActive!=="undefined"){oSpinActive=false;cancelAnimationFrame(oSpinRaf);clearTimeout(oSpinGradeTimeout);localStorage.removeItem(oSpinStorageKey());oSpinRoundIndex=0;oSpinStopIndex=0;oSpinSolution=[];oSpinAnswers={};oSpinPendingResult=null;oSpinPhaseState="watch";}
+    if(typeof climbScore!=="undefined")climbScore=Number(extraModeScores.climb)||0;
+    if(typeof oSpinScore!=="undefined")oSpinScore=Number(extraModeScores.spin)||0;
 
-    score =
-        0;
+    score = 0;
 
     roundIndex =
         0;
@@ -3831,7 +3827,7 @@ function restartAllProgress() {
        same points repeatedly.
     */
 
-    resetPlayerLeaderboardScore();
+    /* Do not reset the player's accumulated leaderboard/earning points here. */
 
     showMainMenu();
 
@@ -8633,8 +8629,8 @@ const tOldRestart=restartAllProgress;
 restartAllProgress=function(){
  clearTimeout(tSyncTimer);
  tOldRestart();
- // Local reset can be cancelled; only sync if the game really is at zero.
- if(getTotalPlayerScore()===0){clearTimeout(tSyncTimer);tSaveNow().catch(e=>alert('Unable to sync game restart: '+e.message));}
+ // Restart changes rounds, not accumulated earning points. Sync the new round state.
+ clearTimeout(tSyncTimer);tSaveNow().catch(e=>alert('Unable to sync game restart: '+e.message));
  if(typeof tmRefreshDailyChallenges==='function')tmRefreshDailyChallenges();
 };
 const tOldOpenLeaderboard=openLeaderboard;openLeaderboard=function(){leaderboardType='daily';tOldOpenLeaderboard();leaderboardType='daily';tRenderLeaderboard()};
@@ -8906,7 +8902,7 @@ window.addEventListener('load',tBoot);
  <p id="earnV2SelectedSummary"></p>
  <div id="earnV2Applications" class="earn-campaign" style="background:#eff6ff;border:1px solid #93c5fd"><h4>📋 Applications & campaigns</h4><p><small>Approved applications can be released to Spotlight here. A campaign is released only once.</small></p><div id="earnV2ApplicationList"></div></div>
  <div class="earn-campaign" style="background:#f0fdf4;border:1px solid #86efac"><h4>📣 New campaign application</h4><p><small>Capture the advertiser’s approved campaign details. The requested allocation is in Advertising Credits: 1 credit funds one approved R1 sponsored publication.</small></p><label>Campaign title <input id="earnV2CampaignTitle" maxlength="100"></label><label>Approved sponsored message <textarea id="earnV2CampaignMessage" maxlength="240" rows="3"></textarea></label><label>Advertiser HTTPS link <input id="earnV2CampaignUrl" type="url" placeholder="https://..."></label><label>Poster/media storage path (optional) <input id="earnV2CampaignMediaPath" maxlength="300" placeholder="Leave blank when no media path is required"></label><label>Requested Advertising Credits <input id="earnV2RequestedCredits" type="number" min="1" step="1"></label><button id="earnV2CreateApplication" type="button">Create campaign application</button><p id="earnV2ApplicationStatus" role="status"></p></div>
- <div id="earnV2ApprovalBox" class="earn-campaign" hidden style="background:#fffbeb;border:1px solid #fbbf24"><h4>💳 Verify payment & approve allocation</h4><p><small>Only continue after the advertiser’s proof of payment has been checked and cleared funds are confirmed. The approved credit allocation becomes the campaign’s accounting limit; no separate Rand budget is entered.</small></p><p id="earnV2PendingApplication"></p><label>Approved Advertising Credits <input id="earnV2ApprovedCredits" type="number" min="1" step="1"></label><label>Admin verification note <input id="earnV2ApprovalNote" maxlength="180" placeholder="e.g. EFT cleared and proof verified"></label><button id="earnV2ApproveApplication" type="button">Approve payment & credits</button><p id="earnV2ApprovalStatus" role="status"></p></div>
+ <div id="earnV2ApprovalBox" class="earn-campaign" hidden style="background:#fffbeb;border:1px solid #fbbf24"><h4>💳 Proof of payment & credit approval</h4><p><small>This proof is attached to the specific business and campaign application shown below. Upload the advertiser’s proof here before approving credits.</small></p><p id="earnV2PendingApplication"></p><label>Proof of payment (JPG, PNG, WebP or PDF) <input id="earnV2PaymentProof" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"></label><button id="earnV2UploadPaymentProof" type="button">Upload proof for this application</button><p id="earnV2PaymentProofStatus" role="status"></p><label>Approved Advertising Credits <input id="earnV2ApprovedCredits" type="number" min="1" step="1"></label><label>Admin verification note <input id="earnV2ApprovalNote" maxlength="180" placeholder="e.g. EFT cleared and proof verified"></label><button id="earnV2ApproveApplication" type="button">Approve payment & credits</button><p id="earnV2ApprovalStatus" role="status"></p></div>
  <div id="earnV2Adjustment" class="earn-campaign" style="background:#f8fafc;border:1px solid #cbd5e1"><h4>🧾 Historical credit correction</h4><p><small>For reconciled legacy businesses only. This creates an audit-ledger entry and never overwrites a balance.</small></p><label>Credit adjustment <input id="earnV2AdjustmentAmount" type="number" step="1" placeholder="e.g. 60 or -5"></label><label>Reason <input id="earnV2AdjustmentReason" maxlength="180" placeholder="e.g. Legacy payment verified by admin"></label><button id="earnV2ApplyAdjustment" type="button">Record audited adjustment</button><p id="earnV2AdjustmentStatus" role="status"></p></div>
 </div>
 </section><section class="earn-campaign" style="border:2px solid #34d399;background:#f0fdf4"><h4>🗂️ Manage Published Campaigns</h4><button id="earnManageRefresh" type="button">Refresh campaigns</button><div id="earnManagedCampaigns"></div><p id="earnManageNotice" role="status"></p><div id="earnManageEditor" hidden><h4 id="earnManageEditorHeading">Edit campaign</h4><label>Campaign title <input id="earnEditTitle" maxlength="90"></label><label>Spotlight message <textarea id="earnEditMessage" maxlength="180" rows="3"></textarea></label><label>Campaign and reward rules <textarea id="earnEditDescription" maxlength="350" rows="3"></textarea></label><label>Advertiser HTTPS link <input id="earnEditUrl" type="url"></label><label>Replace picture/video <input id="earnEditMedia" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"></label><div id="earnEditMediaPreview"></div><input id="earnEditCost" type="hidden" value="5"><label>Campaign end date <input id="earnEditEnd" type="date"></label><button id="earnEditSave" type="button">Save campaign changes</button><button id="earnEditCancel" type="button">Cancel edit</button></div></section>

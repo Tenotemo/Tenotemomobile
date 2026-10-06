@@ -9,11 +9,11 @@ function note(s){$('earnNotice').textContent=s}
 function referral(code){return location.origin+'/api/c?code='+encodeURIComponent(code)}
 function directReferral(code){return location.origin+'/api/r?code='+encodeURIComponent(code)}
 function shareMessage(c){return `${c.title} — ${c.description||'Approved advertiser promotion'}\n${referral(c.referral_code)}\n#Sponsored #TenotemoEarn`}
-async function registerShare(c){const rows=await rpc('tenotemo_register_campaign_share',{p_campaign_id:c.id});const r=Array.isArray(rows)?rows[0]:rows;if(r?.reward_type==='cash')note('Publication registered. This campaign currently qualifies for R1 per approved eligible platform Status/Story. Keep it live for more than 2 hours and reach at least 21 genuine views before admin review.');else note('Paid rewards are used up for this campaign. It is now clearly in Memory Credit mode: an eligible approved Status/Story earns 5 Memory Credits. Keep it live for more than 2 hours and reach at least 21 genuine views.');return r}
+async function registerShare(c){const rows=await rpc('tenotemo_register_campaign_share',{p_campaign_id:c.id});const r=Array.isArray(rows)?rows[0]:rows;note('Publication registered. The campaign credit and your provisional amount have been updated. Keep the Status/Story live for more than 2 hours and reach at least 21 genuine views before admin review.');await refresh();return r}
 async function copyCampaignLink(c){const message=shareMessage(c);try{await navigator.clipboard.writeText(message);note('Campaign message and your unique referral link copied. Paste them alongside your picture or video.')}catch{prompt('Copy your campaign message and referral link:',message)}}
 async function share(c){const link=referral(c.referral_code),message=shareMessage(c);
  if(navigator.share){try{await navigator.share({title:c.title,text:message});await registerShare(c);return}catch(e){if(e.name==='AbortError')return;throw e}}
- await copyCampaignLink(c);note('Link copied. Tenotemo can only create the automatic R2 provisional amount after a supported device share completes.');
+ await copyCampaignLink(c);note('Link copied. Tenotemo can only create the automatic R1 provisional amount after a supported device share completes.');
 }
 async function shareMedia(c){
  if(!c.referral_code)return note('Unlock this campaign first.');
